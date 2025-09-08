@@ -160,7 +160,7 @@
                         <!-- Desktop Nav -->
                         <div class="hidden md:flex items-center gap-4">
                              <div id="welcome-message" class="text-stone-600"></div>
-                            <button id="cart-btn" class="relative text-stone-600 hover:text-amber-600 transition">
+                            <button id="cart-btn-desktop" class="relative text-stone-600 hover:text-amber-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
                             </button>
@@ -175,7 +175,7 @@
                         </div>
                         <!-- Mobile Nav Buttons -->
                         <div class="md:hidden flex items-center gap-4">
-                            <button id="cart-btn" class="relative text-stone-600 hover:text-amber-600 transition">
+                            <button id="cart-btn-mobile" class="relative text-stone-600 hover:text-amber-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
                             </button>
@@ -619,8 +619,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const welcomeMessage = document.getElementById('welcome-message');
     const welcomeMessageMobile = document.getElementById('welcome-message-mobile');
     
-    const cartBtn = document.getElementById('cart-btn');
-    // cartBtnMobile.addEventListener('click', (e) => {
+    const cartBtns = [document.getElementById('cart-btn-desktop'), document.getElementById('cart-btn-mobile')];
     const cartModal = document.getElementById('cart-modal');
     const cartCloseBtn = document.getElementById('cart-close-btn');
     
@@ -1698,16 +1697,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    cartBtn.addEventListener('click', () => {
-        renderCart();
-        cartModal.classList.remove('hidden');
+    cartBtns.forEach(btn => {
+        if (btn) { // Ensure the button exists
+            btn.addEventListener('click', () => {
+                renderCart();
+                cartModal.classList.remove('hidden');
+            });
+        }
     });
-    // cartBtnMobile is now handled by cartBtn due to shared ID and placement
-    // cartBtnMobile.addEventListener('click', (e) => {
-    //     e.preventDefault();
-    //     renderCart();
-    //     cartModal.classList.remove('hidden');
-    // });
 
     document.getElementById('cart-body').addEventListener('click', e => {
         const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
