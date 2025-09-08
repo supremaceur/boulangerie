@@ -1508,6 +1508,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         selectionContainer.innerHTML = itemsHtml;
         promoModal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     };
     
     // ===== AUTHENTICATION =====
@@ -1965,7 +1966,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     addPromoBtn.addEventListener('click', () => openPromoModal());
-    promoModalCloseBtn.addEventListener('click', () => promoModal.classList.add('hidden'));
+    promoModalCloseBtn.addEventListener('click', () => {
+        promoModal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    });
 
     promoForm.addEventListener('submit', async (e) => {
         e.preventDefault();
