@@ -527,7 +527,7 @@
             <div class="p-6 border-b border-stone-200">
                  <h3 id="promo-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une promotion</h3>
             </div>
-            <form id="promo-form" class="flex flex-col flex-grow max-h-[calc(100vh-100px)] overflow-y-auto">
+            <form id="promo-form">
                 <div class="p-6 space-y-6">
                     <input type="hidden" id="promo-id-input">
                     <div>
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const welcomeMessageMobile = document.getElementById('welcome-message-mobile');
     
     const cartBtn = document.getElementById('cart-btn');
-    const cartBtnMobile = document.getElementById('cart-btn-mobile');
+    // cartBtnMobile.addEventListener('click', (e) => {
     const cartModal = document.getElementById('cart-modal');
     const cartCloseBtn = document.getElementById('cart-close-btn');
     
