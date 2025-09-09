@@ -469,22 +469,22 @@
   <div id="toast" class="toast"></div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', async () => {
+  document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_URL = 'https://zliusqwhpqzszjetvrpx.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaXVzcXdocHF6c3pqZXR2cnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNjE2MzgsImV4cCI6MjA3MjczNzYzOH0.Zb3InrWND0YpIUNHSHKDdPUxQzgihQOB2491VRb994E';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'saveurs-pasteur-app'
-    }
-  }
-});
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'saveurs-pasteur-app'
+        }
+      }
+    });
 
     // ===== STATE =====
     let state = {
@@ -498,9 +498,6 @@
     };
 
     let chartInstances = {};
-    let logoutTimer;
-    const LOGOUT_TIME = 10 * 60 * 1000; // 10 min
-    let hasBootstrapped = false;
 
     // ===== DOM =====
     const loader = document.getElementById('loader');
@@ -595,52 +592,53 @@
     const updateCartBadge = () => {
       const cartBadge = document.getElementById('cart-badge');
       const cartItemCount = state.cart.reduce((total, item) => total + item.quantity, 0);
-      if (cartItemCount > 0) { cartBadge.textContent = cartItemCount; cartBadge.classList.remove('hidden'); }
+      if (cartItemCount > 0) { cartBadge.textContent = cartItemCount; cartBadge.classList.remove('hidden'); } 
       else { cartBadge.classList.add('hidden'); }
     };
 
-    // ===== INACTIVITÉ =====
-    const resetLogoutTimer = () => {
-  if (!state.currentUser) return;
-  clearTimeout(logoutTimer);
-  logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
-};
-
-// Événements moins agressifs pour mobile
-const activityEvents = ['mousedown', 'touchstart', 'keydown'];
-let lastActivity = Date.now();
-
-activityEvents.forEach(ev => {
-  document.addEventListener(ev, () => {
-    const now = Date.now();
-    if (now - lastActivity > 30000) { // Throttle 30 secondes
-      lastActivity = now;
-      resetLogoutTimer();
+    // ===== API WRAPPER =====
+    async function apiCall(promise) {
+      showLoader(true);
+      try {
+        const { data, error } = await promise;
+        if (error) {
+          // JWT expired, invalid, etc.
+          if (error.code === 'PGRST301' || error.message.includes('JWT')) {
+            console.warn("Token invalide ou expiré, déconnexion...");
+            await handleLogout(true, "Votre session a expiré, veuillez vous reconnecter.");
+            return { data: null, error };
+          }
+          throw error;
+        }
+        return { data, error: null };
+      } catch (error) {
+        console.error("Erreur d'API non gérée:", error);
+        showToast(`Erreur: ${error.message}`);
+        return { data: null, error };
+      } finally {
+        showLoader(false);
+      }
     }
-  }, { passive: true });
-});
 
     // ===== DATA =====
-    async function loadInitialData(showLoaderIndicator = true) {
-      if (showLoaderIndicator) showLoader(true);
-      try {
-        // Profile
-        if (state.currentUser) {
-          const { data, error } = await supabaseClient.from('profiles').select('first_name, last_name').eq('id', state.currentUser.id).single();
-          if (error && error.code !== 'PGRST116') throw error;
-          state.userProfile = data;
-        }
-        // Products
-        const { data: productsData, error: productsError } = await supabaseClient.from('products').select('*');
-        if (productsError) throw productsError;
+    async function loadInitialData() {
+      // Profile
+      if (state.currentUser) {
+        const { data } = await apiCall(supabaseClient.from('profiles').select('first_name, last_name').eq('id', state.currentUser.id).single());
+        if (data) state.userProfile = data;
+      }
+      // Products
+      const { data: productsData } = await apiCall(supabaseClient.from('products').select('*'));
+      if (productsData) {
         state.products = { sandwichs: [], boissons: [], desserts: [] };
         productsData.forEach(p => {
           if (!state.products[p.category]) state.products[p.category] = [];
           state.products[p.category].push(p);
         });
-        // Formules + eligible
-        const { data: formulesData, error: formulesError } = await supabaseClient.from('formules').select('*, formule_products(product_id)');
-        if (formulesError) throw formulesError;
+      }
+      // Formules + eligible
+      const { data: formulesData } = await apiCall(supabaseClient.from('formules').select('*, formule_products(product_id)'));
+      if (formulesData) {
         state.formules = formulesData.map(f => {
           const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
           if (f.formule_products) {
@@ -654,28 +652,22 @@ activityEvents.forEach(ev => {
           }
           return { ...f, eligible_products };
         });
-        // Orders
-        if (state.currentUser) {
-          let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
-          if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
-          const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
-          if (ordersError) throw ordersError;
-          state.orders = ordersData;
-        }
-        // Promotions
-        const { data: promosData, error: promosError } = await supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)');
-        if (promosError) throw promosError;
+      }
+      // Orders
+      if (state.currentUser) {
+        let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
+        if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
+        const { data: ordersData } = await apiCall(query.order('created_at', { ascending: false }));
+        if (ordersData) state.orders = ordersData;
+      }
+      // Promotions
+      const { data: promosData } = await apiCall(supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)'));
+      if (promosData) {
         state.promotions = promosData;
-        // usage_count
         for (const promo of state.promotions) {
-          const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
-          if (!countError) promo.usage_count = count;
+          const { data: count } = await apiCall(supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id }));
+          if (count) promo.usage_count = count;
         }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        showToast(`Erreur de chargement: ${error.message}`);
-      } finally {
-        if (showLoaderIndicator) showLoader(false);
       }
     }
 
@@ -856,35 +848,34 @@ activityEvents.forEach(ev => {
 
     const handleCheckout = async () => {
       if (state.cart.length === 0) return showToast("Votre panier est vide.");
-      showLoader(true);
-      try {
-        const subtotal = state.cart.reduce((total, item) => {
-          const price = item.type === 'product' ? item.product.price : item.formule.price;
-          return total + (item.quantity * price);
-        }, 0);
 
-        const applicablePromo = findApplicablePromotion(state.cart);
-        let discountAmount = 0;
-        let finalTotal = subtotal;
-        let promoId = null;
-        if (applicablePromo) {
-          discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
-          finalTotal = subtotal - discountAmount;
-          promoId = applicablePromo.id;
-        }
+      const subtotal = state.cart.reduce((total, item) => {
+        const price = item.type === 'product' ? item.product.price : item.formule.price;
+        return total + (item.quantity * price);
+      }, 0);
 
-        const pickupTime = document.getElementById('cart-pickup-time').value;
+      const applicablePromo = findApplicablePromotion(state.cart);
+      let discountAmount = 0;
+      let finalTotal = subtotal;
+      let promoId = null;
+      if (applicablePromo) {
+        discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
+        finalTotal = subtotal - discountAmount;
+        promoId = applicablePromo.id;
+      }
 
-        const { data: orderData, error: orderError } = await supabaseClient.from('orders').insert({
-          user_id: state.currentUser.id,
-          total_price: finalTotal,
-          pickup_time: pickupTime,
-          status: 'pending',
-          promotion_id: promoId,
-          discount_amount: discountAmount
-        }).select().single();
-        if (orderError) throw orderError;
+      const pickupTime = document.getElementById('cart-pickup-time').value;
 
+      const { data: orderData } = await apiCall(supabaseClient.from('orders').insert({
+        user_id: state.currentUser.id,
+        total_price: finalTotal,
+        pickup_time: pickupTime,
+        status: 'pending',
+        promotion_id: promoId,
+        discount_amount: discountAmount
+      }).select().single());
+
+      if (orderData) {
         const orderItemsToInsert = state.cart.map(item => {
           if (item.type === 'product') {
             return { order_id: orderData.id, product_id: item.product.id, quantity: item.quantity, price: item.product.price, category: item.product.category };
@@ -893,21 +884,16 @@ activityEvents.forEach(ev => {
           }
         });
 
-        const { error: itemsError } = await supabaseClient.from('order_items').insert(orderItemsToInsert);
-        if (itemsError) throw itemsError;
-
-        state.cart = [];
-        updateCartBadge();
-        renderCart();
-        cartModal.classList.add('hidden');
-        await loadInitialData(false);
-        renderAll();
-        showToast("Commande passée avec succès !");
-      } catch (error) {
-        console.error('Checkout error:', error);
-        showToast(`Erreur lors de la commande: ${error.message}`);
-      } finally {
-        showLoader(false);
+        const { error: itemsError } = await apiCall(supabaseClient.from('order_items').insert(orderItemsToInsert));
+        if (!itemsError) {
+          state.cart = [];
+          updateCartBadge();
+          renderCart();
+          cartModal.classList.add('hidden');
+          await loadInitialData();
+          renderAll();
+          showToast("Commande passée avec succès !");
+        }
       }
     };
 
@@ -1117,7 +1103,7 @@ activityEvents.forEach(ev => {
           refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
           delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terminée</span>`
         }[order.status] || '');
-        const actionButtons = `${order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2" data-order-id="${order.id}">Voir le reçu</button>` : ''}`;
+        const actionButtons = `${order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2">Voir le reçu</button>` : ''}`;
         return `
           <div class="bg-stone-50 p-4 rounded-lg">
             <div class="flex justify-between items-start">
@@ -1239,198 +1225,91 @@ activityEvents.forEach(ev => {
     const handleLogin = async (e) => {
       e.preventDefault();
       hideAuthError();
-      showLoader(true);
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
-      try {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Erreur de connexion:', error);
+      const { error } = await apiCall(supabaseClient.auth.signInWithPassword({ email, password }));
+      if (error) {
         if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
         else showAuthError(error.message);
-      } finally {
-        showLoader(false);
       }
     };
 
     const handleSignup = async (e) => {
       e.preventDefault();
       hideAuthError();
-      showLoader(true);
       const email = document.getElementById('signup-email').value;
       const password = document.getElementById('signup-password').value;
       const firstName = document.getElementById('signup-firstname').value;
       const lastName = document.getElementById('signup-lastname').value;
-      try {
-        const { error } = await supabaseClient.auth.signUp({
-          email, password, options: { data: { first_name: firstName, last_name: lastName } }
-        });
-        if (error) throw error;
-        showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
-      } catch (error) {
-        console.error("Erreur d'inscription:", error);
+      const { error } = await apiCall(supabaseClient.auth.signUp({
+        email, password, options: { data: { first_name: firstName, last_name: lastName } }
+      }));
+      if (error) {
         showAuthError(error.message);
-      } finally {
-        showLoader(false);
+      } else {
+        showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
       }
     };
 
-    const handleGoogleLogin = async () => { 
-  await supabaseClient.auth.signInWithOAuth({ 
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin
-    }
-  }); 
-};
+    const handleGoogleLogin = async () => {
+      await apiCall(supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      }));
+    };
 
-    const hardSignOut = async () => {
-      try { await supabaseClient.auth.signOut(); } catch(e) {}
+    const handleLogout = async (isAuto = false, message = "Vous avez été déconnecté.") => {
+      await apiCall(supabaseClient.auth.signOut());
+      // Le `onAuthStateChange` avec `SIGNED_OUT` s'occupera du reste.
+      if (isAuto) {
+        showToast(message);
+      }
+    };
+
+    const resetAppState = () => {
       state = { currentUser: null, userProfile: null, products: { sandwichs: [], boissons: [], desserts: [] }, formules: [], orders: [], cart: [], promotions: [] };
-      clearTimeout(logoutTimer);
-      showView('auth-view');
+      document.body.classList.remove('overflow-hidden');
+      [cartModal, orderModal, historyModal, receiptModal, refuseModal, formuleModal, productModal, promoModal].forEach(m => m.classList.add('hidden'));
     };
 
-    const handleLogout = (isTimeout = false) => {
-      hardSignOut();
-      if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
-    };
+    // ===== AUTH STATE CHANGE =====
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event);
+      showLoader(true);
 
-    // Bootstrap auth : ne pas déconnecter au simple refresh
-    const bootstrapAuth = async () => {
-  showLoader(true);
-  
-  try {
-    // Détecter si on revient d'OAuth
-    const urlParams = new URLSearchParams(window.location.search);
-    const isOAuthReturn = urlParams.has('code') || urlParams.has('access_token');
-    
-    if (isOAuthReturn) {
-      console.log('Retour OAuth détecté, traitement en cours...');
-      
-      // Timeout de sécurité pour éviter le spinner infini
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout OAuth')), 10000)
-      );
-      
-      // Attendre la session avec timeout
-      try {
-        await Promise.race([
-          new Promise(resolve => setTimeout(resolve, 2000)),
-          timeoutPromise
-        ]);
-      } catch (error) {
-        console.warn('Timeout lors du traitement OAuth');
+      // Nettoyer l'URL des paramètres OAuth
+      const urlParams = new URLSearchParams(window.location.hash.substring(1)); // PKCE flow uses hash
+      if (urlParams.has('access_token') || urlParams.has('code')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      if (event === 'SIGNED_OUT') {
+        resetAppState();
         showView('auth-view');
         showLoader(false);
         return;
       }
-    }
-    
-    // Récupérer la session
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    
-    if (error) {
-      console.error('Erreur lors de la récupération de session:', error);
-      throw error;
-    }
-    
-    if (session?.user) {
-      console.log('Session trouvée, connexion réussie');
-      
-      // Nettoyer l'URL
-      if (isOAuthReturn) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      
-      state.currentUser = { 
-        ...session.user, 
-        role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-      };
-      
-      resetLogoutTimer();
-      await loadInitialData(false);
-      showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-      renderAll();
-    } else {
-      console.log('Aucune session trouvée');
-      if (isOAuthReturn) {
-        // Si on revient d'OAuth mais pas de session, c'est une erreur
-        showAuthError("Erreur lors de la connexion Google. Veuillez réessayer.");
-      }
-      showView('auth-view');
-    }
-  } catch (error) {
-    console.error('Erreur bootstrap:', error);
-    showView('auth-view');
-    if (error.message !== 'Timeout OAuth') {
-      showAuthError("Erreur de connexion. Veuillez réessayer.");
-    }
-  } finally {
-    hasBootstrapped = true;
-    showLoader(false); // IMPORTANT: toujours cacher le loader
-  }
-};
 
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  console.log('Auth state change:', event, session?.user?.email);
-  
-  // Toujours arrêter le loader en cas d'événement auth
-  showLoader(false);
-  
-  try {
-    switch (event) {
-      case 'SIGNED_IN':
-        if (session?.user) {
-          console.log('Utilisateur connecté');
-          
-          // Nettoyer l'URL
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.has('code')) {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-          
-          state.currentUser = { 
-            ...session.user, 
-            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-          };
-          
-          resetLogoutTimer();
-          showLoader(true); // Montrer le loader pour le chargement des données
-          await loadInitialData(false);
-          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+      if (session?.user) {
+        const userRole = session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer';
+        
+        // Mettre à jour l'état uniquement si l'utilisateur ou son rôle a changé
+        if (!state.currentUser || state.currentUser.id !== session.user.id || state.currentUser.role !== userRole) {
+          state.currentUser = { ...session.user, role: userRole };
+          await loadInitialData();
           renderAll();
-          showLoader(false); // Cacher le loader après chargement
+          showView(userRole === 'admin' ? 'admin-view' : 'customer-view');
         }
-        break;
-        
-      case 'SIGNED_OUT':
-        const { data: { session: s } } = await supabaseClient.auth.getSession();
-        if (!s) { 
-          await hardSignOut(); 
-        }
-        break;
-        
-      case 'TOKEN_REFRESHED':
-      case 'USER_UPDATED':
-        if (session?.user) {
-          state.currentUser = { 
-            ...session.user, 
-            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-          };
-          resetLogoutTimer();
-        }
-        break;
-    }
-  } catch (error) {
-    console.error('Erreur dans onAuthStateChange:', error);
-    showView('auth-view');
-    showAuthError("Erreur de connexion.");
-  } finally {
-    showLoader(false); // Sécurité: toujours cacher le loader
-  }
-});
+      } else {
+        resetAppState();
+        showView('auth-view');
+      }
+      
+      showLoader(false);
+    });
+
 
     // ===== LISTENERS =====
     loginForm.addEventListener('submit', handleLogin);
@@ -1468,32 +1347,22 @@ activityEvents.forEach(ev => {
     forgotPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('forgot-password-email').value;
-      showLoader(true);
-      try {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
-        if (error) throw error;
+      const { error } = await apiCall(supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href }));
+      if (!error) {
         showToast("Un email de réinitialisation a été envoyé.");
         forgotPasswordModal.classList.add('hidden');
-      } catch (error) {
-        console.error('Forgot password error:', error);
-        showToast(`Erreur: ${error.message}`);
-      } finally { showLoader(false); }
+      }
     });
 
     resetPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const newPassword = document.getElementById('reset-password-new').value;
       if (newPassword.length < 6) return showToast("Le mot de passe doit contenir au moins 6 caractères.");
-      showLoader(true);
-      try {
-        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-        if (error) throw error;
+      const { error } = await apiCall(supabaseClient.auth.updateUser({ password: newPassword }));
+      if (!error) {
         showToast("Mot de passe réinitialisé avec succès !");
         resetPasswordModal.classList.add('hidden');
-      } catch (error) {
-        console.error('Reset password error:', error);
-        showToast(`Erreur: ${error.message}`);
-      } finally { showLoader(false); }
+      }
     });
 
     // CUSTOMER
@@ -1504,7 +1373,7 @@ activityEvents.forEach(ev => {
       if (orderBtn) openOrderModal(parseInt(orderBtn.dataset.formuleId, 10));
     });
 
-    // ADMIN: changement d'onglet => refresh des commandes si on ouvre "orders"
+    // ADMIN: changement d\'onglet => refresh des commandes si on ouvre "orders"
     document.addEventListener('click', async e => {
       const adminTab = e.target.closest('.admin-tab');
       if (!adminTab) return;
@@ -1518,10 +1387,8 @@ activityEvents.forEach(ev => {
       document.getElementById(`${tabId}-tab`).classList.remove('hidden');
 
       if (tabId === 'orders') {
-        showLoader(true);
-        await loadInitialData(false);
+        await loadInitialData();
         renderAdminOrders();
-        showLoader(false);
       }
       if (tabId === 'stats') renderStats();
     });
@@ -1534,24 +1401,24 @@ activityEvents.forEach(ev => {
 
       if (confirmBtn) {
         const orderId = confirmBtn.dataset.orderId;
-        const { error } = await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', orderId);
-        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+        const { error } = await apiCall(supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', orderId));
+        if (!error) { await loadInitialData(); renderAdminOrders(); }
       }
       if (refuseBtn) {
         const orderId = refuseBtn.dataset.orderId;
         refuseModal.classList.remove('hidden');
         refuseConfirmBtn.onclick = async () => {
           const reason = refuseReasonInput.value;
-          const { error } = await supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', orderId);
-          if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+          const { error } = await apiCall(supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', orderId));
+          if (!error) { await loadInitialData(); renderAdminOrders(); }
           refuseReasonInput.value = '';
           refuseModal.classList.add('hidden');
         };
       }
       if (deliverBtn) {
         const orderId = deliverBtn.dataset.orderId;
-        const { error } = await supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', orderId);
-        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+        const { error } = await apiCall(supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', orderId));
+        if (!error) { await loadInitialData(); renderAdminOrders(); }
       }
     });
 
@@ -1570,26 +1437,26 @@ activityEvents.forEach(ev => {
     productForm.addEventListener('submit', async e => {
       e.preventDefault();
       const newProduct = { name: document.getElementById('product-name').value, price: parseFloat(document.getElementById('product-price').value), category: document.getElementById('product-category').value };
-      showLoader(true);
-      const { error } = await supabaseClient.from('products').insert(newProduct);
-      if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit ajouté !"); }
-      await loadInitialData(false);
-      renderAdminProducts();
-      productModal.classList.add('hidden');
-      showLoader(false);
+      const { error } = await apiCall(supabaseClient.from('products').insert(newProduct));
+      if (!error) {
+        showToast("Produit ajouté !");
+        await loadInitialData();
+        renderAdminProducts();
+        productModal.classList.add('hidden');
+      }
     });
     adminProductsContainer.addEventListener('click', async e => {
       const deleteBtn = e.target.closest('.delete-product-btn');
       if (deleteBtn) {
         const productId = deleteBtn.dataset.productId;
         showConfirmModal('Supprimer ce produit?', 'Cette action est irréversible.', async () => {
-          showLoader(true);
-          const { error } = await supabaseClient.from('products').delete().eq('id', productId);
-          if (error) showToast(`Erreur: ${error.message}`); else showToast("Produit supprimé.");
-          await loadInitialData(false);
-          renderAdminProducts();
-          renderAdminFormules();
-          showLoader(false);
+          const { error } = await apiCall(supabaseClient.from('products').delete().eq('id', productId));
+          if (!error) {
+            showToast("Produit supprimé.");
+            await loadInitialData();
+            renderAdminProducts();
+            renderAdminFormules();
+          }
         });
       }
     });
@@ -1597,8 +1464,12 @@ activityEvents.forEach(ev => {
       if (e.target.classList.contains('toggle-product-btn')) {
         const { productId } = e.target.dataset;
         const isAvailable = e.target.checked;
-        const { error } = await supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId);
-        if (error) { showToast(`Erreur: ${error.message}`); e.target.checked = !isAvailable; } else { showToast(`Disponibilité mise à jour.`); }
+        const { error } = await apiCall(supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId));
+        if (!error) {
+          showToast(`Disponibilité mise à jour.`);
+        } else {
+          e.target.checked = !isAvailable;
+        }
       }
     });
 
@@ -1633,52 +1504,44 @@ activityEvents.forEach(ev => {
       if (deleteBtn) {
         const formuleId = deleteBtn.dataset.formuleId;
         showConfirmModal('Supprimer cette formule?', 'Cette action est irréversible.', async () => {
-          showLoader(true);
-          await supabaseClient.from('formule_products').delete().eq('formule_id', formuleId);
-          const { error } = await supabaseClient.from('formules').delete().eq('id', formuleId);
-          if (error) showToast(`Erreur: ${error.message}`); else showToast("Formule supprimée.");
-          await loadInitialData(false);
-          renderAdminFormules();
-          showLoader(false);
+          await apiCall(supabaseClient.from('formule_products').delete().eq('formule_id', formuleId));
+          const { error } = await apiCall(supabaseClient.from('formules').delete().eq('id', formuleId));
+          if (!error) {
+            showToast("Formule supprimée.");
+            await loadInitialData();
+            renderAdminFormules();
+          }
         });
       }
     });
     formuleForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      showLoader(true);
       const id_str = document.getElementById('formule-id-input').value;
       const id = id_str ? parseInt(id_str, 10) : null;
       const name = document.getElementById('formule-name').value;
       const price = parseFloat(document.getElementById('formule-price').value);
       const selectedProducts = Array.from(formuleForm.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value, 10));
-      try {
-        if (id) {
-          const { error } = await supabaseClient.from('formules').update({ name, price }).eq('id', id);
-          if (error) throw error;
-          await supabaseClient.from('formule_products').delete().eq('formule_id', id);
-          if (selectedProducts.length > 0) {
-            const toInsert = selectedProducts.map(pid => ({ formule_id: id, product_id: pid }));
-            const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
-            if (insertError) throw insertError;
-          }
-        } else {
-          const { data, error } = await supabaseClient.from('formules').insert({ name, price }).select().single();
-          if (error) throw error;
-          if (selectedProducts.length > 0) {
-            const toInsert = selectedProducts.map(pid => ({ formule_id: data.id, product_id: pid }));
-            const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
-            if (insertError) throw insertError;
-          }
+
+      if (id) {
+        const { error } = await apiCall(supabaseClient.from('formules').update({ name, price }).eq('id', id));
+        if(error) return;
+        await apiCall(supabaseClient.from('formule_products').delete().eq('formule_id', id));
+        if (selectedProducts.length > 0) {
+          const toInsert = selectedProducts.map(pid => ({ formule_id: id, product_id: pid }));
+          await apiCall(supabaseClient.from('formule_products').insert(toInsert));
         }
-        showToast("Formule enregistrée !");
-      } catch (error) {
-        showToast(`Erreur: ${error.message}`); console.error("Error saving formule:", error);
-      } finally {
-        await loadInitialData(false);
-        renderAdminFormules();
-        formuleModal.classList.add('hidden');
-        showLoader(false);
+      } else {
+        const { data, error } = await apiCall(supabaseClient.from('formules').insert({ name, price }).select().single());
+        if(error) return;
+        if (selectedProducts.length > 0) {
+          const toInsert = selectedProducts.map(pid => ({ formule_id: data.id, product_id: pid }));
+          await apiCall(supabaseClient.from('formule_products').insert(toInsert));
+        }
       }
+      showToast("Formule enregistrée !");
+      await loadInitialData();
+      renderAdminFormules();
+      formuleModal.classList.add('hidden');
     });
 
     // Promotions CRUD
@@ -1735,41 +1598,36 @@ activityEvents.forEach(ev => {
       e.preventDefault();
       const descriptionEl = promoForm.querySelector('#promo-description');
       if (!descriptionEl || !descriptionEl.value.trim()) { showToast("La description ne peut pas être vide."); return; }
-      showLoader(true);
+      
       const id = document.getElementById('promo-id-input').value;
       const promoData = { description: descriptionEl.value, discount_percentage: parseFloat(document.getElementById('promo-discount').value) };
       const limitType = promoForm.querySelector('input[name="promo_limit_type"]:checked').value;
-      if (limitType === 'date') { const exp = document.getElementById('promo-expires-at').value; promoData.expires_at = exp || null; promoData.max_orders = null; }
+      if (limitType === 'date') { const exp = document.getElementById('promo-expires-at').value; promoData.expires_at = exp || null; promoData.max_orders = null; } 
       else { const mo = document.getElementById('promo-max-orders').value; promoData.max_orders = mo ? parseInt(mo, 10) : null; promoData.expires_at = null; }
 
       const selectedProducts = Array.from(promoForm.querySelectorAll('input[name="promo_products"]:checked')).map(cb => parseInt(cb.value, 10));
       const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
 
-      try {
-        if (id) {
-          const { error } = await supabaseClient.from('promotions').update(promoData).eq('id', id);
-          if (error) throw error;
-          await supabaseClient.from('promotion_products').delete().eq('promotion_id', id);
-          await supabaseClient.from('promotion_formules').delete().eq('promotion_id', id);
-          if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: id, product_id: pid })));
-          if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: id, formule_id: fid })));
-        } else {
-          const { data, error } = await supabaseClient.from('promotions').insert(promoData).select().single();
-          if (error) throw error;
-          const newPromoId = data.id;
-          if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: newPromoId, product_id: pid })));
-          if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: newPromoId, formule_id: fid })));
-        }
-        showToast("Promotion enregistrée !");
-      } catch (error) {
-        showToast(`Erreur: ${error.message}`); console.error("Error saving promotion:", error);
-      } finally {
-        await loadInitialData(false);
-        renderAdminPromotions();
-        promoModal.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-        showLoader(false);
+      if (id) {
+        const { error } = await apiCall(supabaseClient.from('promotions').update(promoData).eq('id', id));
+        if(error) return;
+        await apiCall(supabaseClient.from('promotion_products').delete().eq('promotion_id', id));
+        await apiCall(supabaseClient.from('promotion_formules').delete().eq('promotion_id', id));
+        if (selectedProducts.length) await apiCall(supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: id, product_id: pid }))));
+        if (selectedFormules.length) await apiCall(supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: id, formule_id: fid }))));
+      } else {
+        const { data, error } = await apiCall(supabaseClient.from('promotions').insert(promoData).select().single());
+        if(error) return;
+        const newPromoId = data.id;
+        if (selectedProducts.length) await apiCall(supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: newPromoId, product_id: pid }))));
+        if (selectedFormules.length) await apiCall(supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: newPromoId, formule_id: fid }))));
       }
+      
+      showToast("Promotion enregistrée !");
+      await loadInitialData();
+      renderAdminPromotions();
+      promoModal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
     });
 
     adminPromosContainer.addEventListener('click', async e => {
@@ -1779,12 +1637,12 @@ activityEvents.forEach(ev => {
       if (deleteBtn) {
         const promoId = deleteBtn.dataset.promoId;
         showConfirmModal('Supprimer cette promotion?', 'Cette action est irréversible.', async () => {
-          showLoader(true);
-          const { error } = await supabaseClient.from('promotions').delete().eq('id', promoId);
-          if (error) showToast(`Erreur: ${error.message}`); else showToast("Promotion supprimée.");
-          await loadInitialData(false);
-          renderAdminPromotions();
-          showLoader(false);
+          const { error } = await apiCall(supabaseClient.from('promotions').delete().eq('id', promoId));
+          if (!error) {
+            showToast("Promotion supprimée.");
+            await loadInitialData();
+            renderAdminPromotions();
+          }
         });
       }
     });
@@ -1797,43 +1655,25 @@ activityEvents.forEach(ev => {
       }
     });
 
-    // Rafraîchit quand l’onglet reprend le focus
-    window.addEventListener('focus', async () => {
-      if (!state.currentUser) return;
-      await loadInitialData(false);
-      if (state.currentUser.role === 'admin') {
-        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
-        if (isOrdersVisible) renderAdminOrders(); else renderAll();
-      } else { renderAll(); }
-    });
-
-    // Rafraîchit quand la page redevient visible
-    document.addEventListener('visibilitychange', async () => {
+    // Rafraîchit quand l\'onglet reprend le focus ou redevient visible
+    const handleVisibilityOrFocus = async () => {
       if (document.hidden || !state.currentUser) return;
-      await loadInitialData(false);
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        await handleLogout(true, "Votre session a expiré.");
+        return;
+      }
+      await loadInitialData();
       if (state.currentUser.role === 'admin') {
         const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
-        if (isOrdersVisible) renderAdminOrders(); else renderAll();
-      } else { renderAll(); }
-    });
-	
-	// Gestion simple de la visibilité
-document.addEventListener('visibilitychange', async () => {
-  if (document.hidden || !state.currentUser) return;
-  
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      await handleLogout();
-    }
-  } catch (error) {
-    console.warn('Vérification de session échouée:', error);
-  }
-});
+        if (isOrdersVisible) renderAdminOrders();
+      } else {
+        renderAll();
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
 
-    // ===== BOOTSTRAP =====
-    await bootstrapAuth();
-    if (state.currentUser) resetLogoutTimer();
   });
   </script>
 </body>
