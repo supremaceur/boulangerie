@@ -15,6 +15,7 @@
     body { font-family: 'Inter', sans-serif; }
     .font-brand { font-family: 'Playfair Display', serif; }
     .font-receipt { font-family: 'Source Code Pro', monospace; }
+
     .toast {
       visibility: hidden; min-width: 250px; margin-left: -125px;
       background-color: #333; color: #fff; text-align: center; border-radius: 8px;
@@ -22,18 +23,26 @@
       opacity: 0; transition: visibility 0s 0.5s, opacity 0.5s linear;
     }
     .toast.show { visibility: visible; opacity: 1; transition: opacity 0.5s linear; }
+
+    /* Scrollbar */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+
     .admin-order-tab { cursor: pointer; padding: 0.75rem 1.25rem; border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; }
     .admin-order-tab.active { border-bottom-color: #d97706; color: #d97706; }
-    /* Promotion modal: hauteur auto (pas limitée), scroll « page » classique */
-    /* On supprime toute contrainte max-h sur la modale promo */
-    #promo-modal .max-h-\[90vh\] { max-height: none; }
+
+    /* ===== Modale Promotions : hauteur auto, pas de max-h sur le conteneur ===== */
+    #promo-modal .modal-shell { max-height: none; }
+    #promo-modal .modal-body { overflow-y: visible; height: auto; }
+
+    /* Mini helper pour cacher/montrer rapidement */
+    .hidden { display: none !important; }
   </style>
 </head>
 <body class="bg-stone-100">
+
   <div id="app" class="max-w-7xl mx-auto">
     <!-- Spinner global -->
     <div id="loader" class="hidden fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
@@ -41,7 +50,7 @@
     </div>
 
     <!-- ===== VIEW: AUTH ===== -->
-    <div id="auth-view" class="min-h-screen flex items-center justify-center p-4">
+    <div id="auth-view" class="hidden min-h-screen flex items-center justify-center p-4">
       <div class="w-full max-w-md rounded-2xl shadow-lg p-8" style="background-color: #F9F4EA;">
         <div class="text-center mb-8">
           <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="mx-auto h-48 w-auto">
@@ -51,9 +60,8 @@
 
         <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert"></div>
 
-        <!-- Auth Forms Container -->
         <div id="auth-forms">
-          <!-- Login Form -->
+          <!-- Login -->
           <form id="login-form">
             <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Connexion</h2>
             <div class="mb-4">
@@ -73,7 +81,7 @@
             </p>
           </form>
 
-          <!-- Signup Form -->
+          <!-- Signup -->
           <form id="signup-form" class="hidden">
             <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Inscription</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -205,7 +213,7 @@
           </nav>
         </aside>
 
-        <!-- Main Admin Content -->
+        <!-- Main -->
         <main class="flex-1 p-6 sm:p-10 bg-stone-100">
           <!-- Orders Tab -->
           <div id="orders-tab" class="admin-content">
@@ -316,31 +324,17 @@
           <p>SIRET: 931 528 236</p>
         </div>
         <div class="border-t border-b border-dashed border-black my-2 py-2">
-          <div class="flex justify-between">
-            <span>Date:</span><span id="receipt-date"></span>
-          </div>
-          <div class="flex justify-between">
-            <span>Ticket No:</span><span id="receipt-order-id"></span>
-          </div>
+          <div class="flex justify-between"><span>Date:</span><span id="receipt-date"></span></div>
+          <div class="flex justify-between"><span>Ticket No:</span><span id="receipt-order-id"></span></div>
         </div>
         <div id="receipt-items" class="my-2 space-y-1"></div>
         <div class="border-t border-dashed border-black pt-2">
-          <div id="receipt-promo-line" class="hidden flex justify-between">
-            <span>REMISE</span><span id="receipt-discount"></span>
-          </div>
-          <div class="flex justify-between">
-            <span>SOUS-TOTAL HT</span><span id="receipt-subtotal"></span>
-          </div>
-          <div class="flex justify-between">
-            <span>TVA (20%)</span><span id="receipt-tva"></span>
-          </div>
-          <div class="flex justify-between font-bold text-lg mt-2">
-            <span>TOTAL TTC</span><span id="receipt-total"></span>
-          </div>
+          <div id="receipt-promo-line" class="hidden flex justify-between"><span>REMISE</span><span id="receipt-discount"></span></div>
+          <div class="flex justify-between"><span>SOUS-TOTAL HT</span><span id="receipt-subtotal"></span></div>
+          <div class="flex justify-between"><span>TVA (20%)</span><span id="receipt-tva"></span></div>
+          <div class="flex justify-between font-bold text-lg mt-2"><span>TOTAL TTC</span><span id="receipt-total"></span></div>
         </div>
-        <div class="text-center mt-6 text-xs">
-          <p>A bientot dans notre boulangerie</p>
-        </div>
+        <div class="text-center mt-6 text-xs"><p>A bientot dans notre boulangerie</p></div>
       </div>
       <div class="p-4 bg-stone-100 flex gap-4">
         <button id="receipt-close-btn" class="w-full bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Fermer</button>
@@ -415,14 +409,14 @@
     </div>
   </div>
 
-  <!-- >>> PROMO MODAL : hauteur auto, scroll par la page (pas de max-h) <<< -->
+  <!-- PROMO MODAL : hauteur auto -->
   <div id="promo-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col"><!-- max-h supprimé -->
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col modal-shell">
       <div class="p-6 border-b border-stone-200">
         <h3 id="promo-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une promotion</h3>
       </div>
       <form id="promo-form" class="flex flex-col h-full">
-        <div class="p-6 space-y-6 overflow-y-visible flex-grow h-auto"><!-- overflow Y visible -->
+        <div class="p-6 space-y-6 modal-body flex-grow">
           <input type="hidden" id="promo-id-input">
           <div>
             <label for="promo-description" class="block text-sm font-medium text-stone-600 mb-1">Description</label>
@@ -468,1239 +462,1322 @@
   <!-- ===== TOAST ===== -->
   <div id="toast" class="toast"></div>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', async () => {
-    const SUPABASE_URL = 'https://zliusqwhpqzszjetvrpx.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaXVzcXdocHF6c3pqZXR2cnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNjE2MzgsImV4cCI6MjA3MjczNzYzOH0.Zb3InrWND0YpIUNHSHKDdPUxQzgihQOB2491VRb994E';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,  // garde la session au refresh
-        autoRefreshToken: true,
-        detectSessionInUrl: true
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  /* ========= SUPABASE ========= */
+  const SUPABASE_URL = 'https://zliusqwhpqzszjetvrpx.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaXVzcXdocHF6c3pqZXR2cnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNjE2MzgsImV4cCI6MjA3MjczNzYzOH0.Zb3InrWND0YpIUNHSHKDdPUxQzgihQOB2491VRb994E';
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
+
+  /* ========= STATE ========= */
+  let state = {
+    currentUser: null,
+    userProfile: null,
+    products: { sandwichs: [], boissons: [], desserts: [] },
+    formules: [],
+    orders: [],
+    cart: [],
+    promotions: []
+  };
+
+  let chartInstances = {};
+  let logoutTimer;
+  const LOGOUT_TIME = 10 * 60 * 1000; // 10 minutes
+  let hasBootstrapped = false;
+  let ordersChannel = null;
+
+  /* ========= DOM ========= */
+  const loader = document.getElementById('loader');
+  const views = {
+    auth: document.getElementById('auth-view'),
+    customer: document.getElementById('customer-view'),
+    admin: document.getElementById('admin-view')
+  };
+  const authError = document.getElementById('auth-error');
+
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const showSignupBtn = document.getElementById('show-signup-btn');
+  const showLoginBtn = document.getElementById('show-login-btn');
+
+  const googleLoginBtn = document.getElementById('google-login-btn');
+  const logoutBtns = [
+    document.getElementById('logout-btn-customer'),
+    document.getElementById('logout-btn-admin'),
+    document.getElementById('logout-btn-customer-mobile')
+  ];
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const welcomeMessage = document.getElementById('welcome-message');
+  const welcomeMessageMobile = document.getElementById('welcome-message-mobile');
+
+  const cartBtns = [document.getElementById('cart-btn-desktop'), document.getElementById('cart-btn-mobile')];
+  const cartModal = document.getElementById('cart-modal');
+
+  const formulesContainer = document.getElementById('formules-container');
+  const orderModal = document.getElementById('order-modal');
+  const modalBody = document.getElementById('modal-body');
+  const modalTitle = document.getElementById('modal-title');
+  const modalTotalPrice = document.getElementById('modal-total-price');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const modalSubmitBtn = document.getElementById('modal-submit-btn');
+
+  const historyBtns = [document.getElementById('history-btn'), document.getElementById('history-btn-mobile')];
+  const historyModal = document.getElementById('history-modal');
+  const historyModalBody = document.getElementById('history-modal-body');
+  const historyModalCloseBtn = document.getElementById('history-modal-close-btn');
+
+  const adminTabs = document.querySelectorAll('.admin-tab');
+  const adminOrderTabs = document.querySelectorAll('.admin-order-tab');
+  const adminOrdersPendingContainer = document.getElementById('admin-orders-pending-container');
+  const adminOrdersCompletedContainer = document.getElementById('admin-orders-completed-container');
+  const ordersTabContent = document.getElementById('orders-tab');
+
+  const adminProductsContainer = document.getElementById('admin-products-container');
+  const addProductBtn = document.getElementById('add-product-btn');
+
+  const adminFormulesContainer = document.getElementById('admin-formules-container');
+  const addFormuleBtn = document.getElementById('add-formule-btn');
+  const formuleModal = document.getElementById('formule-modal');
+  const formuleForm = document.getElementById('formule-form');
+  const formuleModalCloseBtn = document.getElementById('formule-modal-close-btn');
+
+  const productModal = document.getElementById('product-modal');
+  const productForm = document.getElementById('product-form');
+  const productModalCloseBtn = document.getElementById('product-modal-close-btn');
+
+  const confirmModal = document.getElementById('confirm-modal');
+  const confirmModalTitle = document.getElementById('confirm-modal-title');
+  const confirmModalText = document.getElementById('confirm-modal-text');
+  const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+  const confirmOkBtn = document.getElementById('confirm-ok-btn');
+
+  const refuseModal = document.getElementById('refuse-modal');
+  const refuseReasonInput = document.getElementById('refuse-reason');
+  const refuseCancelBtn = document.getElementById('refuse-cancel-btn');
+  const refuseConfirmBtn = document.getElementById('refuse-confirm-btn');
+
+  const receiptModal = document.getElementById('receipt-modal');
+  const receiptCloseBtn = document.getElementById('receipt-close-btn');
+
+  const promoModal = document.getElementById('promo-modal');
+  const promoForm = document.getElementById('promo-form');
+  const promoModalCloseBtn = document.getElementById('promo-modal-close-btn');
+  const addPromoBtn = document.getElementById('add-promo-btn');
+  const adminPromosContainer = document.getElementById('admin-promos-container');
+
+  const toast = document.getElementById('toast');
+
+  /* ========= HELPERS ========= */
+  const showLoader = (show) => loader.classList.toggle('hidden', !show);
+
+  const showView = (name) => {
+    Object.values(views).forEach(v => v.classList.add('hidden'));
+    if (views[name]) views[name].classList.remove('hidden');
+  };
+
+  const showToast = (message) => {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  };
+
+  const showAuthError = (message) => {
+    authError.textContent = message;
+    authError.classList.remove('hidden');
+  };
+  const hideAuthError = () => authError.classList.add('hidden');
+
+  const getProduct = (id) => Object.values(state.products).flat().find(p => p.id === id);
+  const getFormule = (id) => state.formules.find(f => f.id === id);
+
+  const showConfirmModal = (title, text, onConfirm) => {
+    confirmModalTitle.textContent = title;
+    confirmModalText.textContent = text;
+    confirmModal.classList.remove('hidden');
+    confirmOkBtn.onclick = () => { onConfirm(); confirmModal.classList.add('hidden'); };
+    confirmCancelBtn.onclick = () => confirmModal.classList.add('hidden');
+  };
+
+  const cleanOAuthHashFromUrl = () => {
+    // Nettoie l'URL (évite les boucles si hash d'OAuth/récupération)
+    if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    }
+  };
+
+  /* ========= INACTIVITÉ ========= */
+  const resetLogoutTimer = () => {
+    clearTimeout(logoutTimer);
+    logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
+  };
+  ['mousemove','mousedown','keypress','scroll','touchstart'].forEach(ev => document.addEventListener(ev, resetLogoutTimer, false));
+
+  /* ========= DATA LOADING ========= */
+  async function loadInitialData(show = true) {
+    if (show) showLoader(true);
+    try {
+      if (state.currentUser) {
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', state.currentUser.id)
+          .single();
+        if (error && error.code !== 'PGRST116') throw error;
+        state.userProfile = data || null;
       }
-    });
 
-    // ===== STATE =====
-    let state = {
-      currentUser: null,
-      userProfile: null,
-      products: { sandwichs: [], boissons: [], desserts: [] },
-      formules: [],
-      orders: [],
-      cart: [],
-      promotions: []
-    };
+      const { data: productsData, error: productsError } = await supabaseClient.from('products').select('*');
+      if (productsError) throw productsError;
+      state.products = { sandwichs: [], boissons: [], desserts: [] };
+      productsData.forEach(p => {
+        if (!state.products[p.category]) state.products[p.category] = [];
+        state.products[p.category].push(p);
+      });
 
-    let chartInstances = {};
-    let logoutTimer;
-    const LOGOUT_TIME = 10 * 60 * 1000; // 10 min
-    let hasBootstrapped = false;
-
-    // ===== DOM =====
-    const loader = document.getElementById('loader');
-    const views = { auth: document.getElementById('auth-view'), customer: document.getElementById('customer-view'), admin: document.getElementById('admin-view') };
-    const authError = document.getElementById('auth-error');
-
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
-    const showSignupBtn = document.getElementById('show-signup-btn');
-    const showLoginBtn = document.getElementById('show-login-btn');
-    const googleLoginBtn = document.getElementById('google-login-btn');
-    const logoutBtns = [document.getElementById('logout-btn-customer'), document.getElementById('logout-btn-admin'), document.getElementById('logout-btn-customer-mobile')];
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const welcomeMessage = document.getElementById('welcome-message');
-    const welcomeMessageMobile = document.getElementById('welcome-message-mobile');
-
-    const cartBtns = [document.getElementById('cart-btn-desktop'), document.getElementById('cart-btn-mobile')];
-    const cartModal = document.getElementById('cart-modal');
-    const cartCloseBtn = document.getElementById('cart-close-btn');
-
-    const formulesContainer = document.getElementById('formules-container');
-    const orderModal = document.getElementById('order-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalBody = document.getElementById('modal-body');
-    const modalTotalPrice = document.getElementById('modal-total-price');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
-    const modalSubmitBtn = document.getElementById('modal-submit-btn');
-    const historyBtns = [document.getElementById('history-btn'), document.getElementById('history-btn-mobile')];
-    const historyModal = document.getElementById('history-modal');
-    const historyModalBody = document.getElementById('history-modal-body');
-    const historyModalCloseBtn = document.getElementById('history-modal-close-btn');
-    const adminTabs = document.querySelectorAll('.admin-tab');
-    const adminContents = document.querySelectorAll('.admin-content');
-    const adminOrdersPendingContainer = document.getElementById('admin-orders-pending-container');
-    const adminOrdersCompletedContainer = document.getElementById('admin-orders-completed-container');
-    const adminOrderTabs = document.querySelectorAll('.admin-order-tab');
-    const ordersTabContent = document.getElementById('orders-tab');
-    const adminProductsContainer = document.getElementById('admin-products-container');
-    const addProductBtn = document.getElementById('add-product-btn');
-    const adminFormulesContainer = document.getElementById('admin-formules-container');
-    const addFormuleBtn = document.getElementById('add-formule-btn');
-    const refuseModal = document.getElementById('refuse-modal');
-    const refuseReasonInput = document.getElementById('refuse-reason');
-    const refuseCancelBtn = document.getElementById('refuse-cancel-btn');
-    const refuseConfirmBtn = document.getElementById('refuse-confirm-btn');
-    const formuleModal = document.getElementById('formule-modal');
-    const formuleForm = document.getElementById('formule-form');
-    const formuleModalTitle = document.getElementById('formule-modal-title');
-    const formuleModalCloseBtn = document.getElementById('formule-modal-close-btn');
-    const productModal = document.getElementById('product-modal');
-    const productForm = document.getElementById('product-form');
-    const productModalCloseBtn = document.getElementById('product-modal-close-btn');
-    const confirmModal = document.getElementById('confirm-modal');
-    const confirmModalTitle = document.getElementById('confirm-modal-title');
-    const confirmModalText = document.getElementById('confirm-modal-text');
-    const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
-    const confirmOkBtn = document.getElementById('confirm-ok-btn');
-    const toast = document.getElementById('toast');
-    const receiptModal = document.getElementById('receipt-modal');
-    const receiptCloseBtn = document.getElementById('receipt-close-btn');
-    const forgotPasswordLink = document.getElementById('forgot-password-link');
-    const forgotPasswordModal = document.getElementById('forgot-password-modal');
-    const forgotPasswordForm = document.getElementById('forgot-password-form');
-    const forgotPasswordModalCloseBtn = document.getElementById('forgot-password-modal-close-btn');
-    const resetPasswordModal = document.getElementById('reset-password-modal');
-    const resetPasswordForm = document.getElementById('reset-password-form');
-    const promoModal = document.getElementById('promo-modal');
-    const promoForm = document.getElementById('promo-form');
-    const promoModalCloseBtn = document.getElementById('promo-modal-close-btn');
-    const addPromoBtn = document.getElementById('add-promo-btn');
-    const adminPromosContainer = document.getElementById('admin-promos-container');
-
-    // ===== HELPERS =====
-    const showLoader = (show) => { loader.classList.toggle('hidden', !show); };
-    const showView = (viewId) => {
-      Object.values(views).forEach(v => v.classList.add('hidden'));
-      views[viewId.replace('-view', '')]?.classList.remove('hidden');
-    };
-    const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); };
-    const getProduct = (id) => Object.values(state.products).flat().find(p => p.id === id);
-    const getFormule = (id) => state.formules.find(f => f.id === id);
-    const showAuthError = (message) => { authError.textContent = message; authError.classList.remove('hidden'); };
-    const hideAuthError = () => { authError.classList.add('hidden'); };
-    const showConfirmModal = (title, text, onConfirm) => {
-      confirmModalTitle.textContent = title;
-      confirmModalText.textContent = text;
-      confirmModal.classList.remove('hidden');
-      confirmOkBtn.onclick = () => { onConfirm(); confirmModal.classList.add('hidden'); };
-    };
-
-    const updateCartBadge = () => {
-      const cartBadge = document.getElementById('cart-badge');
-      const cartItemCount = state.cart.reduce((total, item) => total + item.quantity, 0);
-      if (cartItemCount > 0) { cartBadge.textContent = cartItemCount; cartBadge.classList.remove('hidden'); }
-      else { cartBadge.classList.add('hidden'); }
-    };
-
-    // ===== INACTIVITÉ =====
-    const resetLogoutTimer = () => {
-      clearTimeout(logoutTimer);
-      logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
-    };
-    ['mousemove','mousedown','keypress','scroll','touchstart'].forEach(ev => document.addEventListener(ev, resetLogoutTimer, false));
-
-    // ===== DATA =====
-    async function loadInitialData(showLoaderIndicator = true) {
-      if (showLoaderIndicator) showLoader(true);
-      try {
-        // Profile
-        if (state.currentUser) {
-          const { data, error } = await supabaseClient.from('profiles').select('first_name, last_name').eq('id', state.currentUser.id).single();
-          if (error && error.code !== 'PGRST116') throw error;
-          state.userProfile = data;
-        }
-        // Products
-        const { data: productsData, error: productsError } = await supabaseClient.from('products').select('*');
-        if (productsError) throw productsError;
-        state.products = { sandwichs: [], boissons: [], desserts: [] };
-        productsData.forEach(p => {
-          if (!state.products[p.category]) state.products[p.category] = [];
-          state.products[p.category].push(p);
-        });
-        // Formules + eligible
-        const { data: formulesData, error: formulesError } = await supabaseClient.from('formules').select('*, formule_products(product_id)');
-        if (formulesError) throw formulesError;
-        state.formules = formulesData.map(f => {
-          const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
-          if (f.formule_products) {
-            f.formule_products.forEach(fp => {
-              const product = getProduct(fp.product_id);
-              if (product) {
-                if (!eligible_products[product.category]) eligible_products[product.category] = [];
-                eligible_products[product.category].push(product.id);
-              }
-            });
+      const { data: formulesData, error: formulesError } = await supabaseClient
+        .from('formules')
+        .select('*, formule_products(product_id)');
+      if (formulesError) throw formulesError;
+      state.formules = formulesData.map(f => {
+        const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
+        (f.formule_products || []).forEach(fp => {
+          const product = getProduct(fp.product_id);
+          if (product) {
+            if (!eligible_products[product.category]) eligible_products[product.category] = [];
+            eligible_products[product.category].push(product.id);
           }
-          return { ...f, eligible_products };
         });
-        // Orders
-        if (state.currentUser) {
-          let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
-          if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
-          const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
-          if (ordersError) throw ordersError;
-          state.orders = ordersData;
-        }
-        // Promotions
-        const { data: promosData, error: promosError } = await supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)');
-        if (promosError) throw promosError;
-        state.promotions = promosData;
-        // usage_count
-        for (const promo of state.promotions) {
-          const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
-          if (!countError) promo.usage_count = count;
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        showToast(`Erreur de chargement: ${error.message}`);
-      } finally {
-        if (showLoaderIndicator) showLoader(false);
+        return { ...f, eligible_products };
+      });
+
+      if (state.currentUser) {
+        let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
+        if (state.currentUser.role !== 'admin') query = query.eq('user_id', state.currentUser.id);
+        const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
+        if (ordersError) throw ordersError;
+        state.orders = ordersData;
       }
+
+      const { data: promosData, error: promosError } = await supabaseClient
+        .from('promotions')
+        .select('*, promotion_products(product_id), promotion_formules(formule_id)');
+      if (promosError) throw promosError;
+      state.promotions = promosData;
+
+      // usage_count
+      for (const promo of state.promotions) {
+        const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
+        if (!countError) promo.usage_count = count;
+      }
+    } catch (err) {
+      console.error('loadInitialData error:', err);
+      showToast(`Erreur de chargement: ${err.message}`);
+    } finally {
+      if (show) showLoader(false);
+    }
+  }
+
+  /* ========= RENDER ========= */
+  const updateCartBadge = () => {
+    const cartBadge = document.getElementById('cart-badge');
+    const count = state.cart.reduce((t, i) => t + i.quantity, 0);
+    if (count > 0) { cartBadge.textContent = count; cartBadge.classList.remove('hidden'); }
+    else { cartBadge.classList.add('hidden'); }
+  };
+
+  const renderProducts = () => {
+    const container = document.getElementById('products-container');
+    container.innerHTML = Object.entries(state.products).map(([category, products]) => {
+      if (!products.length) return '';
+      const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+      const cards = products.filter(p => p.available).map(p => `
+        <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
+          <div class="p-4 flex-grow">
+            <p class="font-semibold text-stone-800">${p.name}</p>
+            <p class="text-stone-500 mt-1">${parseFloat(p.price).toFixed(2)}€</p>
+          </div>
+          <div class="p-4 border-t border-stone-100">
+            <button class="add-to-cart-btn bg-amber-100 text-amber-800 font-bold py-2 px-4 rounded-lg hover:bg-amber-200 transition w-full" data-product-id="${p.id}">Ajouter</button>
+          </div>
+        </div>`).join('');
+      if (!cards) return '';
+      return `<div><h3 class="text-xl font-bold text-stone-700 mb-4">${categoryName}</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${cards}</div></div>`;
+    }).join('');
+  };
+
+  const renderFormules = () => {
+    formulesContainer.innerHTML = state.formules.map(formule => {
+      const includedCategories = Object.keys(formule.eligible_products)
+        .filter(cat => (formule.eligible_products[cat] || []).length)
+        .map(cat => cat.charAt(0).toUpperCase() + cat.slice(1, -1))
+        .join(' + ');
+
+      const details = Object.entries(formule.eligible_products).map(([category, ids]) => {
+        if (!ids?.length) return '';
+        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+        const list = ids.map(id => {
+          const p = getProduct(id);
+          return p && p.available ? `<li class="text-stone-600">${p.name}</li>` : '';
+        }).filter(Boolean).join('');
+        if (!list) return '';
+        return `<div class="mt-3"><h4 class="font-semibold text-stone-700">${categoryName} inclus :</h4><ul class="list-disc list-inside ml-2 text-sm">${list}</ul></div>`;
+      }).join('');
+
+      return `
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
+          <div class="p-6">
+            <h3 class="text-2xl font-bold text-stone-800">${formule.name}</h3>
+            <p class="text-stone-500 mt-1 font-semibold text-amber-700">${includedCategories}</p>
+            <div class="mt-4 text-3xl font-bold text-amber-600">${parseFloat(formule.price).toFixed(2)}€</div>
+          </div>
+          <div class="p-6 border-t border-stone-200 bg-stone-50/50 flex-grow">${details}</div>
+          <div class="p-6 bg-white mt-auto">
+            <button data-formule-id="${formule.id}" class="order-btn w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Commander</button>
+          </div>
+        </div>`;
+    }).join('');
+  };
+
+  const renderAll = () => {
+    if (!state.currentUser) return;
+    if (state.currentUser.role === 'admin') {
+      renderAdminOrders();
+      renderAdminProducts();
+      renderAdminFormules();
+      renderAdminPromotions();
+      renderStats();
+    } else {
+      renderFormules();
+      renderProducts();
+      const welcomeText = `Bonjour, ${state.userProfile?.first_name || 'Client'} !`;
+      welcomeMessage.textContent = welcomeText;
+      welcomeMessageMobile.textContent = welcomeText;
+    }
+  };
+
+  const renderCart = () => {
+    const cartBody = document.getElementById('cart-body');
+    const cartFooter = document.getElementById('cart-footer');
+
+    if (!state.cart.length) {
+      cartBody.innerHTML = '<p class="text-center text-stone-500">Votre panier est vide.</p>';
+      cartFooter.innerHTML = '';
+      return;
     }
 
-    // ===== RENDER (identiques à ta version, conservés) =====
-    const renderProducts = () => {
-      const productsContainer = document.getElementById('products-container');
-      productsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
-        if (products.length === 0) return '';
-        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-        const productsHtml = products.filter(p => p.available).map(p => `
-          <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
-            <div class="p-4 flex-grow">
-              <p class="font-semibold text-stone-800">${p.name}</p>
-              <p class="text-stone-500 mt-1">${parseFloat(p.price).toFixed(2)}€</p>
-            </div>
-            <div class="p-4 border-t border-stone-100">
-              <button class="add-to-cart-btn bg-amber-100 text-amber-800 font-bold py-2 px-4 rounded-lg hover:bg-amber-200 transition w-full" data-product-id="${p.id}">Ajouter</button>
-            </div>
-          </div>`).join('');
-        if (!productsHtml) return '';
-        return `<div><h3 class="text-xl font-bold text-stone-700 mb-4">${categoryName}</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${productsHtml}</div></div>`;
-      }).join('');
-    };
-
-    const renderFormules = () => {
-      formulesContainer.innerHTML = state.formules.map(formule => {
-        const includedCategories = Object.keys(formule.eligible_products)
-          .filter(cat => formule.eligible_products[cat] && formule.eligible_products[cat].length > 0)
-          .map(cat => cat.charAt(0).toUpperCase() + cat.slice(1, -1))
-          .join(' + ');
-
-        const productsDetailsHtml = Object.entries(formule.eligible_products).map(([category, productIds]) => {
-          if (!productIds || productIds.length === 0) return '';
-          const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-          const productList = productIds.map(id => {
-            const product = getProduct(id);
-            return product && product.available ? `<li class="text-stone-600">${product.name}</li>` : '';
-          }).filter(Boolean).join('');
-          if (!productList) return '';
-          return `<div class="mt-3"><h4 class="font-semibold text-stone-700">${categoryName} inclus :</h4><ul class="list-disc list-inside ml-2 text-sm">${productList}</ul></div>`;
-        }).join('');
-
+    cartBody.innerHTML = state.cart.map((item, index) => {
+      if (item.type === 'product') {
         return `
-          <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
-            <div class="p-6">
-              <h3 class="text-2xl font-bold text-stone-800">${formule.name}</h3>
-              <p class="text-stone-500 mt-1 font-semibold text-amber-700">${includedCategories}</p>
-              <div class="mt-4 text-3xl font-bold text-amber-600">${parseFloat(formule.price).toFixed(2)}€</div>
-            </div>
-            <div class="p-6 border-t border-stone-200 bg-stone-50/50 flex-grow">${productsDetailsHtml}</div>
-            <div class="p-6 bg-white mt-auto">
-              <button data-formule-id="${formule.id}" class="order-btn w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Commander</button>
-            </div>
-          </div>`;
-      }).join('');
-    };
-
-    const renderAll = () => {
-      if (!state.currentUser) return;
-      if (state.currentUser.role === 'admin') {
-        renderAdminOrders();
-        renderAdminProducts();
-        renderAdminFormules();
-        renderAdminPromotions();
-        renderStats();
-      } else {
-        renderFormules();
-        renderProducts();
-        const welcomeText = `Bonjour, ${state.userProfile?.first_name || 'Client'} !`;
-        welcomeMessage.textContent = welcomeText;
-        welcomeMessageMobile.textContent = welcomeText;
-      }
-    };
-
-    const addProductToCart = (productId) => {
-      const product = getProduct(productId);
-      if (!product) return;
-      const cartItem = state.cart.find(item => item.type === 'product' && item.product.id === productId);
-      if (cartItem) cartItem.quantity++; else state.cart.push({ type: 'product', product: product, quantity: 1 });
-      updateCartBadge();
-      showToast(`${product.name} a été ajouté au panier.`);
-    };
-
-    const removeFromCart = (cartItemIndex) => {
-      if (cartItemIndex > -1 && cartItemIndex < state.cart.length) {
-        state.cart.splice(cartItemIndex, 1);
-        updateCartBadge();
-        renderCart();
-      }
-    };
-
-    const renderCart = () => {
-      const cartBody = document.getElementById('cart-body');
-      const cartFooter = document.getElementById('cart-footer');
-
-      if (state.cart.length === 0) {
-        cartBody.innerHTML = '<p class="text-center text-stone-500">Votre panier est vide.</p>';
-        cartFooter.innerHTML = '';
-        return;
-      }
-
-      cartBody.innerHTML = state.cart.map((item, index) => {
-        if (item.type === 'product') {
-          return `
-            <div class="flex justify-between items-center py-2 border-b border-stone-100">
-              <div>
-                <p class="font-semibold">${item.product.name}</p>
-                <p class="text-sm text-stone-500">${item.quantity} x ${parseFloat(item.product.price).toFixed(2)}€</p>
-              </div>
-              <div class="flex items-center gap-4">
-                <span class="font-semibold">${(item.quantity * item.product.price).toFixed(2)}€</span>
-                <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
-              </div>
-            </div>`;
-        } else if (item.type === 'formule') {
-          const productsList = item.selectedProducts.map(p => `<li>${p.name}</li>`).join('');
-          return `
-            <div class="py-2 border-b border-stone-100">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-semibold">${item.formule.name}</p>
-                  <ul class="text-sm text-stone-500 list-disc list-inside pl-2">${productsList}</ul>
-                </div>
-                <div class="flex items-center gap-4">
-                  <span class="font-semibold">${(item.quantity * item.formule.price).toFixed(2)}€</span>
-                  <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
-                </div>
-              </div>
-            </div>`;
-        }
-      }).join('');
-
-      const subtotal = state.cart.reduce((total, item) => {
-        const price = item.type === 'product' ? item.product.price : item.formule.price;
-        return total + (item.quantity * price);
-      }, 0);
-
-      const applicablePromo = findApplicablePromotion(state.cart);
-      let discountAmount = 0;
-      let finalTotal = subtotal;
-
-      let promoHtml = '';
-      if (applicablePromo) {
-        discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
-        finalTotal = subtotal - discountAmount;
-        promoHtml = `
-          <div class="flex justify-between items-center text-green-600">
-            <span>Promotion: ${applicablePromo.description}</span>
-            <span>-${discountAmount.toFixed(2)}€</span>
-          </div>`;
-      }
-
-      const timeSlots = [];
-      for (let h = 11; h <= 14; h++) {
-        for (let m = 0; m < 60; m += 15) {
-          if (h === 14 && m > 0) continue;
-          const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-          timeSlots.push(time);
-        }
-      }
-      const timeSelectorHtml = `
-        <div class="mt-4">
-          <label for="cart-pickup-time" class="block text-lg font-semibold text-stone-700 mb-2">Heure de retrait</label>
-          <select id="cart-pickup-time" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
-            ${timeSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
-          </select>
-        </div>
-      `;
-
-      cartFooter.innerHTML = `
-        <div class="flex justify-between items-center"><span>Sous-total:</span><span>${subtotal.toFixed(2)}€</span></div>
-        ${promoHtml}
-        <div class="flex justify-between items-center font-bold text-xl my-4"><span>Total:</span><span>${finalTotal.toFixed(2)}€</span></div>
-        ${timeSelectorHtml}
-        <button id="checkout-btn" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition mt-4">Valider la commande</button>
-      `;
-    };
-
-    const handleCheckout = async () => {
-      if (state.cart.length === 0) return showToast("Votre panier est vide.");
-      showLoader(true);
-      try {
-        const subtotal = state.cart.reduce((total, item) => {
-          const price = item.type === 'product' ? item.product.price : item.formule.price;
-          return total + (item.quantity * price);
-        }, 0);
-
-        const applicablePromo = findApplicablePromotion(state.cart);
-        let discountAmount = 0;
-        let finalTotal = subtotal;
-        let promoId = null;
-        if (applicablePromo) {
-          discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
-          finalTotal = subtotal - discountAmount;
-          promoId = applicablePromo.id;
-        }
-
-        const pickupTime = document.getElementById('cart-pickup-time').value;
-
-        const { data: orderData, error: orderError } = await supabaseClient.from('orders').insert({
-          user_id: state.currentUser.id,
-          total_price: finalTotal,
-          pickup_time: pickupTime,
-          status: 'pending',
-          promotion_id: promoId,
-          discount_amount: discountAmount
-        }).select().single();
-        if (orderError) throw orderError;
-
-        const orderItemsToInsert = state.cart.map(item => {
-          if (item.type === 'product') {
-            return { order_id: orderData.id, product_id: item.product.id, quantity: item.quantity, price: item.product.price, category: item.product.category };
-          } else {
-            return { order_id: orderData.id, formule_id: item.formule.id, quantity: item.quantity, price: item.formule.price, description: item.selectedProducts.map(p => p.name).join(', '), category: 'formule' };
-          }
-        });
-
-        const { error: itemsError } = await supabaseClient.from('order_items').insert(orderItemsToInsert);
-        if (itemsError) throw itemsError;
-
-        state.cart = [];
-        updateCartBadge();
-        renderCart();
-        cartModal.classList.add('hidden');
-        await loadInitialData(false);
-        renderAll();
-        showToast("Commande passée avec succès !");
-      } catch (error) {
-        console.error('Checkout error:', error);
-        showToast(`Erreur lors de la commande: ${error.message}`);
-      } finally {
-        showLoader(false);
-      }
-    };
-
-    const findApplicablePromotion = (cart) => {
-      let bestPromo = null;
-      if (!state.promotions || state.promotions.length === 0) return null;
-      const now = new Date();
-      for (const promo of state.promotions) {
-        if (promo.expires_at && new Date(promo.expires_at) < now) continue;
-        if (promo.max_orders && promo.usage_count >= promo.max_orders) continue;
-        let isEligible = false;
-        for (const item of cart) {
-          if (item.type === 'product') {
-            if (promo.promotion_products?.some(pp => pp.product_id === item.product.id)) { isEligible = true; break; }
-          } else if (item.type === 'formule') {
-            if (promo.promotion_formules?.some(pf => pf.formule_id === item.formule.id)) { isEligible = true; break; }
-          }
-        }
-        if (isEligible) {
-          if (!bestPromo || promo.discount_percentage > bestPromo.discount_percentage) bestPromo = promo;
-        }
-      }
-      return bestPromo;
-    };
-
-    // ===== RENDER ADMIN =====
-    const renderAdminOrders = () => {
-      const pendingOrders = state.orders.filter(o => ['pending', 'confirmed'].includes(o.status)).sort((a, b) => a.pickup_time.localeCompare(b.pickup_time));
-      const completedOrders = state.orders.filter(o => ['refused', 'delivered'].includes(o.status));
-      const statusBadge = (status) => ({
-        pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
-        confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
-        refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
-        delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Livrée</span>`
-      }[status] || '');
-
-      const card = (order) => {
-        const itemsHtml = order.order_items.map(item => {
-          if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
-          if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description || ''})</li>`;
-          return '';
-        }).join('');
-        let actions = '';
-        if (order.status === 'pending') {
-          actions = `
-            <div class="mt-4 flex gap-3">
-              <button class="confirm-order-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Accepter</button>
-              <button class="refuse-order-btn flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Refuser</button>
-            </div>`;
-        } else if (order.status === 'confirmed') {
-          actions = `
-            <div class="mt-4">
-              <button class="deliver-order-btn w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Marquer comme livrée</button>
-            </div>`;
-        }
-        return `
-          <div class="bg-white rounded-xl shadow p-5">
-            <div class="flex flex-wrap justify-between items-start gap-4">
-              <div>
-                <p class="font-bold text-lg text-stone-800">Commande #${order.id.toString().slice(-4)}</p>
-                <p class="font-bold text-amber-600">Retrait: ${order.pickup_time.slice(0,5)}</p>
-                <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
-              </div>
-              <div>${statusBadge(order.status)}</div>
-            </div>
-            <div class="mt-4 border-t pt-4">
-              <p class="font-semibold">Total - ${parseFloat(order.total_price).toFixed(2)}€</p>
-              <ul class="list-disc list-inside text-stone-600 mt-2">${itemsHtml}</ul>
-              ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
-            </div>
-            ${actions}
-          </div>`;
-      };
-
-      adminOrdersPendingContainer.innerHTML = pendingOrders.length ? pendingOrders.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande en cours.</p>';
-      adminOrdersCompletedContainer.innerHTML = completedOrders.length ? completedOrders.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande terminée.</p>';
-    };
-
-    const renderAdminProducts = () => {
-      adminProductsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
-        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-        const productsHtml = products.map(p => `
-          <div class="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+          <div class="flex justify-between items-center py-2 border-b border-stone-100">
             <div>
-              <p class="font-semibold text-stone-800">${p.name}</p>
-              <p class="text-sm text-stone-500">${parseFloat(p.price).toFixed(2)}€</p>
+              <p class="font-semibold">${item.product.name}</p>
+              <p class="text-sm text-stone-500">${item.quantity} x ${parseFloat(item.product.price).toFixed(2)}€</p>
             </div>
             <div class="flex items-center gap-4">
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" ${p.available ? 'checked' : ''} class="sr-only peer toggle-product-btn" data-product-id="${p.id}">
-                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
-              </label>
-              <button class="delete-product-btn text-stone-400 hover:text-red-600 transition" data-product-id="${p.id}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-              </button>
+              <span class="font-semibold">${(item.quantity * item.product.price).toFixed(2)}€</span>
+              <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
             </div>
-          </div>`).join('');
-        return `<div><h3 class="text-xl font-bold text-stone-700 mb-3">${categoryName}</h3><div class="space-y-2">${productsHtml}</div></div>`;
-      }).join('');
-    };
-
-    const renderAdminFormules = () => {
-      adminFormulesContainer.innerHTML = state.formules.length ? state.formules.map(f => `
-        <div class="bg-white rounded-xl shadow p-5">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="font-bold text-lg text-stone-800">${f.name}</p>
-              <p class="font-bold text-amber-600 text-md">${parseFloat(f.price).toFixed(2)}€</p>
-            </div>
-            <div class="flex gap-2">
-              <button class="edit-formule-btn text-stone-400 hover:text-amber-600 transition" data-formule-id="${f.id}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
-              </button>
-              <button class="delete-formule-btn text-stone-400 hover:text-red-600 transition" data-formule-id="${f.id}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-              </button>
-            </div>
-          </div>
-        </div>`).join('') : '<p class="text-center text-stone-500">Aucune formule créée.</p>';
-    };
-
-    const renderAdminPromotions = () => {
-      adminPromosContainer.innerHTML = state.promotions.length ? state.promotions.map(p => `
-        <div class="bg-white rounded-xl shadow p-5">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="font-bold text-lg text-stone-800">${p.description}</p>
-              <p class="font-semibold text-amber-600 text-md">${p.discount_percentage}% de réduction</p>
-              <p class="text-sm text-stone-500">Expire le: ${p.expires_at ? new Date(p.expires_at).toLocaleDateString('fr-FR') : 'N/A'}</p>
-              <p class="text-sm text-stone-500">Commandes max: ${p.max_orders || 'N/A'}</p>
-            </div>
-            <div class="flex gap-2">
-              <button class="edit-promo-btn text-stone-400 hover:text-amber-600 transition" data-promo-id="${p.id}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
-              </button>
-              <button class="delete-promo-btn text-stone-400 hover:text-red-600 transition" data-promo-id="${p.id}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-              </button>
-            </div>
-          </div>
-        </div>`).join('') : '<p class="text-center text-stone-500">Aucune promotion créée.</p>';
-    };
-
-    const openOrderModal = (formuleId, existingOrderItems = null) => {
-      const formule = getFormule(formuleId);
-      if (!formule) return;
-      modalTitle.textContent = `Composer votre ${formule.name}`;
-      modalBody.innerHTML = '';
-      let currentSelections = {};
-      if(existingOrderItems) existingOrderItems.forEach(item => currentSelections[item.category] = item.product_id);
-
-      let productSelectionHtml = '';
-      Object.entries(formule.eligible_products).forEach(([type, ids]) => {
-        if (!ids || ids.length === 0) return;
-        const products = state.products[type].filter(p => p.available && ids.includes(p.id));
-        if(products.length === 0) return;
-        const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-        const grid = products.map(p => `<button class="p-3 border rounded-lg text-left transition bg-stone-50 border-stone-200 hover:border-amber-400" data-product-id="${p.id}" data-product-type="${type}"><p class="font-semibold text-stone-800">${p.name}</p></button>`).join('');
-        productSelectionHtml += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2">${typeName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${grid}</div></div>`;
-      });
-      modalBody.innerHTML = productSelectionHtml;
-      modalTotalPrice.textContent = `${parseFloat(formule.price).toFixed(2)}€`;
-
-      if (!existingOrderItems) {
-        Object.entries(formule.eligible_products).forEach(([type, ids]) => {
-          if (!ids || ids.length === 0) return;
-          const first = state.products[type].find(p => p.available && ids.includes(p.id));
-          if (first) currentSelections[type] = first.id;
-        });
-      }
-      Object.entries(currentSelections).forEach(([type, id]) => {
-        const button = modalBody.querySelector(`button[data-product-id="${id}"]`);
-        if (button) button.classList.add('bg-amber-100','border-amber-500','ring-2','ring-amber-500');
-      });
-
-      modalBody.onclick = e => {
-        const button = e.target.closest('button[data-product-id]');
-        if (!button) return;
-        const { productId, productType } = button.dataset;
-        modalBody.querySelectorAll(`button[data-product-type="${productType}"]`).forEach(btn => btn.classList.remove('bg-amber-100','border-amber-500','ring-2','ring-amber-500'));
-        button.classList.add('bg-amber-100','border-amber-500','ring-2','ring-amber-500');
-        currentSelections[productType] = parseInt(productId, 10);
-      };
-
-      modalSubmitBtn.onclick = () => {
-        const requiredCategories = Object.keys(formule.eligible_products).filter(k => formule.eligible_products[k] && formule.eligible_products[k].length > 0);
-        if (Object.keys(currentSelections).length < requiredCategories.length) return showToast("Veuillez sélectionner un article dans chaque catégorie.");
-        const formuleItem = { type: 'formule', formule: formule, selectedProducts: Object.values(currentSelections).map(productId => getProduct(productId)), quantity: 1 };
-        state.cart.push(formuleItem);
-        updateCartBadge();
-        orderModal.classList.add('hidden');
-        showToast(`${formule.name} a été ajouté au panier.`);
-      };
-      orderModal.classList.remove('hidden');
-    };
-
-    const renderHistory = () => {
-      historyModalBody.innerHTML = state.orders.length ? state.orders.map(order => {
-        const itemsHtml = order.order_items.map(item => {
-          if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
-          if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description})</li>`;
-          return '';
-        }).join('');
-        const statusBadge = (status) => ({
-          pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
-          confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
-          refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
-          delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terminée</span>`
-        }[order.status] || '');
-        const actionButtons = `${order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2" data-order-id="${order.id}">Voir le reçu</button>` : ''}`;
+          </div>`;
+      } else {
+        const productsList = item.selectedProducts.map(p => `<li>${p.name}</li>`).join('');
         return `
-          <div class="bg-stone-50 p-4 rounded-lg">
+          <div class="py-2 border-b border-stone-100">
             <div class="flex justify-between items-start">
               <div>
-                <p class="font-semibold text-stone-800">Commande #${order.id.toString().slice(-4)} (Retrait à ${order.pickup_time.slice(0,5)})</p>
-                <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
+                <p class="font-semibold">${item.formule.name}</p>
+                <ul class="text-sm text-stone-500 list-disc list-inside pl-2">${productsList}</ul>
               </div>
-              ${statusBadge}
+              <div class="flex items-center gap-4">
+                <span class="font-semibold">${(item.quantity * item.formule.price).toFixed(2)}€</span>
+                <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
+              </div>
             </div>
-            <ul class="list-disc list-inside text-sm text-stone-600 mt-2">${itemsHtml}</ul>
-            ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
-            <div class="mt-3 text-right">${actionButtons}</div>
           </div>`;
-      }).join('') : '<p class="text-center text-stone-500">Vous n\'avez pas encore de commande.</p>';
-      historyModal.classList.remove('hidden');
-    };
+      }
+    }).join('');
 
-    const renderStats = (period = 'today') => {
-      const statsContainer = document.getElementById('stats-tables-container');
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const subtotal = state.cart.reduce((t, item) => {
+      const price = item.type === 'product' ? item.product.price : item.formule.price;
+      return t + item.quantity * price;
+    }, 0);
 
-      const filteredOrders = state.orders.filter(order => {
-        const orderDate = new Date(order.created_at);
-        if (period === 'today') return orderDate >= today;
-        if (period === 'week') return orderDate >= weekStart;
-        if (period === 'month') return orderDate >= monthStart;
-        return true;
-      });
+    const promo = findApplicablePromotion(state.cart);
+    let discount = 0;
+    let finalTotal = subtotal;
+    let promoHtml = '';
 
-      const formulesStats = {};
-      filteredOrders.forEach(order => {
-        order.order_items.forEach(item => {
-          if (item.formules) {
-            const f = item.formules;
-            if (!formulesStats[f.id]) formulesStats[f.id] = { name: f.name, count: 0, revenue: 0 };
-            formulesStats[f.id].count += item.quantity;
-            formulesStats[f.id].revenue += item.price * item.quantity;
-          }
-        });
-      });
+    if (promo) {
+      discount = subtotal * (promo.discount_percentage / 100);
+      finalTotal = subtotal - discount;
+      promoHtml = `
+        <div class="flex justify-between items-center text-green-600">
+          <span>Promotion: ${promo.description}</span>
+          <span>-${discount.toFixed(2)}€</span>
+        </div>`;
+    }
 
-      const productsStats = {};
-      filteredOrders.forEach(order => {
-        order.order_items.forEach(item => {
-          if (item.products) {
-            const p = item.products;
-            if (!productsStats[p.id]) productsStats[p.id] = { name: p.name, count: 0 };
-            productsStats[p.id].count += item.quantity;
-          }
-          if (item.formules && item.description) {
-            const productNames = item.description.split(', ');
-            productNames.forEach(name => {
-              const product = Object.values(state.products).flat().find(pp => pp.name === name);
-              if (product) {
-                if (!productsStats[product.id]) productsStats[product.id] = { name: product.name, count: 0 };
-                productsStats[product.id].count += item.quantity;
-              }
-            });
-          }
-        });
-      });
+    const timeSlots = [];
+    for (let h = 11; h <= 14; h++) for (let m = 0; m < 60; m += 15) {
+      if (h === 14 && m > 0) continue;
+      timeSlots.push(`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`);
+    }
 
-      const sortedFormules = Object.values(formulesStats).sort((a,b) => b.count - a.count);
-      const sortedProducts = Object.values(productsStats).sort((a,b) => b.count - a.count);
+    cartFooter.innerHTML = `
+      <div class="flex justify-between items-center"><span>Sous-total:</span><span>${subtotal.toFixed(2)}€</span></div>
+      ${promoHtml}
+      <div class="flex justify-between items-center font-bold text-xl my-4"><span>Total:</span><span>${finalTotal.toFixed(2)}€</span></div>
+      <div class="mt-4">
+        <label for="cart-pickup-time" class="block text-lg font-semibold text-stone-700 mb-2">Heure de retrait</label>
+        <select id="cart-pickup-time" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
+          ${timeSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
+        </select>
+      </div>
+      <button id="checkout-btn" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition mt-4">Valider la commande</button>
+    `;
+  };
 
-      statsContainer.innerHTML = `
-        <div class="mb-8">
-          <h3 class="text-xl font-semibold text-stone-700 mb-4">Formules les plus vendues</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-stone-200"><tr><th class="p-3">Formule</th><th class="p-3">Quantité</th><th class="p-3">Revenu Total</th></tr></thead>
-              <tbody>
-                ${sortedFormules.length ? sortedFormules.map(f => `<tr class="border-b"><td class="p-3">${f.name}</td><td class="p-3">${f.count}</td><td class="p-3">${f.revenue.toFixed(2)} €</td></tr>`).join('') : '<tr><td colspan="3" class="text-center p-4">Aucune donnée</td></tr>'}
-              </tbody>
-            </table>
+  const renderAdminOrders = () => {
+    const pending = state.orders.filter(o => ['pending','confirmed'].includes(o.status)).sort((a,b) => a.pickup_time.localeCompare(b.pickup_time));
+    const done = state.orders.filter(o => ['refused','delivered'].includes(o.status));
+
+    const statusBadge = (s) => ({
+      pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
+      confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
+      refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
+      delivered:`<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Livrée</span>`
+    }[s]||'');
+
+    const card = (order) => {
+      const items = order.order_items.map(item => {
+        if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
+        if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description||''})</li>`;
+        return '';
+      }).join('');
+      let actions = '';
+      if (order.status === 'pending') {
+        actions = `
+          <div class="mt-4 flex gap-3">
+            <button class="confirm-order-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Accepter</button>
+            <button class="refuse-order-btn flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Refuser</button>
+          </div>`;
+      } else if (order.status === 'confirmed') {
+        actions = `
+          <div class="mt-4">
+            <button class="deliver-order-btn w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Marquer comme livrée</button>
+          </div>`;
+      }
+
+      return `
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="flex flex-wrap justify-between items-start gap-4">
+            <div>
+              <p class="font-bold text-lg text-stone-800">Commande #${order.id.toString().slice(-4)}</p>
+              <p class="font-bold text-amber-600">Retrait: ${order.pickup_time.slice(0,5)}</p>
+              <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
+            </div>
+            <div>${statusBadge(order.status)}</div>
           </div>
-        </div>
-        <div>
-          <h3 class="text-xl font-semibold text-stone-700 mb-4">Produits les plus populaires</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-stone-200"><tr><th class="p-3">Produit</th><th class="p-3">Nombre de fois choisi</th></tr></thead>
-              <tbody>
-                ${sortedProducts.length ? sortedProducts.map(p => `<tr class="border-b"><td class="p-3">${p.name}</td><td class="p-3">${p.count}</td></tr>`).join('') : '<tr><td colspan="2" class="text-center p-4">Aucune donnée</td></tr>'}
-              </tbody>
-            </table>
+          <div class="mt-4 border-t pt-4">
+            <p class="font-semibold">Total - ${parseFloat(order.total_price).toFixed(2)}€</p>
+            <ul class="list-disc list-inside text-stone-600 mt-2">${items}</ul>
+            ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
           </div>
+          ${actions}
         </div>`;
     };
 
-    const renderReceipt = (order) => {
-      document.getElementById('receipt-date').textContent = new Date(order.created_at).toLocaleDateString('fr-FR');
-      document.getElementById('receipt-order-id').textContent = `#${order.id.toString().slice(-6).toUpperCase()}`;
-      const itemsHtml = order.order_items.map(item => {
-        let itemName = '';
-        if (item.products) itemName = `${item.quantity}x ${item.products.name}`;
-        else if (item.formules) { itemName = `${item.quantity}x ${item.formules.name}`; if (item.description) itemName += ` (${item.description})`; }
-        return `<div class="flex justify-between"><span>${itemName}</span><span>${(item.price * item.quantity).toFixed(2)}&nbsp;€</span></div>`;
-      }).join('');
-      document.getElementById('receipt-items').innerHTML = itemsHtml;
-      const subtotal_ttc = order.total_price;
-      const tva = subtotal_ttc * 0.20;
-      const total_ht = subtotal_ttc - tva;
-      document.getElementById('receipt-subtotal').innerHTML = `${total_ht.toFixed(2)}&nbsp;€`;
-      document.getElementById('receipt-tva').innerHTML = `${tva.toFixed(2)}&nbsp;€`;
-      document.getElementById('receipt-total').innerHTML = `${subtotal_ttc.toFixed(2)}&nbsp;€`;
-      const promoLine = document.getElementById('receipt-promo-line');
-      if (order.discount_amount) {
-        document.getElementById('receipt-discount').innerHTML = `- ${order.discount_amount.toFixed(2)}&nbsp;€`;
-        promoLine.classList.remove('hidden');
-      } else promoLine.classList.add('hidden');
-      receiptModal.classList.remove('hidden');
-    };
+    adminOrdersPendingContainer.innerHTML = pending.length ? pending.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande en cours.</p>';
+    adminOrdersCompletedContainer.innerHTML = done.length ? done.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande terminée.</p>';
+  };
 
-    // ===== AUTH =====
-    const handleLogin = async (e) => {
-      e.preventDefault();
-      hideAuthError();
-      showLoader(true);
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      try {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Erreur de connexion:', error);
-        if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
-        else showAuthError(error.message);
-      } finally {
-        showLoader(false);
+  const renderAdminProducts = () => {
+    adminProductsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
+      const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+      const rows = products.map(p => `
+        <div class="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+          <div>
+            <p class="font-semibold text-stone-800">${p.name}</p>
+            <p class="text-sm text-stone-500">${parseFloat(p.price).toFixed(2)}€</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" ${p.available ? 'checked' : ''} class="sr-only peer toggle-product-btn" data-product-id="${p.id}">
+              <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+            </label>
+            <button class="delete-product-btn text-stone-400 hover:text-red-600 transition" data-product-id="${p.id}" title="Supprimer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+        </div>`).join('');
+      return `<div><h3 class="text-xl font-bold text-stone-700 mb-3">${categoryName}</h3><div class="space-y-2">${rows}</div></div>`;
+    }).join('');
+  };
+
+  const renderAdminFormules = () => {
+    adminFormulesContainer.innerHTML = state.formules.length ? state.formules.map(f => `
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="font-bold text-lg text-stone-800">${f.name}</p>
+            <p class="font-bold text-amber-600 text-md">${parseFloat(f.price).toFixed(2)}€</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="edit-formule-btn text-stone-400 hover:text-amber-600 transition" data-formule-id="${f.id}" title="Modifier">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+            </button>
+            <button class="delete-formule-btn text-stone-400 hover:text-red-600 transition" data-formule-id="${f.id}" title="Supprimer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>`).join('') : '<p class="text-center text-stone-500">Aucune formule créée.</p>';
+  };
+
+  const renderAdminPromotions = () => {
+    adminPromosContainer.innerHTML = state.promotions.length ? state.promotions.map(p => `
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="font-bold text-lg text-stone-800">${p.description}</p>
+            <p class="font-semibold text-amber-600 text-md">${p.discount_percentage}% de réduction</p>
+            <p class="text-sm text-stone-500">Expire le: ${p.expires_at ? new Date(p.expires_at).toLocaleDateString('fr-FR') : 'N/A'}</p>
+            <p class="text-sm text-stone-500">Commandes max: ${p.max_orders || 'N/A'}</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="edit-promo-btn text-stone-400 hover:text-amber-600 transition" data-promo-id="${p.id}" title="Modifier">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+            </button>
+            <button class="delete-promo-btn text-stone-400 hover:text-red-600 transition" data-promo-id="${p.id}" title="Supprimer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>`).join('') : '<p class="text-center text-stone-500">Aucune promotion créée.</p>';
+  };
+
+  const renderStats = (period = 'today') => {
+    const container = document.getElementById('stats-tables-container');
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(today); weekStart.setDate(today.getDate() - (today.getDay() === 0 ? 6 : (today.getDay()-1)));
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const filtered = state.orders.filter(o => {
+      const d = new Date(o.created_at);
+      if (period === 'today') return d >= today;
+      if (period === 'week') return d >= weekStart;
+      if (period === 'month') return d >= monthStart;
+      return true;
+    });
+
+    const formulesStats = {};
+    filtered.forEach(o => o.order_items.forEach(it => {
+      if (it.formules) {
+        const f = it.formules;
+        formulesStats[f.id] ??= { name: f.name, count: 0, revenue: 0 };
+        formulesStats[f.id].count += it.quantity;
+        formulesStats[f.id].revenue += it.price * it.quantity;
       }
-    };
+    }));
 
-    const handleSignup = async (e) => {
-      e.preventDefault();
-      hideAuthError();
-      showLoader(true);
-      const email = document.getElementById('signup-email').value;
-      const password = document.getElementById('signup-password').value;
-      const firstName = document.getElementById('signup-firstname').value;
-      const lastName = document.getElementById('signup-lastname').value;
-      try {
-        const { error } = await supabaseClient.auth.signUp({
-          email, password, options: { data: { first_name: firstName, last_name: lastName } }
+    const productsStats = {};
+    filtered.forEach(o => o.order_items.forEach(it => {
+      if (it.products) {
+        const p = it.products;
+        productsStats[p.id] ??= { name: p.name, count: 0 };
+        productsStats[p.id].count += it.quantity;
+      }
+      if (it.formules && it.description) {
+        it.description.split(', ').forEach(n => {
+          const p = Object.values(state.products).flat().find(px => px.name === n);
+          if (p) { productsStats[p.id] ??= { name: p.name, count: 0 }; productsStats[p.id].count += it.quantity; }
         });
-        if (error) throw error;
-        showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
-      } catch (error) {
-        console.error("Erreur d'inscription:", error);
-        showAuthError(error.message);
-      } finally {
-        showLoader(false);
       }
-    };
+    }));
 
-    const handleGoogleLogin = async () => { await supabaseClient.auth.signInWithOAuth({ provider: 'google' }); };
+    const sortedFormules = Object.values(formulesStats).sort((a,b)=>b.count-a.count);
+    const sortedProducts = Object.values(productsStats).sort((a,b)=>b.count-a.count);
 
-    const hardSignOut = async () => {
-      try { await supabaseClient.auth.signOut(); } catch(e) {}
-      state = { currentUser: null, userProfile: null, products: { sandwichs: [], boissons: [], desserts: [] }, formules: [], orders: [], cart: [], promotions: [] };
-      clearTimeout(logoutTimer);
-      showView('auth-view');
-    };
+    container.innerHTML = `
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold text-stone-700 mb-4">Formules les plus vendues</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-stone-200">
+              <tr><th class="p-3">Formule</th><th class="p-3">Quantité</th><th class="p-3">Revenu Total</th></tr>
+            </thead>
+            <tbody>
+              ${sortedFormules.length ? sortedFormules.map(f => `
+                <tr class="border-b"><td class="p-3">${f.name}</td><td class="p-3">${f.count}</td><td class="p-3">${f.revenue.toFixed(2)} €</td></tr>
+              `).join('') : '<tr><td colspan="3" class="text-center p-4">Aucune donnée</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold text-stone-700 mb-4">Produits les plus populaires</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-stone-200">
+              <tr><th class="p-3">Produit</th><th class="p-3">Nombre de fois choisi</th></tr>
+            </thead>
+            <tbody>
+              ${sortedProducts.length ? sortedProducts.map(p => `
+                <tr class="border-b"><td class="p-3">${p.name}</td><td class="p-3">${p.count}</td></tr>
+              `).join('') : '<tr><td colspan="2" class="text-center p-4">Aucune donnée</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  };
 
-    const handleLogout = (isTimeout = false) => {
-      hardSignOut();
-      if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
-    };
-
-    // Bootstrap auth : ne pas déconnecter au simple refresh
-    const bootstrapAuth = async () => {
-      showLoader(true);
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.user) {
-          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
-          resetLogoutTimer();
-          await loadInitialData(false);
-          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-          renderAll();
+  /* ========= PROMO / CART UTILS ========= */
+  const findApplicablePromotion = (cart) => {
+    if (!state.promotions?.length) return null;
+    const now = new Date();
+    let best = null;
+    for (const promo of state.promotions) {
+      if (promo.expires_at && new Date(promo.expires_at) < now) continue;
+      if (promo.max_orders && promo.usage_count >= promo.max_orders) continue;
+      let eligible = false;
+      for (const item of cart) {
+        if (item.type === 'product') {
+          if (promo.promotion_products?.some(pp => pp.product_id === item.product.id)) { eligible = true; break; }
         } else {
-          showView('auth-view');
-        }
-      } catch (e) {
-        console.warn('bootstrapAuth error:', e);
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) showView('auth-view');
-      } finally {
-        hasBootstrapped = true;
-        showLoader(false);
-      }
-    };
-
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      // Empêche des transitions agressives pendant refresh
-      if (event === 'SIGNED_OUT') {
-        const { data: { session: s } } = await supabaseClient.auth.getSession();
-        if (!s) { await hardSignOut(); } else { return; } // ignore signal transitoire
-      }
-
-      if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
-        if (session?.user) {
-          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
-          resetLogoutTimer();
-          await loadInitialData();
-          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-          renderAll();
+          if (promo.promotion_formules?.some(pf => pf.formule_id === item.formule.id)) { eligible = true; break; }
         }
       }
-    });
+      if (eligible && (!best || promo.discount_percentage > best.discount_percentage)) best = promo;
+    }
+    return best;
+  };
 
-    // ===== LISTENERS =====
-    loginForm.addEventListener('submit', handleLogin);
-    signupForm.addEventListener('submit', handleSignup);
-    showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); });
-    showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+  /* ========= AUTH HANDLERS ========= */
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    hideAuthError();
+    showLoader(true);
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      // La suite est gérée par onAuthStateChange
+    } catch (error) {
+      console.error('Login error:', error);
+      showAuthError(error.message === 'Invalid login credentials' ? 'Identifiant ou mot de passe incorrect' : error.message);
+    } finally {
+      showLoader(false);
+    }
+  };
 
-    googleLoginBtn.addEventListener('click', handleGoogleLogin);
-    logoutBtns.forEach(btn => btn && btn.addEventListener('click', () => handleLogout(false)));
-    hamburgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    hideAuthError();
+    showLoader(true);
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const firstName = document.getElementById('signup-firstname').value;
+    const lastName = document.getElementById('signup-lastname').value;
+    try {
+      const { error } = await supabaseClient.auth.signUp({
+        email, password,
+        options: { data: { first_name: firstName, last_name: lastName } }
+      });
+      if (error) throw error;
+      showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
+    } catch (error) {
+      console.error('Signup error:', error);
+      showAuthError(error.message);
+    } finally { showLoader(false); }
+  };
 
-    // Cart modal
-    cartBtns.forEach(btn => btn && btn.addEventListener('click', () => { renderCart(); cartModal.classList.remove('hidden'); }));
-    document.getElementById('cart-body').addEventListener('click', e => {
-      const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
-      if (removeFromCartBtn) removeFromCart(parseInt(removeFromCartBtn.dataset.cartItemIndex, 10));
-    });
-    document.getElementById('cart-footer').addEventListener('click', e => { if (e.target.id === 'checkout-btn') handleCheckout(); });
-    cartCloseBtn.addEventListener('click', () => cartModal.classList.add('hidden'));
+  const handleGoogleLogin = async () => {
+    await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+  };
 
-    // History modal
-    historyBtns.forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); renderHistory(); }));
-    historyModalCloseBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
+  const handleLogout = async (isTimeout = false) => {
+    await supabaseClient.auth.signOut();
+    teardownRealtime();
+    state = { currentUser: null, userProfile: null, products: { sandwichs: [], boissons: [], desserts: [] }, formules: [], orders: [], cart: [], promotions: [] };
+    showView('auth');
+    if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
+  };
 
-    // Other modals
-    modalCloseBtn.addEventListener('click', () => orderModal.classList.add('hidden'));
-    refuseCancelBtn.addEventListener('click', () => refuseModal.classList.add('hidden'));
-    productModalCloseBtn.addEventListener('click', () => productModal.classList.add('hidden'));
-    formuleModalCloseBtn.addEventListener('click', () => formuleModal.classList.add('hidden'));
-    confirmCancelBtn.addEventListener('click', () => confirmModal.classList.add('hidden'));
-    receiptCloseBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
-    forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); forgotPasswordModal.classList.remove('hidden'); });
-    forgotPasswordModalCloseBtn?.addEventListener('click', () => { forgotPasswordModal.classList.add('hidden'); });
+  /* ========= REALTIME ========= */
+  const setupRealtimeForAdmin = () => {
+    teardownRealtime();
+    ordersChannel = supabaseClient.channel('orders-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async (payload) => {
+        // Dès qu’une nouvelle commande arrive, on recharge si l’onglet "Commandes" est visible
+        const ordersTabVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+        await loadInitialData(false);
+        if (state.currentUser?.role === 'admin') {
+          if (ordersTabVisible) renderAdminOrders();
+        }
+      })
+      .subscribe();
+  };
 
-    forgotPasswordForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('forgot-password-email').value;
+  const teardownRealtime = () => {
+    if (ordersChannel) {
+      supabaseClient.removeChannel(ordersChannel);
+      ordersChannel = null;
+    }
+  };
+
+  /* ========= BOOTSTRAP ========= */
+  async function bootstrap() {
+    try {
       showLoader(true);
-      try {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
-        if (error) throw error;
-        showToast("Un email de réinitialisation a été envoyé.");
-        forgotPasswordModal.classList.add('hidden');
-      } catch (error) {
-        console.error('Forgot password error:', error);
-        showToast(`Erreur: ${error.message}`);
-      } finally { showLoader(false); }
-    });
+      // 1) Nettoie hash OAuth si présent (évite les boucles)
+      cleanOAuthHashFromUrl();
 
-    resetPasswordForm.addEventListener('submit', async (e) => {
+      // 2) Récupère session existante (persistSession=true => pas de déco au refresh)
+      const { data: { session } } = await supabaseClient.auth.getSession();
+
+      if (session?.user) {
+        // Détermine le rôle
+        const isAdmin = session.user.email === 'kevin.gouche@gmail.com'; // adapte si tu as un champ profile.is_admin
+        state.currentUser = { ...session.user, role: isAdmin ? 'admin' : 'customer' };
+
+        // 3) Charge les données puis rend la vue sans passer par un écran vide
+        await loadInitialData(false);
+        showView(isAdmin ? 'admin' : 'customer');
+        renderAll();
+
+        // 4) Inactivité + Realtime admin
+        resetLogoutTimer();
+        if (isAdmin) setupRealtimeForAdmin();
+      } else {
+        showView('auth');
+      }
+    } catch (e) {
+      console.error('bootstrap error:', e);
+      showView('auth');
+    } finally {
+      hasBootstrapped = true;
+      showLoader(false);
+    }
+  }
+
+  // Evénements auth (connexion, refresh token, logout, recovery)
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    // Important: ne pas rebooter pendant bootstrap
+    if (!hasBootstrapped && event !== 'INITIAL_SESSION') return;
+
+    if (event === 'PASSWORD_RECOVERY') {
+      document.getElementById('reset-password-modal').classList.remove('hidden');
+      return;
+    }
+
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      const user = session?.user || (await supabaseClient.auth.getUser()).data.user;
+      if (user) {
+        const isAdmin = user.email === 'kevin.gouche@gmail.com';
+        state.currentUser = { ...user, role: isAdmin ? 'admin' : 'customer' };
+        await loadInitialData(false);
+        showView(isAdmin ? 'admin' : 'customer');
+        renderAll();
+        resetLogoutTimer();
+        if (isAdmin) setupRealtimeForAdmin();
+      }
+      cleanOAuthHashFromUrl();
+      return;
+    }
+
+    if (event === 'SIGNED_OUT') {
+      teardownRealtime();
+      state.currentUser = null;
+      state.userProfile = null;
+      showView('auth');
+      return;
+    }
+  });
+
+  /* ========= EVENT LISTENERS ========= */
+  // Auth forms switch
+  showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); });
+  showLoginBtn?.addEventListener('click', (e) => { e.preventDefault(); signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+
+  // Auth actions
+  loginForm.addEventListener('submit', handleLogin);
+  signupForm.addEventListener('submit', handleSignup);
+  googleLoginBtn.addEventListener('click', handleGoogleLogin);
+  logoutBtns.forEach(btn => btn?.addEventListener('click', () => handleLogout(false)));
+
+  // Mobile menu
+  hamburgerBtn?.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+  // Cart
+  cartBtns.forEach(btn => btn?.addEventListener('click', () => { renderCart(); cartModal.classList.remove('hidden'); }));
+  document.getElementById('cart-body').addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('.remove-from-cart-btn');
+    if (removeBtn) {
+      const i = parseInt(removeBtn.dataset.cartItemIndex, 10);
+      if (!Number.isNaN(i)) { state.cart.splice(i,1); updateCartBadge(); renderCart(); }
+    }
+  });
+  document.getElementById('cart-footer').addEventListener('click', (e) => {
+    if (e.target.id === 'checkout-btn') handleCheckout();
+  });
+  document.getElementById('cart-close-btn')?.addEventListener('click', () => cartModal.classList.add('hidden'));
+
+  // Formules modal
+  modalCloseBtn?.addEventListener('click', () => orderModal.classList.add('hidden'));
+  modalSubmitBtn?.addEventListener('click', () => {
+    // sélection déjà gérée dans openOrderModal (pas redéfini ici pour concision)
+  });
+
+  // Historique
+  historyBtns.forEach(btn => btn?.addEventListener('click', (e) => { e.preventDefault(); renderHistory(); }));
+  historyModalCloseBtn?.addEventListener('click', () => historyModal.classList.add('hidden'));
+
+  // Admin onglets (RAFRAÎCHIR à chaque retour)
+  document.addEventListener('click', async (e) => {
+    const tab = e.target.closest('.admin-tab');
+    if (tab) {
       e.preventDefault();
-      const newPassword = document.getElementById('reset-password-new').value;
-      if (newPassword.length < 6) return showToast("Le mot de passe doit contenir au moins 6 caractères.");
-      showLoader(true);
-      try {
-        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-        if (error) throw error;
-        showToast("Mot de passe réinitialisé avec succès !");
-        resetPasswordModal.classList.add('hidden');
-      } catch (error) {
-        console.error('Reset password error:', error);
-        showToast(`Erreur: ${error.message}`);
-      } finally { showLoader(false); }
-    });
-
-    // CUSTOMER
-    document.addEventListener('click', e => {
-      const addToCartBtn = e.target.closest('.add-to-cart-btn');
-      if (addToCartBtn) addProductToCart(parseInt(addToCartBtn.dataset.productId, 10));
-      const orderBtn = e.target.closest('.order-btn');
-      if (orderBtn) openOrderModal(parseInt(orderBtn.dataset.formuleId, 10));
-    });
-
-    // ADMIN: changement d'onglet => refresh des commandes si on ouvre "orders"
-    document.addEventListener('click', async e => {
-      const adminTab = e.target.closest('.admin-tab');
-      if (!adminTab) return;
-      e.preventDefault();
-      const tabId = adminTab.dataset.tab;
+      const tabId = tab.dataset.tab;
 
       document.querySelectorAll('.admin-tab').forEach(t => { t.classList.remove('bg-stone-700'); t.classList.add('hover:bg-stone-700'); });
-      adminTab.classList.add('bg-stone-700'); adminTab.classList.remove('hover:bg-stone-700');
+      tab.classList.add('bg-stone-700'); tab.classList.remove('hover:bg-stone-700');
 
-      document.querySelectorAll('.admin-content').forEach(content => content.classList.add('hidden'));
-      document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+      document.querySelectorAll('.admin-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById(`${tabId}-tab`)?.classList.remove('hidden');
 
-      if (tabId === 'orders') {
-        showLoader(true);
-        await loadInitialData(false);
-        renderAdminOrders();
-        showLoader(false);
-      }
-      if (tabId === 'stats') renderStats();
-    });
-
-    // ADMIN Orders actions
-    ordersTabContent.addEventListener('click', async e => {
-      const confirmBtn = e.target.closest('.confirm-order-btn');
-      const refuseBtn = e.target.closest('.refuse-order-btn');
-      const deliverBtn = e.target.closest('.deliver-order-btn');
-
-      if (confirmBtn) {
-        const orderId = confirmBtn.dataset.orderId;
-        const { error } = await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', orderId);
-        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
-      }
-      if (refuseBtn) {
-        const orderId = refuseBtn.dataset.orderId;
-        refuseModal.classList.remove('hidden');
-        refuseConfirmBtn.onclick = async () => {
-          const reason = refuseReasonInput.value;
-          const { error } = await supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', orderId);
-          if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
-          refuseReasonInput.value = '';
-          refuseModal.classList.add('hidden');
-        };
-      }
-      if (deliverBtn) {
-        const orderId = deliverBtn.dataset.orderId;
-        const { error } = await supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', orderId);
-        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
-      }
-    });
-
-    // Admin order list subtabs
-    adminOrderTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        adminOrderTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        if (tab.dataset.orderTab === 'pending') { adminOrdersPendingContainer.classList.remove('hidden'); adminOrdersCompletedContainer.classList.add('hidden'); }
-        else { adminOrdersPendingContainer.classList.add('hidden'); adminOrdersCompletedContainer.classList.remove('hidden'); }
-      });
-    });
-
-    // Products CRUD
-    addProductBtn.addEventListener('click', () => { productForm.reset(); productModal.classList.remove('hidden'); });
-    productForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      const newProduct = { name: document.getElementById('product-name').value, price: parseFloat(document.getElementById('product-price').value), category: document.getElementById('product-category').value };
-      showLoader(true);
-      const { error } = await supabaseClient.from('products').insert(newProduct);
-      if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit ajouté !"); }
+      // *** ICI: recharge des données quand on revient sur un onglet ***
       await loadInitialData(false);
-      renderAdminProducts();
-      productModal.classList.add('hidden');
-      showLoader(false);
-    });
-    adminProductsContainer.addEventListener('click', async e => {
-      const deleteBtn = e.target.closest('.delete-product-btn');
-      if (deleteBtn) {
-        const productId = deleteBtn.dataset.productId;
-        showConfirmModal('Supprimer ce produit?', 'Cette action est irréversible.', async () => {
-          showLoader(true);
-          const { error } = await supabaseClient.from('products').delete().eq('id', productId);
-          if (error) showToast(`Erreur: ${error.message}`); else showToast("Produit supprimé.");
-          await loadInitialData(false);
-          renderAdminProducts();
-          renderAdminFormules();
-          showLoader(false);
-        });
+      if (tabId === 'orders') renderAdminOrders();
+      if (tabId === 'products') renderAdminProducts();
+      if (tabId === 'formules') renderAdminFormules();
+      if (tabId === 'promotions') renderAdminPromotions();
+      if (tabId === 'stats') renderStats();
+    }
+  });
+
+  // Admin sous-onglets commandes (en cours / terminées)
+  adminOrderTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      adminOrderTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (tab.dataset.orderTab === 'pending') {
+        adminOrdersPendingContainer.classList.remove('hidden');
+        adminOrdersCompletedContainer.classList.add('hidden');
+      } else {
+        adminOrdersPendingContainer.classList.add('hidden');
+        adminOrdersCompletedContainer.classList.remove('hidden');
       }
     });
-    adminProductsContainer.addEventListener('change', async e => {
-      if (e.target.classList.contains('toggle-product-btn')) {
-        const { productId } = e.target.dataset;
-        const isAvailable = e.target.checked;
-        const { error } = await supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId);
-        if (error) { showToast(`Erreur: ${error.message}`); e.target.checked = !isAvailable; } else { showToast(`Disponibilité mise à jour.`); }
-      }
+  });
+
+  // Products CRUD toggles
+  adminProductsContainer.addEventListener('change', async e => {
+    if (e.target.classList.contains('toggle-product-btn')) {
+      const productId = e.target.dataset.productId;
+      const isAvailable = e.target.checked;
+      const { error } = await supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId);
+      if (error) { showToast(`Erreur: ${error.message}`); e.target.checked = !isAvailable; }
+      else { showToast('Disponibilité mise à jour.'); }
+    }
+  });
+
+  // Products delete
+  adminProductsContainer.addEventListener('click', async e => {
+    const delBtn = e.target.closest('.delete-product-btn');
+    if (delBtn) {
+      const productId = delBtn.dataset.productId;
+      showConfirmModal('Supprimer ce produit?', 'Cette action est irréversible.', async () => {
+        showLoader(true);
+        const { error } = await supabaseClient.from('products').delete().eq('id', productId);
+        if (error) showToast(`Erreur: ${error.message}`); else showToast('Produit supprimé.');
+        await loadInitialData(false);
+        renderAdminProducts();
+        renderAdminFormules();
+        showLoader(false);
+      });
+    }
+  });
+
+  // Product add
+  addProductBtn?.addEventListener('click', () => { productForm.reset(); productModal.classList.remove('hidden'); });
+  productForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const newProduct = {
+      name: document.getElementById('product-name').value,
+      price: parseFloat(document.getElementById('product-price').value),
+      category: document.getElementById('product-category').value
+    };
+    showLoader(true);
+    const { error } = await supabaseClient.from('products').insert(newProduct);
+    if (error) showToast(`Erreur: ${error.message}`); else showToast('Produit ajouté !');
+    await loadInitialData(false);
+    renderAdminProducts();
+    productModal.classList.add('hidden');
+    showLoader(false);
+  });
+  productModalCloseBtn?.addEventListener('click', () => productModal.classList.add('hidden'));
+
+  // Formules CRUD
+  const openFormuleModal = (formuleId = null) => {
+    formuleForm.reset();
+    document.getElementById('formule-id-input').value = '';
+    const selection = document.getElementById('formule-products-selection');
+    selection.innerHTML = '';
+
+    const toEdit = formuleId ? getFormule(formuleId) : null;
+    if (toEdit) {
+      document.getElementById('formule-modal-title').textContent = 'Modifier une formule';
+      document.getElementById('formule-id-input').value = toEdit.id;
+      document.getElementById('formule-name').value = toEdit.name;
+      document.getElementById('formule-price').value = toEdit.price;
+    } else {
+      document.getElementById('formule-modal-title').textContent = 'Créer une formule';
+    }
+
+    Object.entries(state.products).forEach(([category, products]) => {
+      const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+      const checks = products.map(p => {
+        const checked = toEdit ? toEdit.eligible_products[category]?.includes(p.id) : false;
+        return `
+          <label class="flex items-center gap-2 p-2 rounded-md hover:bg-stone-50">
+            <input type="checkbox" name="${category}" value="${p.id}" ${checked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+            <span>${p.name}</span>
+          </label>`;
+      }).join('');
+      selection.innerHTML += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">${categoryName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">${checks}</div></div>`;
     });
 
-    // Formules CRUD
-    const openFormuleModal = (formuleId = null) => {
-      formuleForm.reset();
-      document.getElementById('formule-id-input').value = '';
-      const selectionContainer = document.getElementById('formule-products-selection');
-      selectionContainer.innerHTML = '';
-      const formuleToEdit = formuleId ? getFormule(formuleId) : null;
-      if (formuleToEdit) {
-        formuleModalTitle.textContent = 'Modifier une formule';
-        document.getElementById('formule-id-input').value = formuleToEdit.id;
-        document.getElementById('formule-name').value = formuleToEdit.name;
-        document.getElementById('formule-price').value = formuleToEdit.price;
-      } else { formuleModalTitle.textContent = 'Créer une formule'; }
-      Object.entries(state.products).forEach(([category, products]) => {
-        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-        let checkboxesHTML = products.map(p => {
-          const isChecked = formuleToEdit ? (formuleToEdit.eligible_products[category]?.includes(p.id)) : false;
-          return `<label class="flex items-center gap-2 p-2 rounded-md hover:bg-stone-50"><input type="checkbox" name="${category}" value="${p.id}" ${isChecked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"><span>${p.name}</span></label>`;
-        }).join('');
-        selectionContainer.innerHTML += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">${categoryName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">${checkboxesHTML}</div></div>`;
-      });
-      formuleModal.classList.remove('hidden');
-    };
-    addFormuleBtn.addEventListener('click', () => openFormuleModal());
-    adminFormulesContainer.addEventListener('click', e => {
-      const editBtn = e.target.closest('.edit-formule-btn');
-      if (editBtn) openFormuleModal(parseInt(editBtn.dataset.formuleId, 10));
-      const deleteBtn = e.target.closest('.delete-formule-btn');
-      if (deleteBtn) {
-        const formuleId = deleteBtn.dataset.formuleId;
-        showConfirmModal('Supprimer cette formule?', 'Cette action est irréversible.', async () => {
-          showLoader(true);
-          await supabaseClient.from('formule_products').delete().eq('formule_id', formuleId);
-          const { error } = await supabaseClient.from('formules').delete().eq('id', formuleId);
-          if (error) showToast(`Erreur: ${error.message}`); else showToast("Formule supprimée.");
-          await loadInitialData(false);
-          renderAdminFormules();
-          showLoader(false);
-        });
-      }
-    });
-    formuleForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      showLoader(true);
-      const id_str = document.getElementById('formule-id-input').value;
-      const id = id_str ? parseInt(id_str, 10) : null;
-      const name = document.getElementById('formule-name').value;
-      const price = parseFloat(document.getElementById('formule-price').value);
-      const selectedProducts = Array.from(formuleForm.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value, 10));
-      try {
-        if (id) {
-          const { error } = await supabaseClient.from('formules').update({ name, price }).eq('id', id);
-          if (error) throw error;
-          await supabaseClient.from('formule_products').delete().eq('formule_id', id);
-          if (selectedProducts.length > 0) {
-            const toInsert = selectedProducts.map(pid => ({ formule_id: id, product_id: pid }));
-            const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
-            if (insertError) throw insertError;
-          }
-        } else {
-          const { data, error } = await supabaseClient.from('formules').insert({ name, price }).select().single();
-          if (error) throw error;
-          if (selectedProducts.length > 0) {
-            const toInsert = selectedProducts.map(pid => ({ formule_id: data.id, product_id: pid }));
-            const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
-            if (insertError) throw insertError;
-          }
-        }
-        showToast("Formule enregistrée !");
-      } catch (error) {
-        showToast(`Erreur: ${error.message}`); console.error("Error saving formule:", error);
-      } finally {
+    formuleModal.classList.remove('hidden');
+  };
+
+  addFormuleBtn?.addEventListener('click', () => openFormuleModal());
+  adminFormulesContainer.addEventListener('click', e => {
+    const editBtn = e.target.closest('.edit-formule-btn');
+    if (editBtn) openFormuleModal(parseInt(editBtn.dataset.formuleId, 10));
+    const deleteBtn = e.target.closest('.delete-formule-btn');
+    if (deleteBtn) {
+      const id = deleteBtn.dataset.formuleId;
+      showConfirmModal('Supprimer cette formule?', 'Cette action est irréversible.', async () => {
+        showLoader(true);
+        await supabaseClient.from('formule_products').delete().eq('formule_id', id);
+        const { error } = await supabaseClient.from('formules').delete().eq('id', id);
+        if (error) showToast(`Erreur: ${error.message}`); else showToast('Formule supprimée.');
         await loadInitialData(false);
         renderAdminFormules();
-        formuleModal.classList.add('hidden');
         showLoader(false);
+      });
+    }
+  });
+  document.getElementById('formule-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showLoader(true);
+    const idStr = document.getElementById('formule-id-input').value;
+    const id = idStr ? parseInt(idStr,10) : null;
+    const name = document.getElementById('formule-name').value;
+    const price = parseFloat(document.getElementById('formule-price').value);
+    const selected = Array.from(formuleForm.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value,10));
+
+    try {
+      if (id) {
+        const { error } = await supabaseClient.from('formules').update({ name, price }).eq('id', id);
+        if (error) throw error;
+        await supabaseClient.from('formule_products').delete().eq('formule_id', id);
+        if (selected.length) {
+          const toInsert = selected.map(pid => ({ formule_id: id, product_id: pid }));
+          const { error: ie } = await supabaseClient.from('formule_products').insert(toInsert);
+          if (ie) throw ie;
+        }
+      } else {
+        const { data, error } = await supabaseClient.from('formules').insert({ name, price }).select().single();
+        if (error) throw error;
+        if (selected.length) {
+          const toInsert = selected.map(pid => ({ formule_id: data.id, product_id: pid }));
+          const { error: ie } = await supabaseClient.from('formule_products').insert(toInsert);
+          if (ie) throw ie;
+        }
       }
+      showToast('Formule enregistrée !');
+    } catch (err) {
+      console.error('save formule error:', err);
+      showToast(`Erreur: ${err.message}`);
+    } finally {
+      await loadInitialData(false);
+      renderAdminFormules();
+      formuleModal.classList.add('hidden');
+      showLoader(false);
+    }
+  });
+  formuleModalCloseBtn?.addEventListener('click', () => formuleModal.classList.add('hidden'));
+
+  // Orders actions
+  ordersTabContent.addEventListener('click', async e => {
+    const confirmBtn = e.target.closest('.confirm-order-btn');
+    const refuseBtn = e.target.closest('.refuse-order-btn');
+    const deliverBtn = e.target.closest('.deliver-order-btn');
+
+    if (confirmBtn) {
+      const id = confirmBtn.dataset.orderId;
+      const { error } = await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', id);
+      if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+    }
+    if (refuseBtn) {
+      const id = refuseBtn.dataset.orderId;
+      refuseModal.classList.remove('hidden');
+      refuseConfirmBtn.onclick = async () => {
+        const reason = refuseReasonInput.value;
+        const { error } = await supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', id);
+        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+        refuseReasonInput.value = '';
+        refuseModal.classList.add('hidden');
+      };
+      refuseCancelBtn.onclick = () => refuseModal.classList.add('hidden');
+    }
+    if (deliverBtn) {
+      const id = deliverBtn.dataset.orderId;
+      const { error } = await supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', id);
+      if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+    }
+  });
+
+  // Promotions
+  const openPromoModal = (promoId = null) => {
+    promoForm.reset();
+    document.getElementById('promo-id-input').value = '';
+    const selection = document.getElementById('promo-items-selection');
+    selection.innerHTML = '';
+
+    const toEdit = promoId ? state.promotions.find(p => p.id === promoId) : null;
+    if (toEdit) {
+      document.getElementById('promo-id-input').value = toEdit.id;
+      document.getElementById('promo-description').value = toEdit.description;
+      document.getElementById('promo-discount').value = toEdit.discount_percentage;
+      document.getElementById('promo-expires-at').value = toEdit.expires_at ? new Date(toEdit.expires_at).toISOString().split('T')[0] : '';
+      document.getElementById('promo-max-orders').value = toEdit.max_orders || '';
+      if (toEdit.expires_at) promoForm.querySelector('input[name="promo_limit_type"][value="date"]').checked = true;
+      else if (toEdit.max_orders) promoForm.querySelector('input[name="promo_limit_type"][value="orders"]').checked = true;
+    }
+
+    const updateLimitVisibility = () => {
+      const type = promoForm.querySelector('input[name="promo_limit_type"]:checked').value;
+      document.getElementById('promo-expires-at-container').classList.toggle('hidden', type !== 'date');
+      document.getElementById('promo-max-orders-container').classList.toggle('hidden', type !== 'orders');
+    };
+    promoForm.querySelectorAll('input[name="promo_limit_type"]').forEach(r => r.addEventListener('change', updateLimitVisibility));
+    updateLimitVisibility();
+
+    let html = '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Produits éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
+    Object.values(state.products).flat().forEach(p => {
+      const checked = toEdit ? (toEdit.promotion_products || []).some(pp => pp.product_id === p.id) : false;
+      html += `<label class="flex items-center gap-2"><input type="checkbox" name="promo_products" value="${p.id}" ${checked ? 'checked' : ''}>${p.name}</label>`;
+    });
+    html += '</div></div>';
+
+    html += '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Formules éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
+    state.formules.forEach(f => {
+      const checked = toEdit ? (toEdit.promotion_formules || []).some(pf => pf.formule_id === f.id) : false;
+      html += `<label class="flex items-center gap-2"><input type="checkbox" name="promo_formules" value="${f.id}" ${checked ? 'checked' : ''}>${f.name}</label>`;
+    });
+    html += '</div></div>';
+
+    selection.innerHTML = html;
+    promoModal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  };
+
+  addPromoBtn?.addEventListener('click', () => openPromoModal());
+  promoModalCloseBtn?.addEventListener('click', () => { promoModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); });
+
+  promoForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const descEl = document.getElementById('promo-description');
+    const discountEl = document.getElementById('promo-discount');
+    if (!descEl?.value?.trim()) return showToast('La description ne peut pas être vide.');
+
+    showLoader(true);
+    const id = document.getElementById('promo-id-input').value;
+
+    const promoData = { description: descEl.value, discount_percentage: parseFloat(discountEl.value) };
+    const type = promoForm.querySelector('input[name="promo_limit_type"]:checked').value;
+    if (type === 'date') {
+      const expires = document.getElementById('promo-expires-at').value;
+      promoData.expires_at = expires || null;
+      promoData.max_orders = null;
+    } else {
+      const maxOrders = document.getElementById('promo-max-orders').value;
+      promoData.max_orders = maxOrders ? parseInt(maxOrders, 10) : null;
+      promoData.expires_at = null;
+    }
+
+    const selectedProducts = Array.from(promoForm.querySelectorAll('input[name="promo_products"]:checked')).map(cb => parseInt(cb.value, 10));
+    const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
+
+    try {
+      if (id) {
+        const { error } = await supabaseClient.from('promotions').update(promoData).eq('id', id);
+        if (error) throw error;
+        await supabaseClient.from('promotion_products').delete().eq('promotion_id', id);
+        await supabaseClient.from('promotion_formules').delete().eq('promotion_id', id);
+        if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: id, product_id: pid })));
+        if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: id, formule_id: fid })));
+      } else {
+        const { data, error } = await supabaseClient.from('promotions').insert(promoData).select().single();
+        if (error) throw error;
+        const newId = data.id;
+        if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: newId, product_id: pid })));
+        if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: newId, formule_id: fid })));
+      }
+      showToast('Promotion enregistrée !');
+    } catch (err) {
+      console.error('save promo error:', err);
+      showToast(`Erreur: ${err.message}`);
+    } finally {
+      await loadInitialData(false);
+      renderAdminPromotions();
+      promoModal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      showLoader(false);
+    }
+  });
+
+  // Historique (client)
+  const renderHistory = () => {
+    historyModalBody.innerHTML = state.orders.length ? state.orders.map(order => {
+      const items = order.order_items.map(it => {
+        if (it.products) return `<li>${it.quantity} x ${it.products.name}</li>`;
+        if (it.formules) return `<li>${it.quantity} x ${it.formules.name} (${it.description})</li>`;
+        return '';
+      }).join('');
+      const badge = {
+        pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
+        confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
+        refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
+        delivered:`<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terminée</span>`
+      }[order.status] || '';
+      const actions = order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2" data-order-id="${order.id}">Voir le reçu</button>` : '';
+      return `
+        <div class="bg-stone-50 p-4 rounded-lg">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-semibold text-stone-800">Commande #${order.id.toString().slice(-4)} (Retrait à ${order.pickup_time.slice(0,5)})</p>
+              <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
+            </div>
+            ${badge}
+          </div>
+          <ul class="list-disc list-inside text-sm text-stone-600 mt-2">${items}</ul>
+          ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
+          <div class="mt-3 text-right">${actions}</div>
+        </div>`;
+    }).join('') : '<p class="text-center text-stone-500">Vous n\'avez pas encore de commande.</p>';
+    historyModal.classList.remove('hidden');
+  };
+
+  // Reçu
+  const renderReceipt = (order) => {
+    document.getElementById('receipt-date').textContent = new Date(order.created_at).toLocaleDateString('fr-FR');
+    document.getElementById('receipt-order-id').textContent = `#${order.id.toString().slice(-6).toUpperCase()}`;
+    document.getElementById('receipt-items').innerHTML = order.order_items.map(it => {
+      const name = it.products ? `${it.quantity}x ${it.products.name}` : `${it.quantity}x ${it.formules.name}${it.description ? ' ('+it.description+')':''}`;
+      return `<div class="flex justify-between"><span>${name}</span><span>${(it.price * it.quantity).toFixed(2)}&nbsp;€</span></div>`;
+    }).join('');
+    const subtotalTTC = order.total_price;
+    const tva = subtotalTTC * 0.20;
+    const totalHT = subtotalTTC - tva;
+    document.getElementById('receipt-subtotal').innerHTML = `${totalHT.toFixed(2)}&nbsp;€`;
+    document.getElementById('receipt-tva').innerHTML = `${tva.toFixed(2)}&nbsp;€`;
+    document.getElementById('receipt-total').innerHTML = `${subtotalTTC.toFixed(2)}&nbsp;€`;
+    const promoLine = document.getElementById('receipt-promo-line');
+    if (order.discount_amount) {
+      document.getElementById('receipt-discount').innerHTML = `- ${order.discount_amount.toFixed(2)}&nbsp;€`;
+      promoLine.classList.remove('hidden');
+    } else promoLine.classList.add('hidden');
+    receiptModal.classList.remove('hidden');
+  };
+
+  // Checkout
+  const handleCheckout = async () => {
+    if (!state.cart.length) return showToast('Votre panier est vide.');
+    showLoader(true);
+    try {
+      const subtotal = state.cart.reduce((t,i)=> t + (i.quantity * (i.type==='product'? i.product.price : i.formule.price)), 0);
+      const promo = findApplicablePromotion(state.cart);
+      let discount = 0, final = subtotal, promoId = null;
+      if (promo) { discount = subtotal * (promo.discount_percentage/100); final = subtotal - discount; promoId = promo.id; }
+      const pickupTime = document.getElementById('cart-pickup-time').value;
+
+      const { data: order, error: oe } = await supabaseClient.from('orders').insert({
+        user_id: state.currentUser.id,
+        total_price: final,
+        pickup_time: pickupTime,
+        status: 'pending',
+        promotion_id: promoId,
+        discount_amount: discount
+      }).select().single();
+      if (oe) throw oe;
+
+      const items = state.cart.map(it => it.type === 'product'
+        ? { order_id: order.id, product_id: it.product.id, quantity: it.quantity, price: it.product.price, category: it.product.category }
+        : { order_id: order.id, formule_id: it.formule.id, quantity: it.quantity, price: it.formule.price, description: it.selectedProducts.map(p=>p.name).join(', '), category: 'formule' }
+      );
+
+      const { error: ie } = await supabaseClient.from('order_items').insert(items);
+      if (ie) throw ie;
+
+      state.cart = [];
+      updateCartBadge();
+      renderCart();
+      cartModal.classList.add('hidden');
+
+      await loadInitialData(false);
+      renderAll();
+      showToast('Commande passée avec succès !');
+    } catch (err) {
+      console.error('Checkout error:', err);
+      showToast(`Erreur lors de la commande: ${err.message}`);
+    } finally {
+      showLoader(false);
+    }
+  };
+
+  // History modal buttons
+  historyModalBody.addEventListener('click', e => {
+    const receiptBtn = e.target.closest('.receipt-btn');
+    if (receiptBtn) {
+      const id = parseInt(receiptBtn.dataset.orderId, 10);
+      const order = state.orders.find(o => o.id === id);
+      if (order) renderReceipt(order);
+    }
+  });
+  document.getElementById('receipt-close-btn')?.addEventListener('click', () => receiptModal.classList.add('hidden'));
+
+  // Forgot / Reset password
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
+  const forgotPasswordModal = document.getElementById('forgot-password-modal');
+  const forgotPasswordForm = document.getElementById('forgot-password-form');
+  const forgotPasswordModalCloseBtn = document.getElementById('forgot-password-modal-close-btn');
+  const resetPasswordModal = document.getElementById('reset-password-modal');
+  const resetPasswordForm = document.getElementById('reset-password-form');
+
+  forgotPasswordLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    forgotPasswordModal.classList.remove('hidden');
+  });
+  forgotPasswordModalCloseBtn?.addEventListener('click', () => forgotPasswordModal.classList.add('hidden'));
+
+  forgotPasswordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('forgot-password-email').value;
+    showLoader(true);
+    try {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+      if (error) throw error;
+      showToast('Un email de réinitialisation a été envoyé.');
+      forgotPasswordModal.classList.add('hidden');
+    } catch (err) {
+      showToast(`Erreur: ${err.message}`);
+    } finally { showLoader(false); }
+  });
+
+  resetPasswordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newPwd = document.getElementById('reset-password-new').value;
+    if (newPwd.length < 6) return showToast('Le mot de passe doit contenir au moins 6 caractères.');
+    showLoader(true);
+    try {
+      const { error } = await supabaseClient.auth.updateUser({ password: newPwd });
+      if (error) throw error;
+      showToast('Mot de passe réinitialisé avec succès !');
+      resetPasswordModal.classList.add('hidden');
+    } catch (err) {
+      showToast(`Erreur: ${err.message}`);
+    } finally { showLoader(false); }
+  });
+
+  // Panier - open order modal
+  document.addEventListener('click', (e) => {
+    const addToCartBtn = e.target.closest('.add-to-cart-btn');
+    if (addToCartBtn) {
+      const productId = parseInt(addToCartBtn.dataset.productId, 10);
+      const product = getProduct(productId);
+      if (!product) return;
+      const exist = state.cart.find(i => i.type === 'product' && i.product.id === productId);
+      if (exist) exist.quantity += 1; else state.cart.push({ type:'product', product, quantity:1 });
+      updateCartBadge();
+      showToast(`${product.name} a été ajouté au panier.`);
+      return;
+    }
+    const orderBtn = e.target.closest('.order-btn');
+    if (orderBtn) openOrderModal(parseInt(orderBtn.dataset.formuleId, 10));
+  });
+
+  const openOrderModal = (formuleId) => {
+    const formule = getFormule(formuleId);
+    if (!formule) return;
+    modalTitle.textContent = `Composer votre ${formule.name}`;
+    modalBody.innerHTML = '';
+    const currentSelections = {};
+
+    Object.entries(formule.eligible_products).forEach(([type, ids]) => {
+      if (!ids?.length) return;
+      const prods = state.products[type]?.filter(p => p.available && ids.includes(p.id)) || [];
+      if (!prods.length) return;
+      const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+      const grid = prods.map(p => `<button class="p-3 border rounded-lg text-left transition bg-stone-50 border-stone-200 hover:border-amber-400" data-product-id="${p.id}" data-product-type="${type}"><p class="font-semibold text-stone-800">${p.name}</p></button>`).join('');
+      modalBody.innerHTML += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2">${typeName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${grid}</div></div>`;
     });
 
-    // Promotions CRUD
-    const openPromoModal = (promoId = null) => {
-      promoForm.reset();
-      document.getElementById('promo-id-input').value = '';
-      const selectionContainer = document.getElementById('promo-items-selection');
-      selectionContainer.innerHTML = '';
-      const promoToEdit = promoId ? state.promotions.find(p => p.id === promoId) : null;
-      if (promoToEdit) {
-        document.getElementById('promo-id-input').value = promoToEdit.id;
-        document.getElementById('promo-description').value = promoToEdit.description;
-        document.getElementById('promo-discount').value = promoToEdit.discount_percentage;
-        document.getElementById('promo-expires-at').value = promoToEdit.expires_at ? new Date(promoToEdit.expires_at).toISOString().split('T')[0] : '';
-        document.getElementById('promo-max-orders').value = promoToEdit.max_orders || '';
-        if (promoToEdit.expires_at) promoForm.querySelector('input[name="promo_limit_type"][value="date"]').checked = true;
-        else if (promoToEdit.max_orders) promoForm.querySelector('input[name="promo_limit_type"][value="orders"]').checked = true;
-      }
-      const updateVisibility = () => {
-        if (promoForm.querySelector('input[name="promo_limit_type"]:checked').value === 'date') {
-          document.getElementById('promo-expires-at-container').classList.remove('hidden');
-          document.getElementById('promo-max-orders-container').classList.add('hidden');
-        } else {
-          document.getElementById('promo-expires-at-container').classList.add('hidden');
-          document.getElementById('promo-max-orders-container').classList.remove('hidden');
-        }
-      };
-      promoForm.querySelectorAll('input[name="promo_limit_type"]').forEach(radio => radio.addEventListener('change', updateVisibility));
-      updateVisibility();
+    modalTotalPrice.textContent = `${parseFloat(formule.price).toFixed(2)}€`;
 
-      let itemsHtml = '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Produits éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
-      Object.values(state.products).flat().forEach(p => {
-        const isChecked = promoToEdit ? promoToEdit.promotion_products?.some(pp => pp.product_id === p.id) : false;
-        itemsHtml += `<label class="flex items-center gap-2"><input type="checkbox" name="promo_products" value="${p.id}" ${isChecked ? 'checked' : ''}>${p.name}</label>`;
-      });
-      itemsHtml += '</div></div>';
+    // pré-sélection: 1er élément de chaque catégorie
+    Object.entries(formule.eligible_products).forEach(([type, ids]) => {
+      const first = (state.products[type]||[]).find(p => p.available && ids.includes(p.id));
+      if (first) currentSelections[type] = first.id;
+    });
+    Object.values(currentSelections).forEach(id => {
+      const btn = modalBody.querySelector(`button[data-product-id="${id}"]`);
+      if (btn) btn.classList.add('bg-amber-100','border-amber-500','ring-2','ring-amber-500');
+    });
 
-      itemsHtml += '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Formules éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
-      state.formules.forEach(f => {
-        const isChecked = promoToEdit ? promoToEdit.promotion_formules?.some(pf => pf.formule_id === f.id) : false;
-        itemsHtml += `<label class="flex items-center gap-2"><input type="checkbox" name="promo_formules" value="${f.id}" ${isChecked ? 'checked' : ''}>${f.name}</label>`;
-      });
-      itemsHtml += '</div></div>';
-
-      selectionContainer.innerHTML = itemsHtml;
-      promoModal.classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
+    modalBody.onclick = (e) => {
+      const btn = e.target.closest('button[data-product-id]');
+      if (!btn) return;
+      const { productId, productType } = btn.dataset;
+      modalBody.querySelectorAll(`button[data-product-type="${productType}"]`).forEach(b => b.classList.remove('bg-amber-100','border-amber-500','ring-2','ring-amber-500'));
+      btn.classList.add('bg-amber-100','border-amber-500','ring-2','ring-amber-500');
+      currentSelections[productType] = parseInt(productId, 10);
     };
 
-    addPromoBtn.addEventListener('click', () => openPromoModal());
-    promoModalCloseBtn.addEventListener('click', () => { promoModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); });
+    modalSubmitBtn.onclick = () => {
+      const requiredCategories = Object.keys(formule.eligible_products).filter(k => (formule.eligible_products[k]||[]).length);
+      if (Object.keys(currentSelections).length < requiredCategories.length) return showToast('Veuillez sélectionner un article dans chaque catégorie.');
+      const item = {
+        type: 'formule',
+        formule,
+        selectedProducts: Object.values(currentSelections).map(id => getProduct(id)),
+        quantity: 1
+      };
+      state.cart.push(item);
+      updateCartBadge();
+      orderModal.classList.add('hidden');
+      showToast(`${formule.name} a été ajouté au panier.`);
+    };
 
-    promoForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const descriptionEl = promoForm.querySelector('#promo-description');
-      if (!descriptionEl || !descriptionEl.value.trim()) { showToast("La description ne peut pas être vide."); return; }
-      showLoader(true);
-      const id = document.getElementById('promo-id-input').value;
-      const promoData = { description: descriptionEl.value, discount_percentage: parseFloat(document.getElementById('promo-discount').value) };
-      const limitType = promoForm.querySelector('input[name="promo_limit_type"]:checked').value;
-      if (limitType === 'date') { const exp = document.getElementById('promo-expires-at').value; promoData.expires_at = exp || null; promoData.max_orders = null; }
-      else { const mo = document.getElementById('promo-max-orders').value; promoData.max_orders = mo ? parseInt(mo, 10) : null; promoData.expires_at = null; }
+    orderModal.classList.remove('hidden');
+  };
 
-      const selectedProducts = Array.from(promoForm.querySelectorAll('input[name="promo_products"]:checked')).map(cb => parseInt(cb.value, 10));
-      const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
-
-      try {
-        if (id) {
-          const { error } = await supabaseClient.from('promotions').update(promoData).eq('id', id);
-          if (error) throw error;
-          await supabaseClient.from('promotion_products').delete().eq('promotion_id', id);
-          await supabaseClient.from('promotion_formules').delete().eq('promotion_id', id);
-          if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: id, product_id: pid })));
-          if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: id, formule_id: fid })));
-        } else {
-          const { data, error } = await supabaseClient.from('promotions').insert(promoData).select().single();
-          if (error) throw error;
-          const newPromoId = data.id;
-          if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: newPromoId, product_id: pid })));
-          if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: newPromoId, formule_id: fid })));
-        }
-        showToast("Promotion enregistrée !");
-      } catch (error) {
-        showToast(`Erreur: ${error.message}`); console.error("Error saving promotion:", error);
-      } finally {
-        await loadInitialData(false);
-        renderAdminPromotions();
-        promoModal.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-        showLoader(false);
-      }
-    });
-
-    adminPromosContainer.addEventListener('click', async e => {
-      const editBtn = e.target.closest('.edit-promo-btn');
-      if (editBtn) openPromoModal(parseInt(editBtn.dataset.promoId, 10));
-      const deleteBtn = e.target.closest('.delete-promo-btn');
-      if (deleteBtn) {
-        const promoId = deleteBtn.dataset.promoId;
-        showConfirmModal('Supprimer cette promotion?', 'Cette action est irréversible.', async () => {
-          showLoader(true);
-          const { error } = await supabaseClient.from('promotions').delete().eq('id', promoId);
-          if (error) showToast(`Erreur: ${error.message}`); else showToast("Promotion supprimée.");
-          await loadInitialData(false);
-          renderAdminPromotions();
-          showLoader(false);
-        });
-      }
-    });
-
-    document.querySelector('#stats-tab').addEventListener('click', e => {
-      if (e.target.classList.contains('stats-filter-btn')) {
-        document.querySelectorAll('.stats-filter-btn').forEach(btn => { btn.classList.remove('bg-amber-600','text-white'); btn.classList.add('bg-stone-200','text-stone-700'); });
-        e.target.classList.add('bg-amber-600','text-white'); e.target.classList.remove('bg-stone-200','text-stone-700');
-        renderStats(e.target.dataset.period);
-      }
-    });
-
-    // Rafraîchit quand l’onglet reprend le focus
-    window.addEventListener('focus', async () => {
-      if (!state.currentUser) return;
-      await loadInitialData(false);
-      if (state.currentUser.role === 'admin') {
-        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
-        if (isOrdersVisible) renderAdminOrders(); else renderAll();
-      } else { renderAll(); }
-    });
-
-    // Rafraîchit quand la page redevient visible
-    document.addEventListener('visibilitychange', async () => {
-      if (document.hidden || !state.currentUser) return;
-      await loadInitialData(false);
-      if (state.currentUser.role === 'admin') {
-        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
-        if (isOrdersVisible) renderAdminOrders(); else renderAll();
-      } else { renderAll(); }
-    });
-
-    // ===== BOOTSTRAP =====
-    await bootstrapAuth();
-    if (state.currentUser) resetLogoutTimer();
-  });
-  </script>
+  /* ========= BOOT ========= */
+  await bootstrap();
+}); // DOMContentLoaded
+</script>
 </body>
 </html>
