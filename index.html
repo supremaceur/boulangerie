@@ -1332,7 +1332,14 @@ activityEvents.forEach(ev => {
       }
     };
 
-    const handleGoogleLogin = async () => { await supabaseClient.auth.signInWithOAuth({ provider: 'google' }); };
+    const handleGoogleLogin = async () => { 
+  await supabaseClient.auth.signInWithOAuth({ 
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin
+    }
+  }); 
+};
 
     const hardSignOut = async () => {
       try { await supabaseClient.auth.signOut(); } catch(e) {}
@@ -1355,6 +1362,16 @@ activityEvents.forEach(ev => {
   showLoader(true);
   
   try {
+    // Vérifier d'abord s'il y a des paramètres OAuth dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasOAuthParams = urlParams.has('code') || urlParams.has('access_token');
+    
+    if (hasOAuthParams) {
+      console.log('Paramètres OAuth détectés, traitement en cours...');
+      // Nettoyer l'URL après traitement
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     
     if (error) {
@@ -1824,21 +1841,24 @@ window.addEventListener('focus', async () => {
       try {
         switch (event) {
           case 'SIGNED_IN':
-            if (session?.user && !state.currentUser) {
-              console.log('Utilisateur connecté');
-              state.currentUser = { 
-                ...session.user, 
-                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-              };
-              
-              resetLogoutTimer();
-              await loadInitialData(true);
-              
-              const targetView = state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view';
-              showView(targetView);
-              renderAll();
-            }
-            break;
+  if (session?.user && !state.currentUser) {
+    console.log('Utilisateur connecté');
+    state.currentUser = { 
+      ...session.user, 
+      role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+    };
+    
+    resetLogoutTimer();
+    
+    // Petit délai pour laisser le temps à l'interface de se stabiliser
+    setTimeout(async () => {
+      await loadInitialData(true);
+      const targetView = state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view';
+      showView(targetView);
+      renderAll();
+    }, 100);
+  }
+  break;
             
           case 'SIGNED_OUT':
             if (state.currentUser) {
