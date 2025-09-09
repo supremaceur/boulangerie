@@ -1285,22 +1285,30 @@ activityEvents.forEach(ev => {
 
     // ===== AUTH =====
     const handleLogin = async (e) => {
-      e.preventDefault();
-      hideAuthError();
-      showLoader(true);
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      try {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Erreur de connexion:', error);
-        if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
-        else showAuthError(error.message);
-      } finally {
-        showLoader(false);
-      }
-    };
+  e.preventDefault();
+  hideAuthError();
+  showLoader(true);
+  
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  
+  try {
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    
+    // Ne pas faire de redirection ici, laisser onAuthStateChange gérer
+    
+  } catch (error) {
+    console.error('Erreur de connexion:', error);
+    if (error.message === 'Invalid login credentials') {
+      showAuthError("Identifiant ou mot de passe incorrect");
+    } else {
+      showAuthError(error.message);
+    }
+  } finally {
+    showLoader(false);
+  }
+};
 
     const handleSignup = async (e) => {
       e.preventDefault();
@@ -1340,27 +1348,49 @@ activityEvents.forEach(ev => {
 
     // Bootstrap auth : ne pas déconnecter au simple refresh
     const bootstrapAuth = async () => {
-      showLoader(true);
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.user) {
-          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
-          resetLogoutTimer();
-          await loadInitialData(false);
-          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-          renderAll();
-        } else {
-          showView('auth-view');
-        }
-      } catch (e) {
-        console.warn('bootstrapAuth error:', e);
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) showView('auth-view');
-      } finally {
-        hasBootstrapped = true;
-        showLoader(false);
-      }
-    };
+  if (state.isInitializing) return;
+  state.isInitializing = true;
+  
+  console.log('Initialisation de l\'authentification...');
+  showLoader(true);
+  
+  try {
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération de la session:', error);
+      showView('auth-view');
+      return;
+    }
+    
+    if (session?.user) {
+      console.log('Session trouvée, utilisateur connecté');
+      
+      state.currentUser = { 
+        ...session.user, 
+        role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+      };
+      
+      resetLogoutTimer();
+      await loadInitialData(false);
+      
+      const targetView = state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view';
+      showView(targetView);
+      renderAll();
+      
+    } else {
+      console.log('Aucune session trouvée');
+      showView('auth-view');
+    }
+    
+  } catch (error) {
+    console.error('Erreur lors de l\'initialisation:', error);
+    showView('auth-view');
+  } finally {
+    state.isInitializing = false;
+    showLoader(false);
+  }
+};
 
     // Gestion de la visibilité de la page
 document.addEventListener('visibilitychange', async () => {
@@ -1780,6 +1810,63 @@ window.addEventListener('focus', async () => {
         if (isOrdersVisible) renderAdminOrders(); else renderAll();
       } else { renderAll(); }
     });
+	
+	// ===== AUTH STATE CHANGE =====
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      // Ignorer pendant l'initialisation
+      if (state.isInitializing) {
+        console.log('Ignoré - initialisation en cours');
+        return;
+      }
+      
+      try {
+        switch (event) {
+          case 'SIGNED_IN':
+            if (session?.user && !state.currentUser) {
+              console.log('Utilisateur connecté');
+              state.currentUser = { 
+                ...session.user, 
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+              };
+              
+              resetLogoutTimer();
+              await loadInitialData(true);
+              
+              const targetView = state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view';
+              showView(targetView);
+              renderAll();
+            }
+            break;
+            
+          case 'SIGNED_OUT':
+            if (state.currentUser) {
+              console.log('Utilisateur déconnecté');
+              state.currentUser = null;
+              state.userProfile = null;
+              state.orders = [];
+              state.cart = [];
+              clearTimeout(logoutTimer);
+              showView('auth-view');
+            }
+            break;
+            
+          case 'TOKEN_REFRESHED':
+            console.log('Token rafraîchi');
+            if (session?.user && state.currentUser) {
+              resetLogoutTimer();
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('Erreur dans onAuthStateChange:', error);
+      }
+    });
+
+    // ===== BOOTSTRAP =====
+    await bootstrapAuth();
+    if (state.currentUser) resetLogoutTimer();
 
     // ===== BOOTSTRAP =====
     await bootstrapAuth();
