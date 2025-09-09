@@ -1298,96 +1298,61 @@ activityEvents.forEach(ev => {
     };
 
     // Bootstrap auth : ne pas déconnecter au simple refresh
+    let isBootstrapping = false;
     const bootstrapAuth = async () => {
-  showLoader(true);
-  
-  try {
-    // Détecter si on revient d'OAuth
-    const urlParams = new URLSearchParams(window.location.search);
-    const isOAuthReturn = urlParams.has('code') || urlParams.has('access_token');
-    
-    if (isOAuthReturn) {
-      console.log('Retour OAuth détecté, traitement en cours...');
-      
-      // Timeout de sécurité pour éviter le spinner infini
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout OAuth')), 10000)
-      );
-      
-      // Attendre la session avec timeout
-      try {
-        await Promise.race([
-          new Promise(resolve => setTimeout(resolve, 2000)),
-          timeoutPromise
-        ]);
-      } catch (error) {
-        console.warn('Timeout lors du traitement OAuth');
-        showView('auth-view');
-        showLoader(false);
+      if (isBootstrapping) {
+        console.log('Bootstrap déjà en cours, ignoré');
         return;
       }
-    }
-    
-    // Récupérer la session
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    
-    if (error) {
-      console.error('Erreur lors de la récupération de session:', error);
-      throw error;
-    }
-    
-    if (session?.user) {
-      console.log('Session trouvée, connexion réussie');
       
-      // Nettoyer l'URL
-      if (isOAuthReturn) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+      isBootstrapping = true;
+      showLoader(true);
       
-      state.currentUser = { 
-        ...session.user, 
-        role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-      };
+      // Timeout global de sécurité
+      const globalTimeout = setTimeout(() => {
+        console.warn('Timeout global bootstrap, forçage du loader hidden');
+        showLoader(false);
+        showView('auth-view');
+        isBootstrapping = false;
+      }, 15000);
       
-      resetLogoutTimer();
-      await loadInitialData(false);
-      showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-      renderAll();
-    } else {
-      console.log('Aucune session trouvée');
-      if (isOAuthReturn) {
-        // Si on revient d'OAuth mais pas de session, c'est une erreur
-        showAuthError("Erreur lors de la connexion Google. Veuillez réessayer.");
-      }
-      showView('auth-view');
-    }
-  } catch (error) {
-    console.error('Erreur bootstrap:', error);
-    showView('auth-view');
-    if (error.message !== 'Timeout OAuth') {
-      showAuthError("Erreur de connexion. Veuillez réessayer.");
-    }
-  } finally {
-    hasBootstrapped = true;
-    showLoader(false); // IMPORTANT: toujours cacher le loader
-  }
-};
-
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  console.log('Auth state change:', event, session?.user?.email);
-  
-  // Toujours arrêter le loader en cas d'événement auth
-  showLoader(false);
-  
-  try {
-    switch (event) {
-      case 'SIGNED_IN':
-        if (session?.user) {
-          console.log('Utilisateur connecté');
+      try {
+        // Détecter si on revient d'OAuth
+        const urlParams = new URLSearchParams(window.location.search);
+        const isOAuthReturn = urlParams.has('code') || urlParams.has('access_token');
+        
+        if (isOAuthReturn) {
+          console.log('Retour OAuth détecté, traitement en cours...');
           
-          // Nettoyer l'URL
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.has('code')) {
+          // Attendre un peu pour laisser le temps à Supabase de traiter
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        // Récupérer la session avec retry
+        let session = null;
+        let error = null;
+        
+        for (let i = 0; i < 3; i++) {
+          const result = await supabaseClient.auth.getSession();
+          session = result.data?.session;
+          error = result.error;
+          
+          if (session || !isOAuthReturn) break;
+          
+          console.log(`Tentative ${i + 1}/3 - Attente de la session...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        if (error) {
+          console.error('Erreur lors de la récupération de session:', error);
+          throw error;
+        }
+        
+        if (session?.user) {
+          console.log('Session trouvée, connexion réussie');
+          
+          // Nettoyer l'URL si retour OAuth
+          if (isOAuthReturn) {
             window.history.replaceState({}, document.title, window.location.pathname);
           }
           
@@ -1397,40 +1362,98 @@ activityEvents.forEach(ev => {
           };
           
           resetLogoutTimer();
-          showLoader(true); // Montrer le loader pour le chargement des données
           await loadInitialData(false);
           showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
           renderAll();
-          showLoader(false); // Cacher le loader après chargement
+        } else {
+          console.log('Aucune session trouvée');
+          if (isOAuthReturn) {
+            showAuthError("Erreur lors de la connexion Google. Veuillez réessayer.");
+          }
+          showView('auth-view');
         }
-        break;
-        
-      case 'SIGNED_OUT':
-        const { data: { session: s } } = await supabaseClient.auth.getSession();
-        if (!s) { 
-          await hardSignOut(); 
+      } catch (error) {
+        console.error('Erreur bootstrap:', error);
+        showView('auth-view');
+        if (error.message !== 'Timeout OAuth') {
+          showAuthError("Erreur de connexion. Veuillez réessayer.");
         }
-        break;
-        
-      case 'TOKEN_REFRESHED':
-      case 'USER_UPDATED':
-        if (session?.user) {
-          state.currentUser = { 
-            ...session.user, 
-            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-          };
-          resetLogoutTimer();
+      } finally {
+        clearTimeout(globalTimeout);
+        isBootstrapping = false;
+        hasBootstrapped = true;
+        showLoader(false); // TOUJOURS cacher le loader
+      }
+    };
+
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      // Ignorer les événements pendant le bootstrap pour éviter les conflits
+      if (isBootstrapping) {
+        console.log('Événement ignoré pendant bootstrap:', event);
+        return;
+      }
+      
+      // Arrêter le loader
+      showLoader(false);
+      
+      try {
+        switch (event) {
+          case 'SIGNED_IN':
+            if (session?.user && hasBootstrapped) {
+              console.log('Utilisateur connecté après bootstrap');
+              
+              // Nettoyer l'URL si nécessaire
+              const urlParams = new URLSearchParams(window.location.search);
+              if (urlParams.has('code') || urlParams.has('access_token')) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+              
+              state.currentUser = { 
+                ...session.user, 
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+              };
+              
+              resetLogoutTimer();
+              showLoader(true);
+              await loadInitialData(false);
+              showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+              renderAll();
+              showLoader(false);
+            }
+            break;
+            
+          case 'SIGNED_OUT':
+            const { data: { session: s } } = await supabaseClient.auth.getSession();
+            if (!s) { 
+              console.log('SIGNED_OUT confirmé');
+              await hardSignOut(); 
+            }
+            break;
+            
+          case 'TOKEN_REFRESHED':
+          case 'USER_UPDATED':
+            if (session?.user && hasBootstrapped) {
+              console.log('Token/User mis à jour');
+              state.currentUser = { 
+                ...session.user, 
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+              };
+              resetLogoutTimer();
+            }
+            break;
         }
-        break;
-    }
-  } catch (error) {
-    console.error('Erreur dans onAuthStateChange:', error);
-    showView('auth-view');
-    showAuthError("Erreur de connexion.");
-  } finally {
-    showLoader(false); // Sécurité: toujours cacher le loader
-  }
-});
+      } catch (error) {
+        console.error('Erreur dans onAuthStateChange:', error);
+        if (hasBootstrapped) {
+          showView('auth-view');
+          showAuthError("Erreur de connexion.");
+        }
+      } finally {
+        showLoader(false);
+      }
+    });
 
     // ===== LISTENERS =====
     loginForm.addEventListener('submit', handleLogin);
@@ -1797,43 +1820,93 @@ activityEvents.forEach(ev => {
       }
     });
 
-    // Rafraîchit quand l’onglet reprend le focus
-    window.addEventListener('focus', async () => {
-      if (!state.currentUser) return;
-      await loadInitialData(false);
-      if (state.currentUser.role === 'admin') {
-        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
-        if (isOrdersVisible) renderAdminOrders(); else renderAll();
-      } else { renderAll(); }
+    // Protection contre les multiples refresh simultanés
+    let isRefreshing = false;
+    
+    const safeRefresh = async () => {
+      if (isRefreshing || !state.currentUser || isBootstrapping) return;
+      
+      isRefreshing = true;
+      try {
+        // Vérifier d'abord la session
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+          console.log('Session expirée, déconnexion');
+          await hardSignOut();
+          return;
+        }
+        
+        await loadInitialData(false);
+        if (state.currentUser?.role === 'admin') {
+          const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+          if (isOrdersVisible) renderAdminOrders(); else renderAll();
+        } else { 
+          renderAll(); 
+        }
+      } catch (error) {
+        console.error('Erreur lors du refresh:', error);
+      } finally {
+        isRefreshing = false;
+      }
+    };
+
+    // Rafraîchit quand l'onglet reprend le focus
+    window.addEventListener('focus', () => {
+      setTimeout(safeRefresh, 100); // Petit délai pour éviter les appels multiples
     });
 
     // Rafraîchit quand la page redevient visible
-    document.addEventListener('visibilitychange', async () => {
-      if (document.hidden || !state.currentUser) return;
-      await loadInitialData(false);
-      if (state.currentUser.role === 'admin') {
-        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
-        if (isOrdersVisible) renderAdminOrders(); else renderAll();
-      } else { renderAll(); }
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        setTimeout(safeRefresh, 100);
+      }
     });
-	
-	// Gestion simple de la visibilité
-document.addEventListener('visibilitychange', async () => {
-  if (document.hidden || !state.currentUser) return;
-  
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      await handleLogout();
+
+    // Protection contre la fermeture accidentelle avec des données non sauvegardées
+    window.addEventListener('beforeunload', (e) => {
+      if (state.cart && state.cart.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'Vous avez des articles dans votre panier. Êtes-vous sûr de vouloir quitter ?';
+      }
+    });
+
+    // Sauvegarde du panier dans le localStorage pour persistance
+    const saveCartToStorage = () => {
+      if (state.currentUser && state.cart) {
+        localStorage.setItem(`cart_${state.currentUser.id}`, JSON.stringify(state.cart));
+      }
+    };
+
+    const loadCartFromStorage = () => {
+      if (state.currentUser) {
+        const savedCart = localStorage.getItem(`cart_${state.currentUser.id}`);
+        if (savedCart) {
+          try {
+            state.cart = JSON.parse(savedCart);
+          } catch (e) {
+            console.warn('Erreur lors du chargement du panier sauvegardé');
+          }
+        }
+      }
+    };
+
+    // Améliorer la fonction addProductToCart pour sauvegarder
+    const originalAddToCart = window.addProductToCart;
+    if (typeof originalAddToCart === 'function') {
+      window.addProductToCart = function(...args) {
+        const result = originalAddToCart.apply(this, args);
+        saveCartToStorage();
+        return result;
+      };
     }
-  } catch (error) {
-    console.warn('Vérification de session échouée:', error);
-  }
-});
 
     // ===== BOOTSTRAP =====
     await bootstrapAuth();
-    if (state.currentUser) resetLogoutTimer();
+    if (state.currentUser) {
+      resetLogoutTimer();
+      loadCartFromStorage(); // Charger le panier sauvegardé
+      renderAll(); // Re-render pour afficher le panier
+    }
   });
   </script>
 </body>
