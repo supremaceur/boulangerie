@@ -575,7 +575,21 @@
     const adminPromosContainer = document.getElementById('admin-promos-container');
 
     // ===== HELPERS =====
-    const showLoader = (show) => { loader.classList.toggle('hidden', !show); };
+    let loaderTimeout;
+    const showLoader = (show) => { 
+      loader.classList.toggle('hidden', !show);
+      
+      if (show) {
+        // Protection anti-spinner infini : forcer l'arrêt après 10s max
+        clearTimeout(loaderTimeout);
+        loaderTimeout = setTimeout(() => {
+          console.warn('🚨 PROTECTION: Loader forcé à se cacher après 10s');
+          loader.classList.add('hidden');
+        }, 10000);
+      } else {
+        clearTimeout(loaderTimeout);
+      }
+    };
     const showView = (viewId) => {
       Object.values(views).forEach(v => v.classList.add('hidden'));
       views[viewId.replace('-view', '')]?.classList.remove('hidden');
@@ -1297,63 +1311,42 @@ activityEvents.forEach(ev => {
       if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
     };
 
-    // Bootstrap auth : ne pas déconnecter au simple refresh
+    // Bootstrap auth simplifié
     let isBootstrapping = false;
     const bootstrapAuth = async () => {
-      if (isBootstrapping) {
-        console.log('Bootstrap déjà en cours, ignoré');
-        return;
-      }
+      if (isBootstrapping) return;
       
       isBootstrapping = true;
       showLoader(true);
       
-      // Timeout global de sécurité
-      const globalTimeout = setTimeout(() => {
-        console.warn('Timeout global bootstrap, forçage du loader hidden');
+      // Timeout de sécurité absolu
+      const safetyTimeout = setTimeout(() => {
+        console.warn('TIMEOUT BOOTSTRAP - Forçage arrêt loader');
         showLoader(false);
         showView('auth-view');
         isBootstrapping = false;
-      }, 15000);
+        hasBootstrapped = true;
+      }, 8000);
       
       try {
-        // Détecter si on revient d'OAuth
-        const urlParams = new URLSearchParams(window.location.search);
-        const isOAuthReturn = urlParams.has('code') || urlParams.has('access_token');
+        console.log('🔄 Bootstrap auth démarré');
         
-        if (isOAuthReturn) {
-          console.log('Retour OAuth détecté, traitement en cours...');
-          
-          // Attendre un peu pour laisser le temps à Supabase de traiter
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        // Récupérer la session avec retry
-        let session = null;
-        let error = null;
-        
-        for (let i = 0; i < 3; i++) {
-          const result = await supabaseClient.auth.getSession();
-          session = result.data?.session;
-          error = result.error;
-          
-          if (session || !isOAuthReturn) break;
-          
-          console.log(`Tentative ${i + 1}/3 - Attente de la session...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        // Simple récupération de session
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
         
         if (error) {
-          console.error('Erreur lors de la récupération de session:', error);
-          throw error;
+          console.error('❌ Erreur getSession:', error);
+          showView('auth-view');
+          return;
         }
         
         if (session?.user) {
-          console.log('Session trouvée, connexion réussie');
+          console.log('✅ Session trouvée:', session.user.email);
           
-          // Nettoyer l'URL si retour OAuth
-          if (isOAuthReturn) {
-            window.history.replaceState({}, document.title, window.location.pathname);
+          // Nettoyer l'URL OAuth si nécessaire
+          const url = new URL(window.location);
+          if (url.searchParams.has('code') || url.searchParams.has('access_token')) {
+            window.history.replaceState({}, '', window.location.pathname);
           }
           
           state.currentUser = { 
@@ -1365,77 +1358,67 @@ activityEvents.forEach(ev => {
           await loadInitialData(false);
           showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
           renderAll();
+          
+          console.log('✅ Bootstrap terminé avec succès');
         } else {
-          console.log('Aucune session trouvée');
-          if (isOAuthReturn) {
-            showAuthError("Erreur lors de la connexion Google. Veuillez réessayer.");
-          }
+          console.log('ℹ️ Pas de session, affichage auth');
           showView('auth-view');
         }
+        
       } catch (error) {
-        console.error('Erreur bootstrap:', error);
+        console.error('❌ Erreur bootstrap:', error);
         showView('auth-view');
-        if (error.message !== 'Timeout OAuth') {
-          showAuthError("Erreur de connexion. Veuillez réessayer.");
-        }
+        showAuthError("Erreur de connexion");
       } finally {
-        clearTimeout(globalTimeout);
+        clearTimeout(safetyTimeout);
         isBootstrapping = false;
         hasBootstrapped = true;
-        showLoader(false); // TOUJOURS cacher le loader
+        showLoader(false);
+        console.log('🏁 Bootstrap terminé');
       }
     };
 
+    // Gestionnaire auth simplifié
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
+      console.log(`🔔 Auth event: ${event}`, session?.user?.email || 'no user');
       
-      // Ignorer les événements pendant le bootstrap pour éviter les conflits
+      // Ignorer TOUT pendant le bootstrap
       if (isBootstrapping) {
-        console.log('Événement ignoré pendant bootstrap:', event);
+        console.log('⏭️ Événement ignoré (bootstrap en cours)');
         return;
       }
       
-      // Arrêter le loader
+      // Toujours arrêter le loader pour éviter le spinner infini
       showLoader(false);
       
       try {
         switch (event) {
           case 'SIGNED_IN':
             if (session?.user && hasBootstrapped) {
-              console.log('Utilisateur connecté après bootstrap');
-              
-              // Nettoyer l'URL si nécessaire
-              const urlParams = new URLSearchParams(window.location.search);
-              if (urlParams.has('code') || urlParams.has('access_token')) {
-                window.history.replaceState({}, document.title, window.location.pathname);
-              }
-              
+              console.log('✅ Utilisateur connecté via auth event');
               state.currentUser = { 
                 ...session.user, 
                 role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
               };
-              
               resetLogoutTimer();
-              showLoader(true);
+              
+              // Chargement rapide sans loader
               await loadInitialData(false);
               showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
               renderAll();
-              showLoader(false);
             }
             break;
             
           case 'SIGNED_OUT':
-            const { data: { session: s } } = await supabaseClient.auth.getSession();
-            if (!s) { 
-              console.log('SIGNED_OUT confirmé');
-              await hardSignOut(); 
+            if (hasBootstrapped) {
+              console.log('👋 Déconnexion détectée');
+              await hardSignOut();
             }
             break;
             
           case 'TOKEN_REFRESHED':
-          case 'USER_UPDATED':
             if (session?.user && hasBootstrapped) {
-              console.log('Token/User mis à jour');
+              console.log('🔄 Token rafraîchi');
               state.currentUser = { 
                 ...session.user, 
                 role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
@@ -1445,13 +1428,7 @@ activityEvents.forEach(ev => {
             break;
         }
       } catch (error) {
-        console.error('Erreur dans onAuthStateChange:', error);
-        if (hasBootstrapped) {
-          showView('auth-view');
-          showAuthError("Erreur de connexion.");
-        }
-      } finally {
-        showLoader(false);
+        console.error('❌ Erreur auth event:', error);
       }
     });
 
@@ -1900,6 +1877,17 @@ activityEvents.forEach(ev => {
       };
     }
 
+    // Diagnostic du loader au démarrage
+    console.log('🔍 État initial du loader:', loader.classList.contains('hidden') ? 'caché' : 'visible');
+    
+    // Protection ultime: vérifier toutes les 5s si le loader est bloqué
+    setInterval(() => {
+      if (!loader.classList.contains('hidden') && !isBootstrapping) {
+        console.warn('⚠️ Loader détecté comme bloqué, forçage hidden');
+        showLoader(false);
+      }
+    }, 5000);
+    
     // ===== BOOTSTRAP =====
     await bootstrapAuth();
     if (state.currentUser) {
@@ -1907,6 +1895,8 @@ activityEvents.forEach(ev => {
       loadCartFromStorage(); // Charger le panier sauvegardé
       renderAll(); // Re-render pour afficher le panier
     }
+    
+    console.log('🎯 Initialisation complète, état final loader:', loader.classList.contains('hidden') ? 'caché' : 'visible');
   });
   </script>
 </body>
