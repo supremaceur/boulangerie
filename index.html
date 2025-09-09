@@ -1301,24 +1301,41 @@ activityEvents.forEach(ev => {
     const bootstrapAuth = async () => {
   showLoader(true);
   try {
-    // Nettoyer les paramètres OAuth de l'URL
+    // Détecter si on revient d'OAuth
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('code') || urlParams.has('access_token')) {
-      window.history.replaceState({}, document.title, window.location.pathname);
+    const isOAuthReturn = urlParams.has('code') || urlParams.has('access_token');
+    
+    if (isOAuthReturn) {
+      console.log('Retour OAuth détecté, attente de la session...');
+      // Attendre un peu que Supabase traite l'OAuth
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     const { data: { session } } = await supabaseClient.auth.getSession();
+    
     if (session?.user) {
-      state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+      console.log('Session trouvée lors du bootstrap');
+      
+      // Nettoyer l'URL
+      if (isOAuthReturn) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      
+      state.currentUser = { 
+        ...session.user, 
+        role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+      };
+      
       resetLogoutTimer();
       await loadInitialData(false);
       showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
       renderAll();
     } else {
+      console.log('Aucune session trouvée');
       showView('auth-view');
     }
   } catch (e) {
-    console.warn('bootstrapAuth error:', e);
+    console.error('Erreur bootstrap:', e);
     showView('auth-view');
   } finally {
     hasBootstrapped = true;
@@ -1327,22 +1344,55 @@ activityEvents.forEach(ev => {
 };
 
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      // Empêche des transitions agressives pendant refresh
-      if (event === 'SIGNED_OUT') {
-        const { data: { session: s } } = await supabaseClient.auth.getSession();
-        if (!s) { await hardSignOut(); } else { return; } // ignore signal transitoire
-      }
-
-      if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
+  console.log('Auth state change:', event, session?.user?.email);
+  
+  try {
+    switch (event) {
+      case 'SIGNED_IN':
         if (session?.user) {
-          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+          console.log('Utilisateur connecté via', event);
+          
+          // Nettoyer l'URL si elle contient des paramètres OAuth
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.has('code')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          
+          state.currentUser = { 
+            ...session.user, 
+            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+          };
+          
           resetLogoutTimer();
           await loadInitialData();
           showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
           renderAll();
         }
-      }
-    });
+        break;
+        
+      case 'SIGNED_OUT':
+        const { data: { session: s } } = await supabaseClient.auth.getSession();
+        if (!s) { 
+          await hardSignOut(); 
+        }
+        break;
+        
+      case 'TOKEN_REFRESHED':
+      case 'USER_UPDATED':
+        if (session?.user) {
+          state.currentUser = { 
+            ...session.user, 
+            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+          };
+          resetLogoutTimer();
+        }
+        break;
+    }
+  } catch (error) {
+    console.error('Erreur dans onAuthStateChange:', error);
+    showLoader(false); // S'assurer que le loader se cache en cas d'erreur
+  }
+});
 
     // ===== LISTENERS =====
     loginForm.addEventListener('submit', handleLogin);
