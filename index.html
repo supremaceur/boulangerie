@@ -572,7 +572,21 @@
     const adminPromosContainer = document.getElementById('admin-promos-container');
 
     // ===== HELPERS =====
-    const showLoader = (show) => { loader.classList.toggle('hidden', !show); };
+    let loaderTimeout;
+    const showLoader = (show) => { 
+      loader.classList.toggle('hidden', !show);
+      
+      if (show) {
+        // Protection anti-spinner infini : forcer l'arrêt après 10s max
+        clearTimeout(loaderTimeout);
+        loaderTimeout = setTimeout(() => {
+          console.warn('🚨 PROTECTION: Loader forcé à se cacher après 10s');
+          loader.classList.add('hidden');
+        }, 10000);
+      } else {
+        clearTimeout(loaderTimeout);
+      }
+    };
     const showView = (viewId) => {
       Object.values(views).forEach(v => v.classList.add('hidden'));
       views[viewId.replace('-view', '')]?.classList.remove('hidden');
@@ -1279,6 +1293,7 @@
       console.log('Auth state change:', event);
       showLoader(true);
 
+<<<<<<< HEAD
       // Nettoyer l'URL des paramètres OAuth
       const urlParams = new URLSearchParams(window.location.hash.substring(1)); // PKCE flow uses hash
       if (urlParams.has('access_token') || urlParams.has('code')) {
@@ -1310,6 +1325,128 @@
       showLoader(false);
     });
 
+=======
+    // Bootstrap auth simplifié
+    let isBootstrapping = false;
+    const bootstrapAuth = async () => {
+      if (isBootstrapping) return;
+      
+      isBootstrapping = true;
+      showLoader(true);
+      
+      // Timeout de sécurité absolu
+      const safetyTimeout = setTimeout(() => {
+        console.warn('TIMEOUT BOOTSTRAP - Forçage arrêt loader');
+        showLoader(false);
+        showView('auth-view');
+        isBootstrapping = false;
+        hasBootstrapped = true;
+      }, 8000);
+      
+      try {
+        console.log('🔄 Bootstrap auth démarré');
+        
+        // Simple récupération de session
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Erreur getSession:', error);
+          showView('auth-view');
+          return;
+        }
+        
+        if (session?.user) {
+          console.log('✅ Session trouvée:', session.user.email);
+          
+          // Nettoyer l'URL OAuth si nécessaire
+          const url = new URL(window.location);
+          if (url.searchParams.has('code') || url.searchParams.has('access_token')) {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+          
+          state.currentUser = { 
+            ...session.user, 
+            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+          };
+          
+          resetLogoutTimer();
+          await loadInitialData(false);
+          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+          renderAll();
+          
+          console.log('✅ Bootstrap terminé avec succès');
+        } else {
+          console.log('ℹ️ Pas de session, affichage auth');
+          showView('auth-view');
+        }
+        
+      } catch (error) {
+        console.error('❌ Erreur bootstrap:', error);
+        showView('auth-view');
+        showAuthError("Erreur de connexion");
+      } finally {
+        clearTimeout(safetyTimeout);
+        isBootstrapping = false;
+        hasBootstrapped = true;
+        showLoader(false);
+        console.log('🏁 Bootstrap terminé');
+      }
+    };
+
+    // Gestionnaire auth simplifié
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      console.log(`🔔 Auth event: ${event}`, session?.user?.email || 'no user');
+      
+      // Ignorer TOUT pendant le bootstrap
+      if (isBootstrapping) {
+        console.log('⏭️ Événement ignoré (bootstrap en cours)');
+        return;
+      }
+      
+      // Toujours arrêter le loader pour éviter le spinner infini
+      showLoader(false);
+      
+      try {
+        switch (event) {
+          case 'SIGNED_IN':
+            if (session?.user && hasBootstrapped) {
+              console.log('✅ Utilisateur connecté via auth event');
+              state.currentUser = { 
+                ...session.user, 
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+              };
+              resetLogoutTimer();
+              
+              // Chargement rapide sans loader
+              await loadInitialData(false);
+              showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+              renderAll();
+            }
+            break;
+            
+          case 'SIGNED_OUT':
+            if (hasBootstrapped) {
+              console.log('👋 Déconnexion détectée');
+              await hardSignOut();
+            }
+            break;
+            
+          case 'TOKEN_REFRESHED':
+            if (session?.user && hasBootstrapped) {
+              console.log('🔄 Token rafraîchi');
+              state.currentUser = { 
+                ...session.user, 
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
+              };
+              resetLogoutTimer();
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('❌ Erreur auth event:', error);
+      }
+    });
+>>>>>>> 6a3e9bc58c11bf44d8ec22c10d1c42f017ee8740
 
     // ===== LISTENERS =====
     loginForm.addEventListener('submit', handleLogin);
@@ -1655,6 +1792,7 @@
       }
     });
 
+<<<<<<< HEAD
     // Rafraîchit quand l\'onglet reprend le focus ou redevient visible
     const handleVisibilityOrFocus = async () => {
       if (document.hidden || !state.currentUser) return;
@@ -1674,6 +1812,108 @@
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
 
+=======
+    // Protection contre les multiples refresh simultanés
+    let isRefreshing = false;
+    
+    const safeRefresh = async () => {
+      if (isRefreshing || !state.currentUser || isBootstrapping) return;
+      
+      isRefreshing = true;
+      try {
+        // Vérifier d'abord la session
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+          console.log('Session expirée, déconnexion');
+          await hardSignOut();
+          return;
+        }
+        
+        await loadInitialData(false);
+        if (state.currentUser?.role === 'admin') {
+          const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+          if (isOrdersVisible) renderAdminOrders(); else renderAll();
+        } else { 
+          renderAll(); 
+        }
+      } catch (error) {
+        console.error('Erreur lors du refresh:', error);
+      } finally {
+        isRefreshing = false;
+      }
+    };
+
+    // Rafraîchit quand l'onglet reprend le focus
+    window.addEventListener('focus', () => {
+      setTimeout(safeRefresh, 100); // Petit délai pour éviter les appels multiples
+    });
+
+    // Rafraîchit quand la page redevient visible
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        setTimeout(safeRefresh, 100);
+      }
+    });
+
+    // Protection contre la fermeture accidentelle avec des données non sauvegardées
+    window.addEventListener('beforeunload', (e) => {
+      if (state.cart && state.cart.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'Vous avez des articles dans votre panier. Êtes-vous sûr de vouloir quitter ?';
+      }
+    });
+
+    // Sauvegarde du panier dans le localStorage pour persistance
+    const saveCartToStorage = () => {
+      if (state.currentUser && state.cart) {
+        localStorage.setItem(`cart_${state.currentUser.id}`, JSON.stringify(state.cart));
+      }
+    };
+
+    const loadCartFromStorage = () => {
+      if (state.currentUser) {
+        const savedCart = localStorage.getItem(`cart_${state.currentUser.id}`);
+        if (savedCart) {
+          try {
+            state.cart = JSON.parse(savedCart);
+          } catch (e) {
+            console.warn('Erreur lors du chargement du panier sauvegardé');
+          }
+        }
+      }
+    };
+
+    // Améliorer la fonction addProductToCart pour sauvegarder
+    const originalAddToCart = window.addProductToCart;
+    if (typeof originalAddToCart === 'function') {
+      window.addProductToCart = function(...args) {
+        const result = originalAddToCart.apply(this, args);
+        saveCartToStorage();
+        return result;
+      };
+    }
+
+    // Diagnostic du loader au démarrage
+    console.log('🔍 État initial du loader:', loader.classList.contains('hidden') ? 'caché' : 'visible');
+    
+    // Protection ultime: vérifier toutes les 5s si le loader est bloqué
+    setInterval(() => {
+      if (!loader.classList.contains('hidden') && !isBootstrapping) {
+        console.warn('⚠️ Loader détecté comme bloqué, forçage hidden');
+        showLoader(false);
+      }
+    }, 5000);
+    
+    // ===== BOOTSTRAP =====
+    await bootstrapAuth();
+    if (state.currentUser) {
+      resetLogoutTimer();
+      loadCartFromStorage(); // Charger le panier sauvegardé
+      renderAll(); // Re-render pour afficher le panier
+    }
+    
+    console.log('🎯 Initialisation complète, état final loader:', loader.classList.contains('hidden') ? 'caché' : 'visible');
+>>>>>>> 6a3e9bc58c11bf44d8ec22c10d1c42f017ee8740
   });
   </script>
 </body>
