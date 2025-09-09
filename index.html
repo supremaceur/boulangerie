@@ -477,7 +477,7 @@
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'pkce' // Plus sécurisé et stable sur mobile
+    flowType: 'pkce'
   },
   global: {
     headers: {
@@ -488,22 +488,19 @@
 
     // ===== STATE =====
     let state = {
-  currentUser: null,
-  userProfile: null,
-  products: { sandwichs: [], boissons: [], desserts: [] },
-  formules: [],
-  orders: [],
-  cart: [],
-  promotions: [],
-  isInitializing: false,
-  authProcessing: false,
-  lastAuthState: null
-};
+      currentUser: null,
+      userProfile: null,
+      products: { sandwichs: [], boissons: [], desserts: [] },
+      formules: [],
+      orders: [],
+      cart: [],
+      promotions: []
+    };
 
-let chartInstances = {};
-let logoutTimer;
-const LOGOUT_TIME = 10 * 60 * 1000; // 10 min
-let authStateHandler;
+    let chartInstances = {};
+    let logoutTimer;
+    const LOGOUT_TIME = 10 * 60 * 1000; // 10 min
+    let hasBootstrapped = false;
 
     // ===== DOM =====
     const loader = document.getElementById('loader');
@@ -606,21 +603,17 @@ let authStateHandler;
     const resetLogoutTimer = () => {
   if (!state.currentUser) return;
   clearTimeout(logoutTimer);
-  logoutTimer = setTimeout(() => {
-    console.log('Déconnexion pour inactivité');
-    handleLogout(true);
-  }, LOGOUT_TIME);
+  logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
 };
 
-// Événements d'activité moins agressifs
+// Événements moins agressifs pour mobile
 const activityEvents = ['mousedown', 'touchstart', 'keydown'];
 let lastActivity = Date.now();
 
 activityEvents.forEach(ev => {
   document.addEventListener(ev, () => {
     const now = Date.now();
-    // Throttle pour éviter trop d'appels
-    if (now - lastActivity > 30000) { // 30 secondes minimum
+    if (now - lastActivity > 30000) { // Throttle 30 secondes
       lastActivity = now;
       resetLogoutTimer();
     }
@@ -628,104 +621,63 @@ activityEvents.forEach(ev => {
 });
 
     // ===== DATA =====
-    async function loadInitialData(showLoaderIndicator = true, retryCount = 0) {
-  const maxRetries = 3;
-  
-  if (showLoaderIndicator) showLoader(true);
-  
-  try {
-    // Vérifier d'abord la session avant de charger les données
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session?.user) {
-      console.log('Pas de session valide pour charger les données');
-      return;
-    }
-
-    // Profile
-    if (state.currentUser) {
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', state.currentUser.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.warn('Erreur profile:', error);
-      } else {
-        state.userProfile = data;
-      }
-    }
-
-    // Products avec timeout
-    const productsPromise = supabaseClient
-      .from('products')
-      .select('*')
-      .abortSignal(AbortSignal.timeout(10000)); // 10s timeout
-      
-    const { data: productsData, error: productsError } = await productsPromise;
-    
-    if (productsError) throw productsError;
-    
-    state.products = { sandwichs: [], boissons: [], desserts: [] };
-    productsData.forEach(p => {
-      if (!state.products[p.category]) state.products[p.category] = [];
-      state.products[p.category].push(p);
-    });
-    
-    // Formules + eligible
-    const { data: formulesData, error: formulesError } = await supabaseClient.from('formules').select('*, formule_products(product_id)');
-    if (formulesError) throw formulesError;
-    state.formules = formulesData.map(f => {
-      const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
-      if (f.formule_products) {
-        f.formule_products.forEach(fp => {
-          const product = getProduct(fp.product_id);
-          if (product) {
-            if (!eligible_products[product.category]) eligible_products[product.category] = [];
-            eligible_products[product.category].push(product.id);
-          }
+    async function loadInitialData(showLoaderIndicator = true) {
+      if (showLoaderIndicator) showLoader(true);
+      try {
+        // Profile
+        if (state.currentUser) {
+          const { data, error } = await supabaseClient.from('profiles').select('first_name, last_name').eq('id', state.currentUser.id).single();
+          if (error && error.code !== 'PGRST116') throw error;
+          state.userProfile = data;
+        }
+        // Products
+        const { data: productsData, error: productsError } = await supabaseClient.from('products').select('*');
+        if (productsError) throw productsError;
+        state.products = { sandwichs: [], boissons: [], desserts: [] };
+        productsData.forEach(p => {
+          if (!state.products[p.category]) state.products[p.category] = [];
+          state.products[p.category].push(p);
         });
+        // Formules + eligible
+        const { data: formulesData, error: formulesError } = await supabaseClient.from('formules').select('*, formule_products(product_id)');
+        if (formulesError) throw formulesError;
+        state.formules = formulesData.map(f => {
+          const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
+          if (f.formule_products) {
+            f.formule_products.forEach(fp => {
+              const product = getProduct(fp.product_id);
+              if (product) {
+                if (!eligible_products[product.category]) eligible_products[product.category] = [];
+                eligible_products[product.category].push(product.id);
+              }
+            });
+          }
+          return { ...f, eligible_products };
+        });
+        // Orders
+        if (state.currentUser) {
+          let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
+          if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
+          const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
+          if (ordersError) throw ordersError;
+          state.orders = ordersData;
+        }
+        // Promotions
+        const { data: promosData, error: promosError } = await supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)');
+        if (promosError) throw promosError;
+        state.promotions = promosData;
+        // usage_count
+        for (const promo of state.promotions) {
+          const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
+          if (!countError) promo.usage_count = count;
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showToast(`Erreur de chargement: ${error.message}`);
+      } finally {
+        if (showLoaderIndicator) showLoader(false);
       }
-      return { ...f, eligible_products };
-    });
-    
-    // Orders
-    if (state.currentUser) {
-      let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
-      if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
-      const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
-      if (ordersError) throw ordersError;
-      state.orders = ordersData;
     }
-    
-    // Promotions
-    const { data: promosData, error: promosError } = await supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)');
-    if (promosError) throw promosError;
-    state.promotions = promosData;
-    
-    // usage_count
-    for (const promo of state.promotions) {
-      const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
-      if (!countError) promo.usage_count = count;
-    }
-    
-  } catch (error) {
-    console.error('Erreur lors du chargement des données:', error);
-    
-    // Retry logic
-    if (retryCount < maxRetries && error.name !== 'AbortError') {
-      console.log(`Tentative ${retryCount + 1}/${maxRetries} de rechargement...`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-      return loadInitialData(showLoaderIndicator, retryCount + 1);
-    }
-    
-    if (error.name !== 'AbortError') {
-      showToast(`Erreur de chargement: ${error.message}`);
-    }
-  } finally {
-    if (showLoaderIndicator) showLoader(false);
-  }
-}
 
     // ===== RENDER (identiques à ta version, conservés) =====
     const renderProducts = () => {
@@ -1285,30 +1237,22 @@ activityEvents.forEach(ev => {
 
     // ===== AUTH =====
     const handleLogin = async (e) => {
-  e.preventDefault();
-  hideAuthError();
-  showLoader(true);
-  
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-  
-  try {
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    
-    // Ne pas faire de redirection ici, laisser onAuthStateChange gérer
-    
-  } catch (error) {
-    console.error('Erreur de connexion:', error);
-    if (error.message === 'Invalid login credentials') {
-      showAuthError("Identifiant ou mot de passe incorrect");
-    } else {
-      showAuthError(error.message);
-    }
-  } finally {
-    showLoader(false);
-  }
-};
+      e.preventDefault();
+      hideAuthError();
+      showLoader(true);
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } catch (error) {
+        console.error('Erreur de connexion:', error);
+        if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
+        else showAuthError(error.message);
+      } finally {
+        showLoader(false);
+      }
+    };
 
     const handleSignup = async (e) => {
       e.preventDefault();
@@ -1355,93 +1299,50 @@ activityEvents.forEach(ev => {
 
     // Bootstrap auth : ne pas déconnecter au simple refresh
     const bootstrapAuth = async () => {
-  if (state.isInitializing) return;
-  state.isInitializing = true;
-  
-  console.log('Initialisation de l\'authentification...');
   showLoader(true);
-  
   try {
-    // Vérifier d'abord s'il y a des paramètres OAuth dans l'URL
+    // Nettoyer les paramètres OAuth de l'URL
     const urlParams = new URLSearchParams(window.location.search);
-    const hasOAuthParams = urlParams.has('code') || urlParams.has('access_token');
-    
-    if (hasOAuthParams) {
-      console.log('Paramètres OAuth détectés, traitement en cours...');
-      // Nettoyer l'URL après traitement
+    if (urlParams.has('code') || urlParams.has('access_token')) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    
-    if (error) {
-      console.error('Erreur lors de la récupération de la session:', error);
-      showView('auth-view');
-      return;
-    }
-    
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session?.user) {
-      console.log('Session trouvée, utilisateur connecté');
-      
-      state.currentUser = { 
-        ...session.user, 
-        role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-      };
-      
+      state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
       resetLogoutTimer();
       await loadInitialData(false);
-      
-      const targetView = state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view';
-      showView(targetView);
+      showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
       renderAll();
-      
     } else {
-      console.log('Aucune session trouvée');
       showView('auth-view');
     }
-    
-  } catch (error) {
-    console.error('Erreur lors de l\'initialisation:', error);
+  } catch (e) {
+    console.warn('bootstrapAuth error:', e);
     showView('auth-view');
   } finally {
-    state.isInitializing = false;
+    hasBootstrapped = true;
     showLoader(false);
   }
 };
 
-    // Gestion de la visibilité de la page
-document.addEventListener('visibilitychange', async () => {
-  if (document.hidden || !state.currentUser) return;
-  
-  console.log('Page redevenue visible, vérification de la session...');
-  
-  try {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    
-    if (error) {
-      console.error('Erreur lors de la vérification de session:', error);
-      return;
-    }
-    
-    if (!session) {
-      console.log('Session expirée, déconnexion');
-      await handleLogout();
-      return;
-    }
-    
-    await loadInitialData(false);
-    renderAll();
-    
-  } catch (error) {
-    console.error('Erreur lors de la vérification de visibilité:', error);
-  }
-});
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      // Empêche des transitions agressives pendant refresh
+      if (event === 'SIGNED_OUT') {
+        const { data: { session: s } } = await supabaseClient.auth.getSession();
+        if (!s) { await hardSignOut(); } else { return; } // ignore signal transitoire
+      }
 
-window.addEventListener('focus', async () => {
-  if (!state.currentUser) return;
-  await loadInitialData(false);
-  renderAll();
-});
+      if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
+        if (session?.user) {
+          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+          resetLogoutTimer();
+          await loadInitialData();
+          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+          renderAll();
+        }
+      }
+    });
 
     // ===== LISTENERS =====
     loginForm.addEventListener('submit', handleLogin);
@@ -1828,65 +1729,19 @@ window.addEventListener('focus', async () => {
       } else { renderAll(); }
     });
 	
-	// ===== AUTH STATE CHANGE =====
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
-      
-      // Ignorer pendant l'initialisation
-      if (state.isInitializing) {
-        console.log('Ignoré - initialisation en cours');
-        return;
-      }
-      
-      try {
-        switch (event) {
-          case 'SIGNED_IN':
-  if (session?.user && !state.currentUser) {
-    console.log('Utilisateur connecté');
-    state.currentUser = { 
-      ...session.user, 
-      role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-    };
-    
-    resetLogoutTimer();
-    
-    // Petit délai pour laisser le temps à l'interface de se stabiliser
-    setTimeout(async () => {
-      await loadInitialData(true);
-      const targetView = state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view';
-      showView(targetView);
-      renderAll();
-    }, 100);
+	// Gestion simple de la visibilité
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || !state.currentUser) return;
+  
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      await handleLogout();
+    }
+  } catch (error) {
+    console.warn('Vérification de session échouée:', error);
   }
-  break;
-            
-          case 'SIGNED_OUT':
-            if (state.currentUser) {
-              console.log('Utilisateur déconnecté');
-              state.currentUser = null;
-              state.userProfile = null;
-              state.orders = [];
-              state.cart = [];
-              clearTimeout(logoutTimer);
-              showView('auth-view');
-            }
-            break;
-            
-          case 'TOKEN_REFRESHED':
-            console.log('Token rafraîchi');
-            if (session?.user && state.currentUser) {
-              resetLogoutTimer();
-            }
-            break;
-        }
-      } catch (error) {
-        console.error('Erreur dans onAuthStateChange:', error);
-      }
-    });
-
-    // ===== BOOTSTRAP =====
-    await bootstrapAuth();
-    if (state.currentUser) resetLogoutTimer();
+});
 
     // ===== BOOTSTRAP =====
     await bootstrapAuth();
