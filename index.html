@@ -1239,39 +1239,58 @@
     const handleLogin = async (e) => {
       e.preventDefault();
       hideAuthError();
+      showLoader(true);
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
-      const { error } = await apiCall(supabaseClient.auth.signInWithPassword({ email, password }));
-      if (error) {
+      try {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } catch (error) {
+        console.error('Erreur de connexion:', error);
         if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
         else showAuthError(error.message);
+      } finally {
+        showLoader(false);
       }
     };
 
     const handleSignup = async (e) => {
       e.preventDefault();
       hideAuthError();
+      showLoader(true);
       const email = document.getElementById('signup-email').value;
       const password = document.getElementById('signup-password').value;
       const firstName = document.getElementById('signup-firstname').value;
       const lastName = document.getElementById('signup-lastname').value;
-      const { error } = await apiCall(supabaseClient.auth.signUp({
-        email, password, options: { data: { first_name: firstName, last_name: lastName } }
-      }));
-      if (error) {
-        showAuthError(error.message);
-      } else {
+      try {
+        const { error } = await supabaseClient.auth.signUp({
+          email, password, options: { data: { first_name: firstName, last_name: lastName } }
+        });
+        if (error) throw error;
         showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
+      } catch (error) {
+        console.error("Erreur d'inscription:", error);
+        showAuthError(error.message);
+      } finally {
+        showLoader(false);
       }
     };
 
     const handleGoogleLogin = async () => {
-      await apiCall(supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
+        showLoader(true);
+        try {
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) throw error;
+        } catch (error) {
+            console.error('Erreur Google Login:', error);
+            showAuthError(error.message);
+            showLoader(false);
         }
-      }));
     };
 
     const handleLogout = async (isAuto = false, message = "Vous avez été déconnecté.") => {
@@ -1484,22 +1503,36 @@
     forgotPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('forgot-password-email').value;
-      const { error } = await apiCall(supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href }));
-      if (!error) {
-        showToast("Un email de réinitialisation a été envoyé.");
-        forgotPasswordModal.classList.add('hidden');
-      }
+        showLoader(true);
+        try {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+            if (error) throw error;
+            showToast("Un email de réinitialisation a été envoyé.");
+            forgotPasswordModal.classList.add('hidden');
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            showToast(`Erreur: ${error.message}`);
+        } finally {
+            showLoader(false);
+        }
     });
 
     resetPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const newPassword = document.getElementById('reset-password-new').value;
       if (newPassword.length < 6) return showToast("Le mot de passe doit contenir au moins 6 caractères.");
-      const { error } = await apiCall(supabaseClient.auth.updateUser({ password: newPassword }));
-      if (!error) {
-        showToast("Mot de passe réinitialisé avec succès !");
-        resetPasswordModal.classList.add('hidden');
-      }
+        showLoader(true);
+        try {
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            showToast("Mot de passe réinitialisé avec succès !");
+            resetPasswordModal.classList.add('hidden');
+        } catch (error) {
+            console.error('Reset password error:', error);
+            showToast(`Erreur: ${error.message}`);
+        } finally {
+            showLoader(false);
+        }
     });
 
     // CUSTOMER
