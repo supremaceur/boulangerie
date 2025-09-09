@@ -1300,21 +1300,44 @@ activityEvents.forEach(ev => {
     // Bootstrap auth : ne pas déconnecter au simple refresh
     const bootstrapAuth = async () => {
   showLoader(true);
+  
   try {
     // Détecter si on revient d'OAuth
     const urlParams = new URLSearchParams(window.location.search);
     const isOAuthReturn = urlParams.has('code') || urlParams.has('access_token');
     
     if (isOAuthReturn) {
-      console.log('Retour OAuth détecté, attente de la session...');
-      // Attendre un peu que Supabase traite l'OAuth
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Retour OAuth détecté, traitement en cours...');
+      
+      // Timeout de sécurité pour éviter le spinner infini
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout OAuth')), 10000)
+      );
+      
+      // Attendre la session avec timeout
+      try {
+        await Promise.race([
+          new Promise(resolve => setTimeout(resolve, 2000)),
+          timeoutPromise
+        ]);
+      } catch (error) {
+        console.warn('Timeout lors du traitement OAuth');
+        showView('auth-view');
+        showLoader(false);
+        return;
+      }
     }
     
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    // Récupérer la session
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération de session:', error);
+      throw error;
+    }
     
     if (session?.user) {
-      console.log('Session trouvée lors du bootstrap');
+      console.log('Session trouvée, connexion réussie');
       
       // Nettoyer l'URL
       if (isOAuthReturn) {
@@ -1332,27 +1355,37 @@ activityEvents.forEach(ev => {
       renderAll();
     } else {
       console.log('Aucune session trouvée');
+      if (isOAuthReturn) {
+        // Si on revient d'OAuth mais pas de session, c'est une erreur
+        showAuthError("Erreur lors de la connexion Google. Veuillez réessayer.");
+      }
       showView('auth-view');
     }
-  } catch (e) {
-    console.error('Erreur bootstrap:', e);
+  } catch (error) {
+    console.error('Erreur bootstrap:', error);
     showView('auth-view');
+    if (error.message !== 'Timeout OAuth') {
+      showAuthError("Erreur de connexion. Veuillez réessayer.");
+    }
   } finally {
     hasBootstrapped = true;
-    showLoader(false);
+    showLoader(false); // IMPORTANT: toujours cacher le loader
   }
 };
 
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
   console.log('Auth state change:', event, session?.user?.email);
   
+  // Toujours arrêter le loader en cas d'événement auth
+  showLoader(false);
+  
   try {
     switch (event) {
       case 'SIGNED_IN':
         if (session?.user) {
-          console.log('Utilisateur connecté via', event);
+          console.log('Utilisateur connecté');
           
-          // Nettoyer l'URL si elle contient des paramètres OAuth
+          // Nettoyer l'URL
           const urlParams = new URLSearchParams(window.location.search);
           if (urlParams.has('code')) {
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -1364,9 +1397,11 @@ activityEvents.forEach(ev => {
           };
           
           resetLogoutTimer();
-          await loadInitialData();
+          showLoader(true); // Montrer le loader pour le chargement des données
+          await loadInitialData(false);
           showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
           renderAll();
+          showLoader(false); // Cacher le loader après chargement
         }
         break;
         
@@ -1390,7 +1425,10 @@ activityEvents.forEach(ev => {
     }
   } catch (error) {
     console.error('Erreur dans onAuthStateChange:', error);
-    showLoader(false); // S'assurer que le loader se cache en cas d'erreur
+    showView('auth-view');
+    showAuthError("Erreur de connexion.");
+  } finally {
+    showLoader(false); // Sécurité: toujours cacher le loader
   }
 });
 
