@@ -12,60 +12,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .font-brand {
-            font-family: 'Playfair Display', serif;
-        }
-        .font-receipt {
-            font-family: 'Source Code Pro', monospace;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .font-brand { font-family: 'Playfair Display', serif; }
+        .font-receipt { font-family: 'Source Code Pro', monospace; }
         .toast {
-            visibility: hidden;
-            min-width: 250px;
-            margin-left: -125px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 100;
-            left: 50%;
-            bottom: 30px;
-            opacity: 0;
-            transition: visibility 0s 0.5s, opacity 0.5s linear;
+            visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%;
+            bottom: 30px; opacity: 0; transition: visibility 0s 0.5s, opacity 0.5s linear;
         }
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            transition: opacity 0.5s linear;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #a8a29e;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #78716c;
-        }
-         .admin-order-tab {
-            cursor: pointer;
-            padding: 0.75rem 1.25rem;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s ease-in-out;
-        }
-        .admin-order-tab.active {
-            border-bottom-color: #d97706; /* amber-600 */
-            color: #d97706;
-        }
+        .toast.show { visibility: visible; opacity: 1; transition: opacity 0.5s linear; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+        .admin-order-tab { cursor: pointer; padding: 0.75rem 1.25rem; border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; }
+        .admin-order-tab.active { border-bottom-color: #d97706; color: #d97706; }
     </style>
 </head>
 <body class="bg-stone-100">
@@ -109,15 +70,15 @@
                         </p>
                     </form>
 
-                    <!-- Signup Form (hidden by default) -->
+                    <!-- Signup Form -->
                     <form id="signup-form" class="hidden">
-                         <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Inscription</h2>
+                        <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Inscription</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                             <div>
+                            <div>
                                 <label for="signup-firstname" class="block text-sm font-medium text-stone-600 mb-1">Prénom</label>
                                 <input type="text" id="signup-firstname" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
                             </div>
-                             <div>
+                            <div>
                                 <label for="signup-lastname" class="block text-sm font-medium text-stone-600 mb-1">Nom</label>
                                 <input type="text" id="signup-lastname" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
                             </div>
@@ -131,7 +92,7 @@
                             <input type="password" id="signup-password" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
                         </div>
                         <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Créer mon compte</button>
-                         <p class="text-center text-sm text-stone-500 mt-4">
+                        <p class="text-center text-sm text-stone-500 mt-4">
                             Déjà un compte ? <a href="#" id="show-login-btn" class="font-semibold text-amber-600 hover:underline">Connectez-vous</a>
                         </p>
                     </form>
@@ -152,14 +113,12 @@
 
         <!-- ===== VIEW: CUSTOMER ===== -->
         <div id="customer-view" class="hidden">
-            <!-- Customer Header -->
             <header class="shadow-md sticky top-0 z-50" style="background-color: #F9F4EA;">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center py-2">
                         <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="h-24 w-auto">
-                        <!-- Desktop Nav -->
                         <div class="hidden md:flex items-center gap-4">
-                             <div id="welcome-message" class="text-stone-600"></div>
+                            <div id="welcome-message" class="text-stone-600"></div>
                             <button id="cart-btn-desktop" class="relative text-stone-600 hover:text-amber-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
@@ -173,7 +132,6 @@
                                 Déconnexion
                             </button>
                         </div>
-                        <!-- Mobile Nav Buttons -->
                         <div class="md:hidden flex items-center gap-4">
                             <button id="cart-btn-mobile" class="relative text-stone-600 hover:text-amber-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -185,86 +143,57 @@
                         </div>
                     </div>
                 </div>
-                <!-- Mobile Menu -->
                 <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-stone-200">
                     <div id="welcome-message-mobile" class="py-3 px-4 text-stone-700 font-semibold"></div>
-                     
                     <a href="#" id="history-btn-mobile" class="block py-3 px-4 text-stone-700 hover:bg-stone-50">Historique des commandes</a>
                     <a href="#" id="logout-btn-customer-mobile" class="block py-3 px-4 text-stone-700 hover:bg-stone-50">Déconnexion</a>
                 </div>
             </header>
 
-            <!-- Main Content -->
             <main class="p-4 sm:p-6 lg:p-8">
                 <div id="promo-banner" class="hidden bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded-lg mb-6" role="alert">
                     <p class="font-bold">Promotion !</p>
                     <p id="promo-description"></p>
                 </div>
                 <h2 class="text-3xl font-bold text-stone-800 mb-6">Nos Formules</h2>
-                <div id="formules-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Formules will be injected here -->
-                </div>
+                <div id="formules-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
                 <div class="mt-12">
                     <h2 class="text-3xl font-bold text-stone-800 mb-6">À la carte</h2>
-                    <div id="products-container" class="space-y-8">
-                        <!-- Products will be injected here -->
-                    </div>
+                    <div id="products-container" class="space-y-8"></div>
                 </div>
             </main>
         </div>
         
         <!-- ===== VIEW: ADMIN ===== -->
         <div id="admin-view" class="hidden">
-             <div class="md:flex min-h-screen">
-                <!-- Sidebar -->
+            <div class="md:flex min-h-screen">
                 <aside class="w-full md:w-64 bg-stone-800 text-white flex-shrink-0">
                     <div class="p-6 text-center">
-                         <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="mx-auto h-28 w-auto">
+                        <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="mx-auto h-28 w-auto">
                         <h1 class="font-brand text-xl text-white mt-2">Espace Admin</h1>
                     </div>
                     <nav class="mt-4">
-                <a href="#" data-tab="orders" class="admin-tab block py-3 px-6 text-lg bg-stone-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
-                    Commandes
-                </a>
-                <a href="#" data-tab="products" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
-                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                   Produits
-                </a>
-                <a href="#" data-tab="formules" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                   Formules
-                </a>
-                <a href="#" data-tab="promotions" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 8V5a2 2 0 012-2z" /><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01" /></svg>
-                   Promotions
-                </a>
-                <a href="#" data-tab="stats" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                    Statistiques
-                </a>
-                <a href="#" id="logout-btn-admin" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
-                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                   Déconnexion
-                </a>
-            </nav>
+                        <a href="#" data-tab="orders" class="admin-tab block py-3 px-6 text-lg bg-stone-700">Commandes</a>
+                        <a href="#" data-tab="products" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">Produits</a>
+                        <a href="#" data-tab="formules" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">Formules</a>
+                        <a href="#" data-tab="promotions" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">Promotions</a>
+                        <a href="#" data-tab="stats" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">Statistiques</a>
+                        <a href="#" id="logout-btn-admin" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">Déconnexion</a>
+                    </nav>
                 </aside>
-                <!-- Main Admin Content -->
+
                 <main class="flex-1 p-6 sm:p-10 bg-stone-100">
-                    <!-- Orders Tab -->
                     <div id="orders-tab" class="admin-content">
                         <h2 class="text-3xl font-bold text-stone-800 mb-4">Gestion des Commandes</h2>
                         <div class="flex border-b border-stone-300 mb-6">
                             <button class="admin-order-tab active" data-order-tab="pending">En cours</button>
                             <button class="admin-order-tab" data-order-tab="completed">Terminées</button>
                         </div>
-
                         <div id="admin-orders-pending-container" class="space-y-4"></div>
                         <div id="admin-orders-completed-container" class="space-y-4 hidden"></div>
-
                     </div>
-                    <!-- Products Tab -->
+
                     <div id="products-tab" class="admin-content hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-3xl font-bold text-stone-800">Gestion des Produits</h2>
@@ -272,7 +201,7 @@
                         </div>
                         <div id="admin-products-container" class="space-y-8"></div>
                     </div>
-                    <!-- Formules Tab -->
+
                     <div id="formules-tab" class="admin-content hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-3xl font-bold text-stone-800">Gestion des Formules</h2>
@@ -280,7 +209,7 @@
                         </div>
                         <div id="admin-formules-container" class="space-y-4"></div>
                     </div>
-                     <!-- Promotions Tab -->
+
                     <div id="promotions-tab" class="admin-content hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-3xl font-bold text-stone-800">Gestion des Promotions</h2>
@@ -288,20 +217,17 @@
                         </div>
                         <div id="admin-promos-container" class="space-y-4"></div>
                     </div>
-                    <!-- Stats Tab -->
+
                     <div id="stats-tab" class="admin-content hidden">
                         <h2 class="text-3xl font-bold text-stone-800 mb-6">Statistiques de Vente</h2>
                         <div class="bg-white p-6 rounded-xl shadow-lg">
-                             <div class="flex flex-wrap gap-2 mb-4">
+                            <div class="flex flex-wrap gap-2 mb-4">
                                 <button class="stats-filter-btn bg-amber-600 text-white font-semibold py-1 px-3 rounded-full text-sm" data-period="today">Aujourd'hui</button>
                                 <button class="stats-filter-btn bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-full text-sm" data-period="week">Cette semaine</button>
                                 <button class="stats-filter-btn bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-full text-sm" data-period="month">Ce mois</button>
                                 <button class="stats-filter-btn bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-full text-sm" data-period="all">Tout</button>
                             </div>
-
-                            <div id="stats-tables-container">
-                                <!-- Tables will be rendered here -->
-                            </div>
+                            <div id="stats-tables-container"></div>
                         </div>
                     </div>
                 </main>
@@ -314,26 +240,20 @@
     <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-stone-200 flex justify-between items-center">
-                 <h3 class="text-2xl font-bold text-stone-800">Votre Panier</h3>
-                 <button id="cart-close-btn" class="text-stone-500 hover:text-stone-800 text-3xl font-bold">&times;</button>
+                <h3 class="text-2xl font-bold text-stone-800">Votre Panier</h3>
+                <button id="cart-close-btn" class="text-stone-500 hover:text-stone-800 text-3xl font-bold">&times;</button>
             </div>
-            <div id="cart-body" class="p-6 space-y-4 overflow-y-auto">
-                <!-- Cart items will be injected here -->
-            </div>
-            <div id="cart-footer" class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl">
-                <!-- Cart summary will be injected here -->
-            </div>
+            <div id="cart-body" class="p-6 space-y-4 overflow-y-auto"></div>
+            <div id="cart-footer" class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl"></div>
         </div>
     </div>
 
     <div id="order-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-stone-200">
-                 <h3 id="modal-title" class="text-2xl font-bold text-stone-800">Composer votre formule</h3>
+                <h3 id="modal-title" class="text-2xl font-bold text-stone-800">Composer votre formule</h3>
             </div>
-            <div id="modal-body" class="p-6 space-y-6 overflow-y-auto">
-                <!-- Modal content will be injected here -->
-            </div>
+            <div id="modal-body" class="p-6 space-y-6 overflow-y-auto"></div>
             <div class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-xl font-semibold text-stone-800">Total:</span>
@@ -350,17 +270,15 @@
     <div id="history-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-stone-200 flex justify-between items-center">
-                 <h3 class="text-2xl font-bold text-stone-800">Historique des commandes</h3>
-                 <button id="history-modal-close-btn" class="text-stone-500 hover:text-stone-800 text-3xl font-bold">&times;</button>
+                <h3 class="text-2xl font-bold text-stone-800">Historique des commandes</h3>
+                <button id="history-modal-close-btn" class="text-stone-500 hover:text-stone-800 text-3xl font-bold">&times;</button>
             </div>
-            <div id="history-modal-body" class="p-6 space-y-4 overflow-y-auto">
-                <!-- History content will be injected here -->
-            </div>
+            <div id="history-modal-body" class="p-6 space-y-4 overflow-y-auto"></div>
         </div>
     </div>
 
     <div id="receipt-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-         <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm max-h-[90vh] flex flex-col font-receipt">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm max-h-[90vh] flex flex-col font-receipt">
             <div id="receipt-content" class="p-6 text-sm text-black overflow-y-auto">
                 <div class="text-center mb-4">
                     <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo" class="h-20 mx-auto mb-2">
@@ -375,14 +293,12 @@
                         <span>Date:</span>
                         <span id="receipt-date"></span>
                     </div>
-                     <div class="flex justify-between">
+                    <div class="flex justify-between">
                         <span>Ticket No:</span>
                         <span id="receipt-order-id"></span>
                     </div>
                 </div>
-                <div id="receipt-items" class="my-2 space-y-1">
-                    <!-- items here -->
-                </div>
+                <div id="receipt-items" class="my-2 space-y-1"></div>
                 <div class="border-t border-dashed border-black pt-2">
                     <div id="receipt-promo-line" class="hidden flex justify-between">
                         <span>REMISE</span>
@@ -406,7 +322,7 @@
                 </div>
             </div>
             <div class="p-4 bg-stone-100 flex gap-4">
-                 <button id="receipt-close-btn" class="w-full bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Fermer</button>
+                <button id="receipt-close-btn" class="w-full bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Fermer</button>
             </div>
         </div>
     </div>
@@ -414,12 +330,12 @@
     <div id="refuse-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div class="p-6">
-                 <h3 class="text-xl font-bold text-stone-800 mb-4">Motif du refus</h3>
-                 <textarea id="refuse-reason" class="w-full p-2 border rounded-lg h-24" placeholder="Ex: Rupture de stock pour le sandwich poulet..."></textarea>
-                 <div class="flex gap-4 mt-4">
-                     <button id="refuse-cancel-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
-                     <button id="refuse-confirm-btn" class="w-1/2 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Confirmer le Refus</button>
-                 </div>
+                <h3 class="text-xl font-bold text-stone-800 mb-4">Motif du refus</h3>
+                <textarea id="refuse-reason" class="w-full p-2 border rounded-lg h-24" placeholder="Ex: Rupture de stock pour le sandwich poulet..."></textarea>
+                <div class="flex gap-4 mt-4">
+                    <button id="refuse-cancel-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
+                    <button id="refuse-confirm-btn" class="w-1/2 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Confirmer le Refus</button>
+                </div>
             </div>
         </div>
     </div>
@@ -427,7 +343,7 @@
     <div id="formule-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-stone-200">
-                 <h3 id="formule-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une formule</h3>
+                <h3 id="formule-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une formule</h3>
             </div>
             <form id="formule-form">
                 <div class="p-6 space-y-6 overflow-y-auto">
@@ -440,9 +356,7 @@
                         <label for="formule-price" class="block text-sm font-medium text-stone-600 mb-1">Prix de la formule (€)</label>
                         <input type="number" id="formule-price" step="0.01" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500" required>
                     </div>
-                    <div id="formule-products-selection" class="space-y-4">
-                        <!-- Product checkboxes will be injected here -->
-                    </div>
+                    <div id="formule-products-selection" class="space-y-4"></div>
                 </div>
                 <div class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl flex gap-4">
                     <button type="button" id="formule-modal-close-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
@@ -522,96 +436,68 @@
         </div>
     </div>
 
-<div id="promo-modal"
-     class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 overflow-y-auto p-4 items-start">
-  <!-- Conteneur de la modale -->
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto my-8 flex flex-col">
-    <div class="p-6 border-b border-stone-200">
-      <h3 id="promo-modal-title" class="text-2xl font-bold text-stone-800">
-        Créer / Modifier une promotion
-      </h3>
+    <!-- ===== MODALE PROMO — VERSION SCROLLABLE ===== -->
+    <div id="promo-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 overflow-y-auto p-4 items-start">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto my-8 flex flex-col">
+            <div class="p-6 border-b border-stone-200">
+                <h3 id="promo-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une promotion</h3>
+            </div>
+            <form id="promo-form" class="flex flex-col">
+                <div class="p-6 space-y-6">
+                    <input type="hidden" id="promo-id-input">
+                    <div>
+                        <label for="promo-description" class="block text-sm font-medium text-stone-600 mb-1">Description</label>
+                        <input type="text" id="promo-description" class="w-full px-4 py-2 border border-stone-300 rounded-lg" required>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="promo-discount" class="block text-sm font-medium text-stone-600 mb-1">Réduction (%)</label>
+                            <input type="number" id="promo-discount" step="0.01" class="w-full px-4 py-2 border border-stone-300 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-600 mb-1">Type de limite</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2"><input type="radio" name="promo_limit_type" value="date" checked> Date</label>
+                                <label class="flex items-center gap-2"><input type="radio" name="promo_limit_type" value="orders"> Commandes</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div id="promo-expires-at-container">
+                            <label for="promo-expires-at" class="block text-sm font-medium text-stone-600 mb-1">Date d'expiration</label>
+                            <input type="date" id="promo-expires-at" class="w-full px-4 py-2 border border-stone-300 rounded-lg">
+                        </div>
+                        <div id="promo-max-orders-container" class="hidden">
+                            <label for="promo-max-orders" class="block text-sm font-medium text-stone-600 mb-1">Nb. commandes max</label>
+                            <input type="number" id="promo-max-orders" class="w-full px-4 py-2 border border-stone-300 rounded-lg">
+                        </div>
+                    </div>
+                    <div id="promo-items-selection" class="space-y-4"></div>
+                </div>
+                <div class="p-6 border-t bg-stone-50 rounded-b-2xl flex gap-4">
+                    <button type="button" id="promo-modal-close-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg">Annuler</button>
+                    <button type="submit" class="w-1/2 bg-amber-600 text-white font-bold py-3 px-4 rounded-lg">Enregistrer</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <form id="promo-form" class="flex flex-col">
-      <!-- NOTE: plus de h-0 / flex-grow ; la hauteur s’auto-ajuste -->
-      <div class="p-6 space-y-6">
-        <input type="hidden" id="promo-id-input">
-
-        <div>
-          <label for="promo-description" class="block text-sm font-medium text-stone-600 mb-1">Description</label>
-          <input type="text" id="promo-description"
-                 class="w-full px-4 py-2 border border-stone-300 rounded-lg" required>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="promo-discount" class="block text-sm font-medium text-stone-600 mb-1">
-              Réduction (%)
-            </label>
-            <input type="number" id="promo-discount" step="0.01"
-                   class="w-full px-4 py-2 border border-stone-300 rounded-lg" required>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-stone-600 mb-1">Type de limite</label>
-            <div class="flex gap-4">
-              <label class="flex items-center gap-2">
-                <input type="radio" name="promo_limit_type" value="date" checked> Date
-              </label>
-              <label class="flex items-center gap-2">
-                <input type="radio" name="promo_limit_type" value="orders"> Commandes
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div id="promo-expires-at-container">
-            <label for="promo-expires-at" class="block text-sm font-medium text-stone-600 mb-1">
-              Date d'expiration
-            </label>
-            <input type="date" id="promo-expires-at"
-                   class="w-full px-4 py-2 border border-stone-300 rounded-lg">
-          </div>
-          <div id="promo-max-orders-container" class="hidden">
-            <label for="promo-max-orders" class="block text-sm font-medium text-stone-600 mb-1">
-              Nb. commandes max
-            </label>
-            <input type="number" id="promo-max-orders"
-                   class="w-full px-4 py-2 border border-stone-300 rounded-lg">
-          </div>
-        </div>
-
-        <div id="promo-items-selection" class="space-y-4">
-          <!-- checkboxes injectés ici -->
-        </div>
-      </div>
-
-      <div class="p-6 border-t bg-stone-50 rounded-b-2xl flex gap-4">
-        <button type="button" id="promo-modal-close-btn"
-                class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg">
-          Annuler
-        </button>
-        <button type="submit"
-                class="w-1/2 bg-amber-600 text-white font-bold py-3 px-4 rounded-lg">
-          Enregistrer
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-    
-
-
-    <!-- ===== TOAST NOTIFICATION ===== -->
     <div id="toast" class="toast"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
 
+    // ====== SUPABASE — client avec persistance & auto-refresh ======
     const SUPABASE_URL = 'https://zliusqwhpqzszjetvrpx.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaXVzcXdocHF6c3pqZXR2cnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNjE2MzgsImV4cCI6MjA3MjczNzYzOH0.Zb3InrWND0YpIUNHSHKDdPUxQzgihQOB2491VRb994E';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storage: window.localStorage
+        }
+    });
 
     // ===== STATE MANAGEMENT =====
     let state = {
@@ -623,7 +509,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         cart: [],
         promotions: []
     };
-    
     let chartInstances = {};
     let logoutTimer;
     const LOGOUT_TIME = 10 * 60 * 1000; // 10 minutes
@@ -632,24 +517,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loader = document.getElementById('loader');
     const views = { auth: document.getElementById('auth-view'), customer: document.getElementById('customer-view'), admin: document.getElementById('admin-view') };
     const authError = document.getElementById('auth-error');
-    
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
-    
     const showSignupBtn = document.getElementById('show-signup-btn');
     const showLoginBtn = document.getElementById('show-login-btn');
-
     const googleLoginBtn = document.getElementById('google-login-btn');
     const logoutBtns = [document.getElementById('logout-btn-customer'), document.getElementById('logout-btn-admin'), document.getElementById('logout-btn-customer-mobile')];
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const mobileMenu = document.getElementById('mobile-menu');
     const welcomeMessage = document.getElementById('welcome-message');
     const welcomeMessageMobile = document.getElementById('welcome-message-mobile');
-    
     const cartBtns = [document.getElementById('cart-btn-desktop'), document.getElementById('cart-btn-mobile')];
     const cartModal = document.getElementById('cart-modal');
     const cartCloseBtn = document.getElementById('cart-close-btn');
-    
     const formulesContainer = document.getElementById('formules-container');
     const orderModal = document.getElementById('order-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -701,26 +581,102 @@ document.addEventListener('DOMContentLoaded', async () => {
     const promoModalCloseBtn = document.getElementById('promo-modal-close-btn');
     const addPromoBtn = document.getElementById('add-promo-btn');
     const adminPromosContainer = document.getElementById('admin-promos-container');
-    
+
     // ===== HELPERS =====
-    const showLoader = (show) => { loader.style.display = show ? 'flex' : 'none'; };
-    const showView = (viewId) => { Object.values(views).forEach(v => v.classList.add('hidden')); views[viewId.replace('-view', '')].classList.remove('hidden'); };
+    const showLoader = (show) => {
+        const max = 8000; // anti loader infini
+        if (show) {
+            loader.style.display = 'flex';
+            clearTimeout(showLoader._t);
+            showLoader._t = setTimeout(() => {
+                loader.style.display = 'none';
+                showToast("Connexion lente… Vous pouvez réessayer.");
+            }, max);
+        } else {
+            loader.style.display = 'none';
+            clearTimeout(showLoader._t);
+        }
+    };
+    const showView = (viewId) => {
+        Object.values(views).forEach(v => v.classList.add('hidden'));
+        views[viewId.replace('-view', '')].classList.remove('hidden');
+    };
     const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); };
     const getProduct = (id) => Object.values(state.products).flat().find(p => p.id === id);
     const getFormule = (id) => state.formules.find(f => f.id === id);
     const showAuthError = (message) => { authError.textContent = message; authError.classList.remove('hidden'); };
     const hideAuthError = () => { authError.classList.add('hidden'); };
-    const showConfirmModal = (title, text, onConfirm) => {
-        confirmModalTitle.textContent = title;
-        confirmModalText.textContent = text;
-        confirmModal.classList.remove('hidden');
 
-        confirmOkBtn.onclick = () => {
-            onConfirm();
-            confirmModal.classList.add('hidden');
-        };
+    // ===== AUTH ROBUSTE =====
+    let memSession = null;
+    let hasBootstrapped = false;
+
+    async function hardSignOut() {
+        try { await supabaseClient.auth.signOut(); } catch(e) {}
+        for (const k of Object.keys(localStorage)) {
+            if (k.startsWith('sb-') && k.includes('-auth-token')) localStorage.removeItem(k);
+        }
+        state = { currentUser: null, userProfile: null, products: { sandwichs: [], boissons: [], desserts: [] }, formules: [], orders: [], cart: [], promotions: [] };
+        showView('auth-view');
+    }
+
+    async function bootstrapAuth() {
+        showLoader(true);
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            memSession = session || null;
+
+            if (memSession && !state.currentUser) {
+                state.currentUser = { ...memSession.user, role: memSession.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+                await loadInitialData(false);
+                showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+                renderAll();
+            } else if (!memSession) {
+                showView('auth-view');
+            }
+        } catch (e) {
+            await hardSignOut();
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    const { data: authSub } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        memSession = session || null;
+
+        if (event === 'PASSWORD_RECOVERY') {
+            resetPasswordModal.classList.remove('hidden');
+            return;
+        }
+        if (event === 'SIGNED_OUT') {
+            await hardSignOut();
+            return;
+        }
+        if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
+            if (!hasBootstrapped && session?.user) {
+                hasBootstrapped = true;
+                state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+                await loadInitialData();
+                showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+                renderAll();
+            }
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        try { authSub.subscription.unsubscribe(); } catch(e) {}
+    });
+
+    // ===== INACTIVITÉ & RÉSEAU =====
+    window.addEventListener('offline', () => showToast('Hors ligne — certaines actions sont indisponibles'));
+    window.addEventListener('online',  () => showToast('Connexion rétablie'));
+
+    const resetLogoutTimer = () => {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
     };
 
+    // ===== PANIER =====
     const updateCartBadge = () => {
         const cartBadge = document.getElementById('cart-badge');
         const cartItemCount = state.cart.reduce((total, item) => total + item.quantity, 0);
@@ -776,8 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="font-semibold">${(item.quantity * item.product.price).toFixed(2)}€</span>
                         <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
                     </div>
-                </div>
-                `;
+                </div>`;
             } else if (item.type === 'formule') {
                 const productsList = item.selectedProducts.map(p => `<li>${p.name}</li>`).join('');
                 return `
@@ -792,8 +747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             }
         }).join('');
 
@@ -805,8 +759,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const applicablePromo = findApplicablePromotion(state.cart);
         let discountAmount = 0;
         let finalTotal = subtotal;
-
         let promoHtml = '';
+
         if (applicablePromo) {
             discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
             finalTotal = subtotal - discountAmount;
@@ -814,8 +768,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="flex justify-between items-center text-green-600">
                     <span>Promotion: ${applicablePromo.description}</span>
                     <span>-${discountAmount.toFixed(2)}€</span>
-                </div>
-            `;
+                </div>`;
         }
 
         const timeSlots = [];
@@ -832,8 +785,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <select id="cart-pickup-time" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
                     ${timeSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
                 </select>
-            </div>
-        `;
+            </div>`;
 
         cartFooter.innerHTML = `
             <div class="flex justify-between items-center">
@@ -846,14 +798,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span>${finalTotal.toFixed(2)}€</span>
             </div>
             ${timeSelectorHtml}
-            <button id="checkout-btn" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition mt-4">Valider la commande</button>
-        `;
+            <button id="checkout-btn" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition mt-4">Valider la commande</button>`;
     };
 
     const handleCheckout = async () => {
-        if (state.cart.length === 0) {
-            return showToast("Votre panier est vide.");
-        }
+        if (state.cart.length === 0) return showToast("Votre panier est vide.");
 
         showLoader(true);
         try {
@@ -895,7 +844,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         price: item.product.price,
                         category: item.product.category
                     };
-                } else { // 'formule'
+                } else {
                     return {
                         order_id: orderData.id,
                         formule_id: item.formule.id,
@@ -917,7 +866,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadInitialData();
             renderAll();
             showToast("Commande passée avec succès !");
-
         } catch (error) {
             console.error('Checkout error:', error);
             showToast(`Erreur lors de la commande: ${error.message}`);
@@ -931,53 +879,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!state.promotions || state.promotions.length === 0) return null;
 
         const now = new Date();
-
         for (const promo of state.promotions) {
-            if (promo.expires_at && new Date(promo.expires_at) < now) {
-                continue;
-            }
-
-            if (promo.max_orders && promo.usage_count >= promo.max_orders) {
-                continue;
-            }
+            if (promo.expires_at && new Date(promo.expires_at) < now) continue;
+            if (promo.max_orders && promo.usage_count >= promo.max_orders) continue;
 
             let isEligible = false;
             for (const item of cart) {
                 if (item.type === 'product') {
-                    if (promo.promotion_products.some(pp => pp.product_id === item.product.id)) {
-                        isEligible = true;
-                        break;
-                    }
+                    if (promo.promotion_products.some(pp => pp.product_id === item.product.id)) { isEligible = true; break; }
                 } else if (item.type === 'formule') {
-                    if (promo.promotion_formules.some(pf => pf.formule_id === item.formule.id)) {
-                        isEligible = true;
-                        break;
-                    }
+                    if (promo.promotion_formules.some(pf => pf.formule_id === item.formule.id)) { isEligible = true; break; }
                 }
             }
-
             if (isEligible) {
-                if (!bestPromo || promo.discount_percentage > bestPromo.discount_percentage) {
-                    bestPromo = promo;
-                }
+                if (!bestPromo || promo.discount_percentage > bestPromo.discount_percentage) bestPromo = promo;
             }
         }
         return bestPromo;
     };
 
-
-    // ===== DATA FETCHING / MANIPULATION =====
+    // ===== DATA FETCHING =====
     async function loadInitialData(showLoaderIndicator = true) {
         if (showLoaderIndicator) showLoader(true);
         try {
-            // Fetch profile
             if (state.currentUser) {
                 const { data, error } = await supabaseClient.from('profiles').select('first_name, last_name').eq('id', state.currentUser.id).single();
-                if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+                if (error && error.code !== 'PGRST116') throw error;
                 state.userProfile = data;
             }
-
-            // Fetch products
             const { data: productsData, error: productsError } = await supabaseClient.from('products').select('*');
             if (productsError) throw productsError;
             state.products = { sandwichs: [], boissons: [], desserts: [] };
@@ -986,8 +915,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.products[p.category].push(p)
             });
 
-
-            // Fetch formules with eligible products
             const { data: formulesData, error: formulesError } = await supabaseClient.from('formules').select(`*, formule_products(product_id)`);
             if (formulesError) throw formulesError;
             state.formules = formulesData.map(f => {
@@ -996,31 +923,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                     f.formule_products.forEach(fp => {
                         const product = getProduct(fp.product_id);
                         if (product) {
-                           if (!eligible_products[product.category]) eligible_products[product.category] = [];
-                           eligible_products[product.category].push(product.id);
+                            if (!eligible_products[product.category]) eligible_products[product.category] = [];
+                            eligible_products[product.category].push(product.id);
                         }
                     });
                 }
                 return { ...f, eligible_products };
             });
 
-            // Fetch orders
             if (state.currentUser) {
                 let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
-                if (state.currentUser.role !== 'admin') {
-                     query = query.eq('user_id', state.currentUser.id);
-                }
+                if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
                 const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
                 if (ordersError) throw ordersError;
                 state.orders = ordersData;
             }
 
-            // Fetch promotions
             const { data: promosData, error: promosError } = await supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)');
             if (promosError) throw promosError;
             state.promotions = promosData;
 
-            // Fetch usage count for promotions
             for (const promo of state.promotions) {
                 const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
                 if (countError) throw countError;
@@ -1040,7 +962,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const productsContainer = document.getElementById('products-container');
         productsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
             if (products.length === 0) return '';
-
             const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
             const productsHtml = products.filter(p => p.available).map(p => `
                 <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
@@ -1053,15 +974,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
             `).join('');
-
             if (productsHtml.length === 0) return '';
-
             return `
                 <div>
                     <h3 class="text-xl font-bold text-stone-700 mb-4">${categoryName}</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${productsHtml}</div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     };
 
@@ -1072,7 +990,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderAdminProducts();
             renderAdminFormules();
             renderAdminPromotions();
-            renderStats(); // Initial render for stats
+            renderStats();
         } else {
             renderFormules();
             renderProducts();
@@ -1091,23 +1009,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const productsDetailsHtml = Object.entries(formule.eligible_products).map(([category, productIds]) => {
                 if (!productIds || productIds.length === 0) return '';
-                
                 const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
                 const productList = productIds.map(id => {
                     const product = getProduct(id);
                     return product && product.available ? `<li class="text-stone-600">${product.name}</li>` : '';
                 }).filter(Boolean).join('');
-
                 if (productList.length === 0) return '';
-
                 return `
                     <div class="mt-3">
                         <h4 class="font-semibold text-stone-700">${categoryName} inclus :</h4>
-                        <ul class="list-disc list-inside ml-2 text-sm">
-                            ${productList}
-                        </ul>
-                    </div>
-                `;
+                        <ul class="list-disc list-inside ml-2 text-sm">${productList}</ul>
+                    </div>`;
             }).join('');
 
             return `
@@ -1121,12 +1033,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${productsDetailsHtml}
                     </div>
                     <div class="p-6 bg-white mt-auto">
-                         <button data-formule-id="${formule.id}" class="order-btn w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">
-                            Commander
-                        </button>
+                        <button data-formule-id="${formule.id}" class="order-btn w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Commander</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     };
 
@@ -1137,9 +1046,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         modalBody.innerHTML = '';
         let currentSelections = {};
         if(existingOrderItems) {
-            existingOrderItems.forEach(item => {
-                currentSelections[item.category] = item.product_id;
-            });
+            existingOrderItems.forEach(item => { currentSelections[item.category] = item.product_id; });
         }
 
         let productSelectionHtml = '';
@@ -1151,12 +1058,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const grid = products.map(p => `<button class="p-3 border rounded-lg text-left transition bg-stone-50 border-stone-200 hover:border-amber-400" data-product-id="${p.id}" data-product-type="${type}"><p class="font-semibold text-stone-800">${p.name}</p></button>`).join('');
             productSelectionHtml += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2">${typeName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${grid}</div></div>`;
         });
-        
         modalBody.innerHTML = productSelectionHtml;
-
         modalTotalPrice.textContent = `${parseFloat(formule.price).toFixed(2)}€`;
 
-        // Pre-selection logic
         if (!existingOrderItems) {
             Object.entries(formule.eligible_products).forEach(([type, ids]) => {
                 if (!ids || ids.length === 0) return;
@@ -1182,10 +1086,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         modalSubmitBtn.onclick = () => {
             const requiredCategories = Object.keys(formule.eligible_products).filter(k => formule.eligible_products[k] && formule.eligible_products[k].length > 0);
-            if (Object.keys(currentSelections).length < requiredCategories.length) {
-                return showToast("Veuillez sélectionner un article dans chaque catégorie.");
-            }
-            
+            if (Object.keys(currentSelections).length < requiredCategories.length) return showToast("Veuillez sélectionner un article dans chaque catégorie.");
+
             const formuleItem = {
                 type: 'formule',
                 formule: formule,
@@ -1204,28 +1106,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderHistory = () => {
         historyModalBody.innerHTML = state.orders.length > 0 ? state.orders.map(order => {
             const itemsHtml = order.order_items.map(item => {
-                if (item.products) { // it's a product
-                    return `<li>${item.quantity} x ${item.products.name}</li>`;
-                } else if (item.formules) { // it's a formule
-                    return `<li>${item.quantity} x ${item.formules.name} (${item.description})</li>`;
-                }
+                if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
+                if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description})</li>`;
                 return '';
             }).join('');
-            
-            const getStatusBadge = (status) => {
-                const statusMap = {
-                    pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
-                    confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
-                    refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
-                    delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terminée</span>`,
-                };
-                return statusMap[status] || '';
+            const statusMap = {
+                pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
+                confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
+                refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
+                delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terminée</span>`,
             };
-
-            const actionButtons = `
-                ${order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2" data-order-id="${order.id}">Voir le reçu</button>` : ''}
-            `;
-            
+            const actionButtons = `${order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2" data-order-id="${order.id}">Voir le reçu</button>` : ''}`;
             return `
                 <div class="bg-stone-50 p-4 rounded-lg">
                     <div class="flex justify-between items-start">
@@ -1233,15 +1124,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p class="font-semibold text-stone-800">Commande #${order.id.toString().slice(-4)} (Retrait à ${order.pickup_time.slice(0,5)})</p>
                             <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
                         </div>
-                        ${getStatusBadge(order.status)}
+                        ${statusMap[order.status]}
                     </div>
                     <ul class="list-disc list-inside text-sm text-stone-600 mt-2">${itemsHtml}</ul>
                     ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
-                    <div class="mt-3 text-right">
-                        ${actionButtons}
-                    </div>
-                </div>
-            `
+                    <div class="mt-3 text-right">${actionButtons}</div>
+                </div>`;
         }).join('') : '<p class="text-center text-stone-500">Vous n\'avez pas encore de commande.</p>';
         historyModal.classList.remove('hidden');
     };
@@ -1250,20 +1138,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pendingOrders = state.orders.filter(o => ['pending', 'confirmed'].includes(o.status)).sort((a, b) => a.pickup_time.localeCompare(b.pickup_time));
         const completedOrders = state.orders.filter(o => ['refused', 'delivered'].includes(o.status));
 
-        const createOrderCardHTML = (order) => {
+        const card = (order) => {
             const statusMap = {
                 pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
                 confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
                 refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
                 delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Livrée</span>`,
             };
-
             const itemsHtml = order.order_items.map(item => {
-                if (item.products) { // it's a product
-                    return `<li>${item.quantity} x ${item.products.name}</li>`;
-                } else if (item.formules) { // it's a formule
-                    return `<li>${item.quantity} x ${item.formules.name} (${item.description})</li>`;
-                }
+                if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
+                if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description})</li>`;
                 return '';
             }).join('');
 
@@ -1300,8 +1184,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>`;
         };
 
-        adminOrdersPendingContainer.innerHTML = pendingOrders.length > 0 ? pendingOrders.map(createOrderCardHTML).join('') : '<p class="text-center text-stone-500">Aucune commande en cours.</p>';
-        adminOrdersCompletedContainer.innerHTML = completedOrders.length > 0 ? completedOrders.map(createOrderCardHTML).join('') : '<p class="text-center text-stone-500">Aucune commande terminée.</p>';
+        adminOrdersPendingContainer.innerHTML = pendingOrders.length > 0 ? pendingOrders.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande en cours.</p>';
+        adminOrdersCompletedContainer.innerHTML = completedOrders.length > 0 ? completedOrders.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande terminée.</p>';
     };
 
     const renderAdminProducts = () => {
@@ -1324,7 +1208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
             `).join('');
-            
             return `<div><h3 class="text-xl font-bold text-stone-700 mb-3">${categoryName}</h3><div class="space-y-2">${productsHtml}</div></div>`;
         }).join('');
     };
@@ -1341,8 +1224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <button class="edit-formule-btn text-stone-400 hover:text-amber-600 transition" data-formule-id="${f.id}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                         </button>
-                         <button class="delete-formule-btn text-stone-400 hover:text-red-600 transition" data-formule-id="${f.id}">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        <button class="delete-formule-btn text-stone-400 hover:text-red-600 transition" data-formule-id="${f.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                         </button>
                     </div>
                 </div>
@@ -1352,11 +1235,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderStats = (period = 'today') => {
         const statsContainer = document.getElementById('stats-tables-container');
-        
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Monday is start of week
+        const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
         const filteredOrders = state.orders.filter(order => {
@@ -1364,44 +1245,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (period === 'today') return orderDate >= today;
             if (period === 'week') return orderDate >= weekStart;
             if (period === 'month') return orderDate >= monthStart;
-            return true; // 'all'
+            return true;
         });
 
-        // Formules Stats
         const formulesStats = {};
         filteredOrders.forEach(order => {
             order.order_items.forEach(item => {
                 if (item.formules) {
-                    const formule = item.formules;
-                    if (!formulesStats[formule.id]) {
-                        formulesStats[formule.id] = { name: formule.name, count: 0, revenue: 0 };
-                    }
-                    formulesStats[formule.id].count += item.quantity;
-                    formulesStats[formule.id].revenue += item.price * item.quantity;
+                    const f = item.formules;
+                    if (!formulesStats[f.id]) formulesStats[f.id] = { name: f.name, count: 0, revenue: 0 };
+                    formulesStats[f.id].count += item.quantity;
+                    formulesStats[f.id].revenue += item.price * item.quantity;
                 }
             });
         });
 
-        // Products Stats
         const productsStats = {};
         filteredOrders.forEach(order => {
             order.order_items.forEach(item => {
                 if (item.products) {
-                    const product = item.products;
-                    if (!productsStats[product.id]) {
-                        productsStats[product.id] = { name: product.name, count: 0 };
-                    }
-                    productsStats[product.id].count += item.quantity;
+                    const p = item.products;
+                    if (!productsStats[p.id]) productsStats[p.id] = { name: p.name, count: 0 };
+                    productsStats[p.id].count += item.quantity;
                 }
-                // Also count products inside formules from the description
                 if (item.formules && item.description) {
                     const productNames = item.description.split(', ');
                     productNames.forEach(name => {
                         const product = Object.values(state.products).flat().find(p => p.name === name);
                         if (product) {
-                            if (!productsStats[product.id]) {
-                                productsStats[product.id] = { name: product.name, count: 0 };
-                            }
+                            if (!productsStats[product.id]) productsStats[product.id] = { name: product.name, count: 0 };
                             productsStats[product.id].count += item.quantity;
                         }
                     });
@@ -1435,9 +1307,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </table>
                 </div>
             </div>
-             <div>
+            <div>
                 <h3 class="text-xl font-semibold text-stone-700 mb-4">Produits les plus populaires</h3>
-                 <div class="overflow-x-auto">
+                <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="bg-stone-200">
                             <tr>
@@ -1454,8 +1326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
-        `;
+            </div>`;
     };
 
     const renderAdminPromotions = () => {
@@ -1472,14 +1343,344 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <button class="edit-promo-btn text-stone-400 hover:text-amber-600 transition" data-promo-id="${p.id}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                         </button>
-                         <button class="delete-promo-btn text-stone-400 hover:text-red-600 transition" data-promo-id="${p.id}">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        <button class="delete-promo-btn text-stone-400 hover:text-red-600 transition" data-promo-id="${p.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                         </button>
                     </div>
                 </div>
             </div>
         `).join('') : '<p class="text-center text-stone-500">Aucune promotion créée.</p>';
     };
+
+    // ===== BOOTSTRAP SESSION — lance l’app avec la bonne vue =====
+    await bootstrapAuth();
+
+    // ===== EVENT LISTENERS =====
+    const showConfirmModal = (title, text, onConfirm) => {
+        confirmModalTitle.textContent = title;
+        confirmModalText.textContent = text;
+        confirmModal.classList.remove('hidden');
+        confirmOkBtn.onclick = () => { onConfirm(); confirmModal.classList.add('hidden'); };
+    };
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAuthError();
+        showLoader(true);
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        try {
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+        } catch (error) {
+            console.error('Erreur de connexion:', error);
+            if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
+            else showAuthError(error.message);
+        } finally { showLoader(false); }
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAuthError();
+        showLoader(true);
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const firstName = document.getElementById('signup-firstname').value;
+        const lastName = document.getElementById('signup-lastname').value;
+
+        try {
+            const { error } = await supabaseClient.auth.signUp({
+                email, password,
+                options: { data: { first_name: firstName, last_name: lastName } }
+            });
+            if (error) throw error;
+            showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
+        } catch (error) {
+            console.error('Erreur d\'inscription:', error);
+            showAuthError(error.message);
+        } finally { showLoader(false); }
+    });
+
+    const handleGoogleLogin = async () => { await supabaseClient.auth.signInWithOAuth({ provider: 'google' }); };
+    googleLoginBtn.addEventListener('click', handleGoogleLogin);
+
+    const handleLogout = (isTimeout = false) => {
+        supabaseClient.auth.signOut();
+        state = { currentUser: null, userProfile: null, products: {}, formules: [], orders: [] };
+        showView('auth-view');
+        if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
+    };
+    logoutBtns.forEach(btn => btn && btn.addEventListener('click', () => handleLogout(false)));
+    hamburgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+    modalCloseBtn.addEventListener('click', () => orderModal.classList.add('hidden'));
+    historyModalCloseBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
+    refuseCancelBtn.addEventListener('click', () => refuseModal.classList.add('hidden'));
+    productModalCloseBtn.addEventListener('click', () => productModal.classList.add('hidden'));
+    formuleModalCloseBtn.addEventListener('click', () => formuleModal.classList.add('hidden'));
+    confirmCancelBtn.addEventListener('click', () => confirmModal.classList.add('hidden'));
+    receiptCloseBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
+
+    forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); forgotPasswordModal.classList.remove('hidden'); });
+    forgotPasswordModalCloseBtn.addEventListener('click', () => { forgotPasswordModal.classList.add('hidden'); });
+
+    forgotPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('forgot-password-email').value;
+        showLoader(true);
+        try {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: `${location.origin}/reset`,
+            });
+            if (error) throw error;
+            showToast("Un email de réinitialisation a été envoyé.");
+            forgotPasswordModal.classList.add('hidden');
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            showToast(`Erreur: ${error.message}`);
+        } finally { showLoader(false); }
+    });
+
+    resetPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPassword = document.getElementById('reset-password-new').value;
+        if (newPassword.length < 6) return showToast("Le mot de passe doit contenir au moins 6 caractères.");
+        showLoader(true);
+        try {
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            showToast("Mot de passe réinitialisé avec succès !");
+            resetPasswordModal.classList.add('hidden');
+        } catch (error) {
+            console.error('Reset password error:', error);
+            showToast(`Erreur: ${error.message}`);
+        } finally { showLoader(false); }
+    });
+
+    document.addEventListener('click', e => {
+        const addToCartBtn = e.target.closest('.add-to-cart-btn');
+        if (addToCartBtn) {
+            const productId = parseInt(addToCartBtn.dataset.productId, 10);
+            addProductToCart(productId);
+        }
+        const orderBtn = e.target.closest('.order-btn');
+        if (orderBtn) openOrderModal(parseInt(orderBtn.dataset.formuleId, 10));
+        const cartCloseBtnElement = e.target.closest('#cart-close-btn');
+        if (cartCloseBtnElement) cartModal.classList.add('hidden');
+    });
+
+    cartBtns.forEach(btn => {
+        if (btn) btn.addEventListener('click', () => { renderCart(); cartModal.classList.remove('hidden'); });
+    });
+
+    document.getElementById('cart-body').addEventListener('click', e => {
+        const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
+        if (removeFromCartBtn) {
+            const cartItemIndex = parseInt(removeFromCartBtn.dataset.cartItemIndex, 10);
+            removeFromCart(cartItemIndex);
+        }
+    });
+
+    document.getElementById('cart-footer').addEventListener('click', e => {
+        if (e.target.id === 'checkout-btn') handleCheckout();
+    });
+
+    historyBtns.forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); renderHistory(); }));
+    historyModalBody.addEventListener('click', e => {
+        const receiptBtn = e.target.closest('.receipt-btn');
+        if (receiptBtn) {
+            const orderId = parseInt(receiptBtn.dataset.orderId, 10);
+            const order = state.orders.find(o => o.id === orderId);
+            if (order) renderReceipt(order);
+        }
+    });
+
+    document.addEventListener('click', e => {
+        const adminTab = e.target.closest('.admin-tab');
+        if (adminTab) {
+            e.preventDefault();
+            const tabId = adminTab.dataset.tab;
+            document.querySelectorAll('.admin-tab').forEach(t => { t.classList.remove('bg-stone-700'); t.classList.add('hover:bg-stone-700'); });
+            adminTab.classList.add('bg-stone-700'); adminTab.classList.remove('hover:bg-stone-700');
+            document.querySelectorAll('.admin-content').forEach(content => content.classList.add('hidden'));
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            if (tabId === 'stats') renderStats();
+        }
+    });
+
+    ordersTabContent.addEventListener('click', async e => {
+        const confirmBtn = e.target.closest('.confirm-order-btn');
+        const refuseBtn = e.target.closest('.refuse-order-btn');
+        const deliverBtn = e.target.closest('.deliver-order-btn');
+
+        if (confirmBtn) {
+            const orderId = confirmBtn.dataset.orderId;
+            const { error } = await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', orderId);
+            if(error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(); renderAdminOrders(); }
+        }
+        if (refuseBtn) {
+            const orderId = refuseBtn.dataset.orderId;
+            refuseModal.classList.remove('hidden');
+            refuseConfirmBtn.onclick = async () => {
+                const reason = refuseReasonInput.value;
+                const { error } = await supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', orderId);
+                if(error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(); renderAdminOrders(); }
+                refuseReasonInput.value = '';
+                refuseModal.classList.add('hidden');
+            };
+        }
+        if (deliverBtn) {
+            const orderId = deliverBtn.dataset.orderId;
+            const { error } = await supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', orderId);
+            if(error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(); renderAdminOrders(); }
+        }
+    });
+
+    adminOrderTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            adminOrderTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            if (tab.dataset.orderTab === 'pending') {
+                adminOrdersPendingContainer.classList.remove('hidden');
+                adminOrdersCompletedContainer.classList.add('hidden');
+            } else {
+                adminOrdersPendingContainer.classList.add('hidden');
+                adminOrdersCompletedContainer.classList.remove('hidden');
+            }
+        });
+    });
+
+    addProductBtn.addEventListener('click', () => { productForm.reset(); productModal.classList.remove('hidden'); });
+    productForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const newProduct = {
+            name: document.getElementById('product-name').value,
+            price: parseFloat(document.getElementById('product-price').value),
+            category: document.getElementById('product-category').value
+        };
+        showLoader(true);
+        const { error } = await supabaseClient.from('products').insert(newProduct);
+        if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit ajouté !"); }
+        await loadInitialData();
+        renderAdminProducts();
+        productModal.classList.add('hidden');
+        showLoader(false);
+    });
+
+    adminProductsContainer.addEventListener('click', async e => {
+        const deleteBtn = e.target.closest('.delete-product-btn');
+        if (deleteBtn) {
+            const productId = deleteBtn.dataset.productId;
+            showConfirmModal('Supprimer ce produit?', 'Cette action est irréversible.', async () => {
+                showLoader(true);
+                const { error } = await supabaseClient.from('products').delete().eq('id', productId);
+                if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit supprimé."); }
+                await loadInitialData();
+                renderAdminProducts();
+                renderAdminFormules();
+                showLoader(false);
+            });
+        }
+    });
+    adminProductsContainer.addEventListener('change', async e => {
+        if (e.target.classList.contains('toggle-product-btn')) {
+            const { productId } = e.target.dataset;
+            const isAvailable = e.target.checked;
+            const { error } = await supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId);
+            if (error) { showToast(`Erreur: ${error.message}`); e.target.checked = !isAvailable; }
+            else { showToast(`Disponibilité mise à jour.`); }
+        }
+    });
+
+    const openFormuleModal = (formuleId = null) => {
+        formuleForm.reset();
+        document.getElementById('formule-id-input').value = '';
+        const selectionContainer = document.getElementById('formule-products-selection');
+        selectionContainer.innerHTML = '';
+
+        const formuleToEdit = formuleId ? getFormule(formuleId) : null;
+        if (formuleToEdit) {
+            formuleModalTitle.textContent = 'Modifier une formule';
+            document.getElementById('formule-id-input').value = formuleToEdit.id;
+            document.getElementById('formule-name').value = formuleToEdit.name;
+            document.getElementById('formule-price').value = formuleToEdit.price;
+        } else {
+            formuleModalTitle.textContent = 'Créer une formule';
+        }
+
+        Object.entries(state.products).forEach(([category, products]) => {
+            const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+            let checkboxesHTML = products.map(p => {
+                const isChecked = formuleToEdit ? formuleToEdit.eligible_products[category]?.includes(p.id) : false;
+                return `
+                    <label class="flex items-center gap-2 p-2 rounded-md hover:bg-stone-50">
+                        <input type="checkbox" name="${category}" value="${p.id}" ${isChecked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+                        <span>${p.name}</span>
+                    </label>`;
+            }).join('');
+            selectionContainer.innerHTML += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">${categoryName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">${checkboxesHTML}</div></div>`;
+        });
+        formuleModal.classList.remove('hidden');
+    };
+
+    addFormuleBtn.addEventListener('click', () => openFormuleModal());
+    adminFormulesContainer.addEventListener('click', e => {
+        const editBtn = e.target.closest('.edit-formule-btn');
+        if (editBtn) openFormuleModal(parseInt(editBtn.dataset.formuleId, 10));
+        const deleteBtn = e.target.closest('.delete-formule-btn');
+        if (deleteBtn) {
+            const formuleId = deleteBtn.dataset.formuleId;
+            showConfirmModal('Supprimer cette formule?', 'Cette action est irréversible.', async () => {
+                showLoader(true);
+                await supabaseClient.from('formule_products').delete().eq('formule_id', formuleId);
+                const { error } = await supabaseClient.from('formules').delete().eq('id', formuleId);
+                if (error) showToast(`Erreur: ${error.message}`); else showToast("Formule supprimée.");
+                await loadInitialData();
+                renderAdminFormules();
+                showLoader(false);
+            });
+        }
+    });
+
+    formuleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoader(true);
+        const id_str = document.getElementById('formule-id-input').value;
+        const id = id_str ? parseInt(id_str, 10) : null;
+        const name = document.getElementById('formule-name').value;
+        const price = parseFloat(document.getElementById('formule-price').value);
+        const selectedProducts = Array.from(formuleForm.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value, 10));
+
+        try {
+            if (id) {
+                const { error } = await supabaseClient.from('formules').update({ name, price }).eq('id', id);
+                if (error) throw error;
+                await supabaseClient.from('formule_products').delete().eq('formule_id', id);
+                if (selectedProducts.length > 0) {
+                    const toInsert = selectedProducts.map(pid => ({ formule_id: id, product_id: pid }));
+                    const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
+                    if (insertError) throw insertError;
+                }
+            } else {
+                const { data, error } = await supabaseClient.from('formules').insert({ name, price }).select().single();
+                if (error) throw error;
+                if (selectedProducts.length > 0) {
+                    const toInsert = selectedProducts.map(pid => ({ formule_id: data.id, product_id: pid }));
+                    const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
+                    if (insertError) throw insertError;
+                }
+            }
+            showToast("Formule enregistrée !");
+        } catch(error) {
+            showToast(`Erreur: ${error.message}`);
+            console.error("Error saving formule:", error);
+        } finally {
+            await loadInitialData();
+            renderAdminFormules();
+            formuleModal.classList.add('hidden');
+            showLoader(false);
+        }
+    });
 
     const openPromoModal = (promoId = null) => {
         promoForm.reset();
@@ -1512,11 +1713,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('promo-max-orders-container').classList.remove('hidden');
             }
         };
-
-        promoForm.querySelectorAll('input[name="promo_limit_type"]').forEach(radio => {
-            radio.addEventListener('change', updateVisibility);
-        });
-
+        promoForm.querySelectorAll('input[name="promo_limit_type"]').forEach(radio => radio.addEventListener('change', updateVisibility));
         updateVisibility();
 
         let itemsHtml = '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Produits éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
@@ -1537,460 +1734,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         promoModal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     };
-    
-    // ===== AUTHENTICATION =====
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        hideAuthError();
-        showLoader(true);
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        try {
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-        } catch (error) {
-            console.error('Erreur de connexion:', error);
-            if (error.message === 'Invalid login credentials') {
-                showAuthError("Identifiant ou mot de passe incorrect");
-            } else {
-                showAuthError(error.message);
-            }
-        } finally {
-            showLoader(false);
-        }
-    };
-
-    const handleSignup = async (e) => {
-        e.preventDefault();
-        hideAuthError();
-        showLoader(true);
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-        const firstName = document.getElementById('signup-firstname').value;
-        const lastName = document.getElementById('signup-lastname').value;
-
-        try {
-            const { error } = await supabaseClient.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        first_name: firstName,
-                        last_name: lastName,
-                    }
-                }
-            });
-            if (error) throw error;
-            showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
-        } catch (error) {
-            console.error('Erreur d\'inscription:', error);
-            showAuthError(error.message);
-        } finally {
-            showLoader(false);
-        }
-    };
-    
-    const handleGoogleLogin = async () => {
-        await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
-    };
-
-    const handleLogout = (isTimeout = false) => {
-        supabaseClient.auth.signOut();
-        state = { currentUser: null, userProfile: null, products: {}, formules: [], orders: [] };
-        showView('auth-view');
-        if (isTimeout) {
-            showToast('Vous avez été déconnecté pour inactivité.');
-        }
-    };
-    
-    const resetLogoutTimer = () => {
-        clearTimeout(logoutTimer);
-        logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
-    };
-
-    // ===== APP LOGIC =====
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        const isSameUser = state.currentUser?.id === session?.user?.id;
-
-        if (event === 'PASSWORD_RECOVERY') {
-            resetPasswordModal.classList.remove('hidden');
-        } else if (session && session.user) {
-            const showLoaderIndicator = !isSameUser;
-            state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
-            await loadInitialData(showLoaderIndicator);
-            showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-            renderAll();
-            resetLogoutTimer();
-        } else {
-            state.currentUser = null;
-            state.userProfile = null;
-            showView('auth-view');
-            clearTimeout(logoutTimer);
-        }
-    });
-
-    // ===== EVENT LISTENERS =====
-    loginForm.addEventListener('submit', handleLogin);
-    signupForm.addEventListener('submit', handleSignup);
-    showSignupBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginForm.classList.add('hidden');
-        signupForm.classList.remove('hidden');
-    });
-     showLoginBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        signupForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-    });
-
-    googleLoginBtn.addEventListener('click', handleGoogleLogin);
-    logoutBtns.forEach(btn => btn.addEventListener('click', () => handleLogout(false)));
-    hamburgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-    
-    // MODAL LISTENERS
-    modalCloseBtn.addEventListener('click', () => orderModal.classList.add('hidden'));
-    historyModalCloseBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
-    refuseCancelBtn.addEventListener('click', () => refuseModal.classList.add('hidden'));
-    productModalCloseBtn.addEventListener('click', () => productModal.classList.add('hidden'));
-    formuleModalCloseBtn.addEventListener('click', () => formuleModal.classList.add('hidden'));
-    confirmCancelBtn.addEventListener('click', () => confirmModal.classList.add('hidden'));
-    receiptCloseBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
-
-    forgotPasswordLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        forgotPasswordModal.classList.remove('hidden');
-    });
-
-    forgotPasswordModalCloseBtn.addEventListener('click', () => {
-        forgotPasswordModal.classList.add('hidden');
-    });
-
-    forgotPasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('forgot-password-email').value;
-        showLoader(true);
-        try {
-            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.href, // Redirect back to the same page
-            });
-            if (error) throw error;
-            showToast("Un email de réinitialisation a été envoyé.");
-            forgotPasswordModal.classList.add('hidden');
-        } catch (error) {
-            console.error('Forgot password error:', error);
-            showToast(`Erreur: ${error.message}`);
-        } finally {
-            showLoader(false);
-        }
-    });
-
-    resetPasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const newPassword = document.getElementById('reset-password-new').value;
-        if (newPassword.length < 6) {
-            return showToast("Le mot de passe doit contenir au moins 6 caractères.");
-        }
-
-        showLoader(true);
-        try {
-            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-            if (error) throw error;
-            showToast("Mot de passe réinitialisé avec succès !");
-            resetPasswordModal.classList.add('hidden');
-        } catch (error) {
-            console.error('Reset password error:', error);
-            showToast(`Erreur: ${error.message}`);
-        } finally {
-            showLoader(false);
-        }
-    });
-
-    // CUSTOMER LISTENERS
-    document.addEventListener('click', e => {
-        const addToCartBtn = e.target.closest('.add-to-cart-btn');
-        if (addToCartBtn) {
-            const productId = parseInt(addToCartBtn.dataset.productId, 10);
-            addProductToCart(productId);
-        }
-
-        const orderBtn = e.target.closest('.order-btn');
-        if (orderBtn) {
-            openOrderModal(parseInt(orderBtn.dataset.formuleId, 10));
-        }
-
-        const cartCloseBtnElement = e.target.closest('#cart-close-btn');
-        if (cartCloseBtnElement) {
-            cartModal.classList.add('hidden');
-        }
-    });
-
-    cartBtns.forEach(btn => {
-        if (btn) { // Ensure the button exists
-            btn.addEventListener('click', () => {
-                renderCart();
-                cartModal.classList.remove('hidden');
-            });
-        }
-    });
-
-    document.getElementById('cart-body').addEventListener('click', e => {
-        const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
-        if (removeFromCartBtn) {
-            const cartItemIndex = parseInt(removeFromCartBtn.dataset.cartItemIndex, 10);
-            removeFromCart(cartItemIndex);
-        }
-    });
-
-    document.getElementById('cart-footer').addEventListener('click', e => {
-        if (e.target.id === 'checkout-btn') {
-            handleCheckout();
-        }
-    });
-
-    historyBtns.forEach(btn => btn.addEventListener('click', e => {
-        e.preventDefault();
-        renderHistory();
-    }));
-    
-    historyModalBody.addEventListener('click', e => {
-        const reorderBtn = e.target.closest('.reorder-btn');
-        if (reorderBtn) {
-            const formuleId = parseInt(reorderBtn.dataset.formuleId, 10);
-            const items = JSON.parse(reorderBtn.dataset.orderItems);
-            historyModal.classList.add('hidden');
-            openOrderModal(formuleId, items);
-        }
-        
-        const receiptBtn = e.target.closest('.receipt-btn');
-        if (receiptBtn) {
-            const orderId = parseInt(receiptBtn.dataset.orderId, 10);
-            const order = state.orders.find(o => o.id === orderId);
-            if (order) renderReceipt(order);
-        }
-    });
-
-    // ADMIN LISTENERS
-    document.addEventListener('click', e => {
-        const adminTab = e.target.closest('.admin-tab');
-        if (adminTab) {
-            e.preventDefault();
-            const tabId = adminTab.dataset.tab;
-
-            document.querySelectorAll('.admin-tab').forEach(t => {
-                t.classList.remove('bg-stone-700');
-                t.classList.add('hover:bg-stone-700');
-            });
-            adminTab.classList.add('bg-stone-700');
-            adminTab.classList.remove('hover:bg-stone-700');
-
-            document.querySelectorAll('.admin-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-
-            if (tabId === 'stats') {
-                renderStats(); // Initial render for stats
-            }
-        }
-    });
-
-    ordersTabContent.addEventListener('click', async e => {
-        const confirmBtn = e.target.closest('.confirm-order-btn');
-        const refuseBtn = e.target.closest('.refuse-order-btn');
-        const deliverBtn = e.target.closest('.deliver-order-btn');
-
-        if (confirmBtn) {
-            const orderId = confirmBtn.dataset.orderId;
-            const { error } = await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', orderId);
-            if(error) showToast(`Erreur: ${error.message}`);
-            else { await loadInitialData(); renderAdminOrders(); }
-        }
-        if (refuseBtn) {
-            const orderId = refuseBtn.dataset.orderId;
-            refuseModal.classList.remove('hidden');
-            refuseConfirmBtn.onclick = async () => {
-                const reason = refuseReasonInput.value;
-                const { error } = await supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', orderId);
-                if(error) showToast(`Erreur: ${error.message}`);
-                else { await loadInitialData(); renderAdminOrders(); }
-                refuseReasonInput.value = '';
-                refuseModal.classList.add('hidden');
-            };
-        }
-        if(deliverBtn) {
-            showToast("Bouton 'livré' cliqué !"); // Debug toast
-            const orderId = deliverBtn.dataset.orderId;
-            const { error } = await supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', orderId);
-            if(error) showToast(`Erreur: ${error.message}`);
-            else { await loadInitialData(); renderAdminOrders(); }
-        }
-    });
-
-    adminOrderTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            adminOrderTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            if (tab.dataset.orderTab === 'pending') {
-                adminOrdersPendingContainer.classList.remove('hidden');
-                adminOrdersCompletedContainer.classList.add('hidden');
-            } else {
-                adminOrdersPendingContainer.classList.add('hidden');
-                adminOrdersCompletedContainer.classList.remove('hidden');
-            }
-        });
-    });
-
-    // PRODUCTS
-    addProductBtn.addEventListener('click', () => { productForm.reset(); productModal.classList.remove('hidden'); });
-    
-    productForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const newProduct = {
-            name: document.getElementById('product-name').value,
-            price: parseFloat(document.getElementById('product-price').value),
-            category: document.getElementById('product-category').value
-        };
-        showLoader(true);
-        const { error } = await supabaseClient.from('products').insert(newProduct);
-        if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit ajouté !"); }
-        await loadInitialData();
-        renderAdminProducts();
-        productModal.classList.add('hidden');
-        showLoader(false);
-    });
-
-    adminProductsContainer.addEventListener('click', async e => {
-        const deleteBtn = e.target.closest('.delete-product-btn');
-        if (deleteBtn) {
-            const productId = deleteBtn.dataset.productId;
-            showConfirmModal('Supprimer ce produit?', 'Cette action est irréversible.', async () => {
-                showLoader(true);
-                const { error } = await supabaseClient.from('products').delete().eq('id', productId);
-                if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit supprimé."); }
-                await loadInitialData();
-                renderAdminProducts();
-                renderAdminFormules();
-                showLoader(false);
-            });
-        }
-    });
-    
-    adminProductsContainer.addEventListener('change', async e => {
-        if (e.target.classList.contains('toggle-product-btn')) {
-            const { productId } = e.target.dataset;
-            const isAvailable = e.target.checked;
-            const { error } = await supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId);
-            if (error) { showToast(`Erreur: ${error.message}`); e.target.checked = !isAvailable; }
-             else { showToast(`Disponibilité mise à jour.`); }
-        }
-    });
-    
-    // FORMULES
-    const openFormuleModal = (formuleId = null) => {
-        formuleForm.reset();
-        document.getElementById('formule-id-input').value = '';
-        const selectionContainer = document.getElementById('formule-products-selection');
-        selectionContainer.innerHTML = '';
-
-        const formuleToEdit = formuleId ? getFormule(formuleId) : null;
-
-        if (formuleToEdit) {
-            formuleModalTitle.textContent = 'Modifier une formule';
-            document.getElementById('formule-id-input').value = formuleToEdit.id;
-            document.getElementById('formule-name').value = formuleToEdit.name;
-            document.getElementById('formule-price').value = formuleToEdit.price;
-        } else {
-            formuleModalTitle.textContent = 'Créer une formule';
-        }
-
-        Object.entries(state.products).forEach(([category, products]) => {
-            const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-            let checkboxesHTML = products.map(p => {
-                 const isChecked = formuleToEdit ? formuleToEdit.eligible_products[category]?.includes(p.id) : false;
-                 return `
-                    <label class="flex items-center gap-2 p-2 rounded-md hover:bg-stone-50">
-                        <input type="checkbox" name="${category}" value="${p.id}" ${isChecked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
-                        <span>${p.name}</span>
-                    </label>
-                 `
-            }).join('');
-            selectionContainer.innerHTML += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">${categoryName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">${checkboxesHTML}</div></div>`;
-        });
-        formuleModal.classList.remove('hidden');
-    };
-    
-    addFormuleBtn.addEventListener('click', () => openFormuleModal());
-
-    adminFormulesContainer.addEventListener('click', e => {
-        const editBtn = e.target.closest('.edit-formule-btn');
-        if (editBtn) {
-            openFormuleModal(parseInt(editBtn.dataset.formuleId, 10));
-        }
-
-        const deleteBtn = e.target.closest('.delete-formule-btn');
-        if (deleteBtn) {
-            const formuleId = deleteBtn.dataset.formuleId;
-            showConfirmModal('Supprimer cette formule?', 'Cette action est irréversible.', async () => {
-                showLoader(true);
-                await supabaseClient.from('formule_products').delete().eq('formule_id', formuleId);
-                const { error } = await supabaseClient.from('formules').delete().eq('id', formuleId);
-                if (error) {
-                    showToast(`Erreur: ${error.message}`);
-                } else {
-                    showToast("Formule supprimée.");
-                }
-                await loadInitialData();
-                renderAdminFormules();
-                showLoader(false);
-            });
-        }
-    });
-
-    formuleForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        showLoader(true);
-        const id_str = document.getElementById('formule-id-input').value;
-        const id = id_str ? parseInt(id_str, 10) : null;
-        const name = document.getElementById('formule-name').value;
-        const price = parseFloat(document.getElementById('formule-price').value);
-        
-        const selectedProducts = Array.from(formuleForm.querySelectorAll('input[type="checkbox"]:checked'))
-            .map(cb => parseInt(cb.value, 10));
-
-        try {
-            if (id) { // Update
-                const { error } = await supabaseClient.from('formules').update({ name, price }).eq('id', id);
-                if (error) throw error;
-                
-                await supabaseClient.from('formule_products').delete().eq('formule_id', id);
-
-                if (selectedProducts.length > 0) {
-                    const toInsert = selectedProducts.map(pid => ({ formule_id: id, product_id: pid }));
-                    const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
-                    if (insertError) throw insertError;
-                }
-            } else { // Create
-                const { data, error } = await supabaseClient.from('formules').insert({ name, price }).select().single();
-                if (error) throw error;
-
-                if (selectedProducts.length > 0) {
-                    const toInsert = selectedProducts.map(pid => ({ formule_id: data.id, product_id: pid }));
-                    const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
-                    if (insertError) throw insertError;
-                }
-            }
-            showToast("Formule enregistrée !");
-        } catch(error) {
-            showToast(`Erreur: ${error.message}`);
-            console.error("Error saving formule:", error);
-        } finally {
-            await loadInitialData();
-            renderAdminFormules();
-            formuleModal.classList.add('hidden');
-            showLoader(false);
-        }
-    });
 
     addPromoBtn.addEventListener('click', () => openPromoModal());
     promoModalCloseBtn.addEventListener('click', () => {
@@ -2002,27 +1745,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
 
         const descriptionElement = promoForm.querySelector('#promo-description');
-        if (!descriptionElement) {
-            showToast("Erreur: Champ de description introuvable.");
-            return;
-        }
+        if (!descriptionElement) { showToast("Erreur: Champ de description introuvable."); return; }
         const description = descriptionElement.value;
-        showToast(`Description: [${description}]`); // Debug toast
-
-        if (!description || !description.trim()) {
-            showToast("La description ne peut pas être vide.");
-            return;
-        }
+        if (!description || !description.trim()) { showToast("La description ne peut pas être vide."); return; }
 
         showLoader(true);
-
         const id = document.getElementById('promo-id-input').value;
-        
-        const promoData = {
-            description: description,
-            discount_percentage: parseFloat(document.getElementById('promo-discount').value),
-        };
-
+        const promoData = { description, discount_percentage: parseFloat(document.getElementById('promo-discount').value) };
         const limitType = promoForm.querySelector('input[name="promo_limit_type"]:checked').value;
         if (limitType === 'date') {
             const expires_at = document.getElementById('promo-expires-at').value;
@@ -2038,13 +1767,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
 
         try {
-            if (id) { // Update
+            if (id) {
                 const { error } = await supabaseClient.from('promotions').update(promoData).eq('id', id);
                 if (error) throw error;
-
                 await supabaseClient.from('promotion_products').delete().eq('promotion_id', id);
                 await supabaseClient.from('promotion_formules').delete().eq('promotion_id', id);
-
                 if (selectedProducts.length > 0) {
                     const productsToInsert = selectedProducts.map(pid => ({ promotion_id: id, product_id: pid }));
                     await supabaseClient.from('promotion_products').insert(productsToInsert);
@@ -2053,10 +1780,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const formulesToInsert = selectedFormules.map(fid => ({ promotion_id: id, formule_id: fid }));
                     await supabaseClient.from('promotion_formules').insert(formulesToInsert);
                 }
-            } else { // Create
+            } else {
                 const { data, error } = await supabaseClient.from('promotions').insert(promoData).select().single();
                 if (error) throw error;
-
                 const newPromoId = data.id;
                 if (selectedProducts.length > 0) {
                     const productsToInsert = selectedProducts.map(pid => ({ promotion_id: newPromoId, product_id: pid }));
@@ -2079,30 +1805,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    adminPromosContainer.addEventListener('click', async e => {
-        const editBtn = e.target.closest('.edit-promo-btn');
-        if (editBtn) {
-            openPromoModal(parseInt(editBtn.dataset.promoId, 10));
-        }
-
-        const deleteBtn = e.target.closest('.delete-promo-btn');
-        if (deleteBtn) {
-            const promoId = deleteBtn.dataset.promoId;
-            showConfirmModal('Supprimer cette promotion?', 'Cette action est irréversible.', async () => {
-                showLoader(true);
-                const { error } = await supabaseClient.from('promotions').delete().eq('id', promoId);
-                if (error) {
-                    showToast(`Erreur: ${error.message}`);
-                } else {
-                    showToast("Promotion supprimée.");
-                }
-                await loadInitialData();
-                renderAdminPromotions();
-                showLoader(false);
-            });
-        }
-    });
-
     document.querySelector('#stats-tab').addEventListener('click', e => {
         if (e.target.classList.contains('stats-filter-btn')) {
             document.querySelectorAll('.stats-filter-btn').forEach(btn => {
@@ -2118,47 +1820,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderReceipt = (order) => {
         document.getElementById('receipt-date').textContent = new Date(order.created_at).toLocaleDateString('fr-FR');
         document.getElementById('receipt-order-id').textContent = `#${order.id.toString().slice(-6).toUpperCase()}`;
-        
         const itemsHtml = order.order_items.map(item => {
             let itemName = '';
-            if (item.products) { // Product
-                itemName = `${item.quantity}x ${item.products.name}`;
-            } else if (item.formules) { // Formule
+            if (item.products) itemName = `${item.quantity}x ${item.products.name}`;
+            else if (item.formules) {
                 itemName = `${item.quantity}x ${item.formules.name}`;
-                if (item.description) {
-                    itemName += ` (${item.description})`;
-                }
+                if (item.description) itemName += ` (${item.description})`;
             }
-            return `
-                <div class="flex justify-between">
-                    <span>${itemName}</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}&nbsp;€</span>
-                </div>
-            `;
+            return `<div class="flex justify-between"><span>${itemName}</span><span>${(item.price * item.quantity).toFixed(2)}&nbsp;€</span></div>`;
         }).join('');
-
         document.getElementById('receipt-items').innerHTML = itemsHtml;
-
         const subtotal = order.total_price + (order.discount_amount || 0);
         const tva = order.total_price * 0.20;
         const total_ht = order.total_price - tva;
-
         document.getElementById('receipt-subtotal').innerHTML = `${total_ht.toFixed(2)}&nbsp;€`;
         document.getElementById('receipt-tva').innerHTML = `${tva.toFixed(2)}&nbsp;€`;
         document.getElementById('receipt-total').innerHTML = `${order.total_price.toFixed(2)}&nbsp;€`;
-        
         const promoLine = document.getElementById('receipt-promo-line');
         if (order.discount_amount) {
             document.getElementById('receipt-discount').innerHTML = `- ${order.discount_amount.toFixed(2)}&nbsp;€`;
             promoLine.classList.remove('hidden');
-        } else {
-            promoLine.classList.add('hidden');
-        }
-
+        } else promoLine.classList.add('hidden');
         receiptModal.classList.remove('hidden');
     };
 
-    // Inactivity timer events
     ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'].forEach(event => {
         document.addEventListener(event, resetLogoutTimer, false);
     });
@@ -2168,4 +1853,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 </body>
 </html>
-
