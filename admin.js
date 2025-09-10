@@ -79,6 +79,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const showLoader = (show) => { 
     loader.classList.toggle('hidden', !show); 
   };
+
+  // Modal body lock utilities
+  const lockBody = () => {
+    document.body.style.overflow = 'hidden';
+  };
+
+  const unlockBody = () => {
+    document.body.style.overflow = '';
+  };
   
   const showToast = (message) => { 
     toast.textContent = message; 
@@ -607,6 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('product-available').checked = product.available;
 
     productModal.classList.remove('hidden');
+    lockBody();
     productForm.dataset.productId = productId;
   };
 
@@ -705,6 +715,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderFormuleProducts(selectedProducts);
 
     formuleModal.classList.remove('hidden');
+    lockBody();
     formuleForm.dataset.formuleId = numericId;
   };
 
@@ -877,6 +888,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     productForm.reset();
     delete productForm.dataset.productId;
     productModal.classList.remove('hidden');
+    lockBody();
   });
 
   addFormuleBtn?.addEventListener('click', () => {
@@ -888,6 +900,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('formule-id-input').value = '';
     renderFormuleProducts();
     formuleModal.classList.remove('hidden');
+    lockBody();
   });
 
   addPromoBtn?.addEventListener('click', () => {
@@ -966,6 +979,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     selectionContainer.innerHTML = itemsHtml;
     promoModal.classList.remove('hidden');
+    lockBody();
   };
 
   // Close modals
@@ -974,20 +988,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       productModal.classList.add('hidden');
       formuleModal.classList.add('hidden');
       promoModal.classList.add('hidden');
+      unlockBody();
     });
   });
 
   // Cancel buttons
   formuleCancelBtn?.addEventListener('click', () => {
     formuleModal.classList.add('hidden');
+    unlockBody();
   });
 
   productCancelBtn?.addEventListener('click', () => {
     productModal.classList.add('hidden');
+    unlockBody();
   });
 
   promoCancelBtn?.addEventListener('click', () => {
     promoModal.classList.add('hidden');
+    unlockBody();
   });
 
   refuseCancelBtn?.addEventListener('click', () => {
@@ -1029,6 +1047,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       productModal.classList.add('hidden');
+      unlockBody();
       await loadInitialData(false);
       renderAdminProducts();
     } catch (error) {
@@ -1104,6 +1123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       formuleModal.classList.add('hidden');
+      unlockBody();
       await loadInitialData(false);
       renderAdminFormules();
     } catch (error) {
@@ -1186,6 +1206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       showToast("Promotion enregistrée !");
       promoModal.classList.add('hidden');
+      unlockBody();
       await loadInitialData(false);
       renderAdminPromotions();
       

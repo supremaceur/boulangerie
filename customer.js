@@ -74,6 +74,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const showLoader = (show) => { 
     loader.classList.toggle('hidden', !show); 
   };
+
+  // Modal body lock utilities
+  const lockBody = () => {
+    document.body.style.overflow = 'hidden';
+  };
+
+  const unlockBody = () => {
+    document.body.style.overflow = '';
+  };
   
   const showToast = (message) => { 
     toast.textContent = message; 
@@ -415,11 +424,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn?.addEventListener('click', () => {
       renderHistory();
       historyModal.classList.remove('hidden');
+      lockBody();
     });
   });
 
   historyModalCloseBtn?.addEventListener('click', () => {
     historyModal.classList.add('hidden');
+    unlockBody();
   });
 
   receiptCloseBtn?.addEventListener('click', () => {
