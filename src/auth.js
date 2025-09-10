@@ -4,6 +4,7 @@ import { renderAll, showView, showToast, showAuthError, hideAuthError, showLoade
 
 let logoutTimer;
 const LOGOUT_TIME = 10 * 60 * 1000; // 10 min
+let hasBootstrapped = false;
 
 function resetLogoutTimer() {
   clearTimeout(logoutTimer);
@@ -51,11 +52,13 @@ export async function handleSignup(e) {
 }
 
 export async function handleGoogleLogin() {
+  console.log('handleGoogleLogin: Initiating Google OAuth');
   await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
 }
 
 async function hardSignOut() {
-  try { await supabaseClient.auth.signOut(); } catch(e) {}
+  console.log('hardSignOut: Performing hard sign out');
+  try { await supabaseClient.auth.signOut(); } catch(e) { console.error('hardSignOut error:', e); }
   state.currentUser = null;
   state.userProfile = null;
   state.products = { sandwichs: [], boissons: [], desserts: [] };
@@ -65,59 +68,75 @@ async function hardSignOut() {
   state.promotions = [];
   clearTimeout(logoutTimer);
   showView('auth-view');
+  console.log('hardSignOut: State reset and auth view shown');
 }
 
 export function handleLogout(isTimeout = false) {
+  console.log('handleLogout: Logging out, isTimeout:', isTimeout);
   hardSignOut();
   if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
 }
 
-export async function initAuth() {
+export async function bootstrapAuth() {
+  console.log('bootstrapAuth: Starting bootstrap process');
   showLoader(true);
   try {
     const { data, error } = await supabaseClient.auth.getSession();
+    console.log('bootstrapAuth: getSession result - data:', data, 'error:', error);
     if (error) throw error;
     const session = data.session;
 
     if (session?.user) {
+      console.log('bootstrapAuth: User session found:', session.user.id, session.user.email);
       state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
       resetLogoutTimer();
       await loadInitialData();
       showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
       renderAll();
+      console.log('bootstrapAuth: User logged in, view rendered');
     } else {
+      console.log('bootstrapAuth: No user session found, showing auth view');
       showView('auth-view');
     }
   } catch (e) {
-    console.warn('initAuth error:', e);
+    console.warn('bootstrapAuth error:', e);
     showView('auth-view');
+    console.log('bootstrapAuth: Error during bootstrap, showing auth view');
   } finally {
+    hasBootstrapped = true;
     showLoader(false);
+    console.log('bootstrapAuth: Bootstrap process finished, hasBootstrapped = true');
   }
+}
 
+export function initAuthListeners() {
+  console.log('initAuthListeners: Initializing auth state change listener');
   supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    console.log('onAuthStateChange: Event:', event, 'Session:', session, 'hasBootstrapped:', hasBootstrapped);
+    if (!hasBootstrapped) {
+      console.log('onAuthStateChange: Not bootstrapped yet, returning.');
+      return;
+    }
+
     if (event === 'SIGNED_OUT') {
+      console.log('onAuthStateChange: SIGNED_OUT event');
       await hardSignOut();
       return;
     }
 
-    if (event === 'TOKEN_REFRESHED') {
-        if (session?.user) {
-          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
-          resetLogoutTimer();
-        } else {
-          await hardSignOut();
-        }
-        return;
-    }
-
     if (['SIGNED_IN', 'USER_UPDATED'].includes(event)) {
+      console.log('onAuthStateChange: SIGNED_IN or USER_UPDATED event');
       if (session?.user) {
+        console.log('onAuthStateChange: User session found in event:', session.user.id, session.user.email);
         state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
         resetLogoutTimer();
         await loadInitialData();
         renderAll();
         showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+        console.log('onAuthStateChange: User logged in via event, view rendered');
+      } else {
+        console.log('onAuthStateChange: No user session found in event, performing hard sign out');
+        await hardSignOut(); // Should not happen for SIGNED_IN/USER_UPDATED with null session
       }
     }
   });

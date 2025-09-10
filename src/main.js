@@ -1,5 +1,5 @@
 import { supabaseClient, state } from './store.js';
-import { initAuth, handleLogin, handleSignup, handleGoogleLogin, handleLogout } from './auth.js';
+import { bootstrapAuth, initAuthListeners, handleLogin, handleSignup, handleGoogleLogin, handleLogout } from './auth.js';
 import { loadInitialData } from './api.js';
 import { addProductToCart, removeFromCart, handleCheckout } from './cart.js';
 import { 
@@ -20,6 +20,7 @@ import {
 } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('DOMContentLoaded: Application started');
   // DOM Elements
   const loginForm = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
@@ -89,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   cartCloseBtn.addEventListener('click', () => cartModal.classList.add('hidden'));
 
   // History modal
-  historyBtns.forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); renderHistory(); historyModal.classList.remove('hidden');}));
+  historyBtns.forEach(btn => btn && btn.addEventListener('click', e => { e.preventDefault(); renderHistory(); historyModal.classList.remove('hidden');}));
   historyModalCloseBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
 
   // Other modals
@@ -215,7 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit ajouté !"); }
     await loadInitialData(false);
     renderAdminProducts();
-    productModal.classList.add('hidden');
+    document.getElementById('product-modal').classList.add('hidden');
     showLoader(false);
   });
 
@@ -317,7 +318,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     else { const mo = document.getElementById('promo-max-orders').value; promoData.max_orders = mo ? parseInt(mo, 10) : null; promoData.expires_at = null; }
 
     const selectedProducts = Array.from(promoForm.querySelectorAll('input[name="promo_products"]:checked')).map(cb => parseInt(cb.value, 10));
-    const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
+    const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules']:checked')).map(cb => parseInt(cb.value, 10));
 
     try {
       if (id) {
@@ -390,5 +391,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ===== BOOTSTRAP =====
-  await initAuth();
+  initAuthListeners();
+  await bootstrapAuth();
 });
