@@ -146,7 +146,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         .select('*');
       if (productsError) throw productsError;
       
-      state.products = productsData;
+      // Organiser les produits par catégorie
+      state.products = { sandwichs: [], boissons: [], desserts: [] };
+      productsData.forEach(product => {
+        if (state.products[product.category]) {
+          state.products[product.category].push(product);
+        }
+      });
 
       // Formules avec leurs produits
       const { data: formulesData, error: formulesError } = await supabaseClient

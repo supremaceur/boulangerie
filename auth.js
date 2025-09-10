@@ -82,9 +82,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             firstName = nameParts[0] || '';
             lastName = nameParts.slice(1).join(' ') || '';
           }
+          
+          // Essayer les identities si disponibles
+          if (!firstName && !lastName && user.identities && user.identities.length > 0) {
+            const identity = user.identities.find(id => id.provider === 'google');
+            if (identity && identity.identity_data) {
+              firstName = identity.identity_data.given_name || identity.identity_data.first_name || '';
+              lastName = identity.identity_data.family_name || identity.identity_data.last_name || '';
+              if (!firstName && !lastName && identity.identity_data.name) {
+                const nameParts = identity.identity_data.name.split(' ');
+                firstName = nameParts[0] || '';
+                lastName = nameParts.slice(1).join(' ') || '';
+              }
+            }
+          }
+          
+          // En dernier recours, utiliser l'email
+          if (!firstName && !lastName && user.email) {
+            const emailPart = user.email.split('@')[0];
+            firstName = emailPart;
+          }
         }
 
-        console.log('Creating profile with:', { firstName, lastName, userMetadata: user.user_metadata });
+        console.log('User metadata received:', user.user_metadata);
+        console.log('Extracted names:', { firstName, lastName });
+        console.log('Full user object:', user);
 
         const { error: insertError } = await supabaseClient
           .from('profiles')
