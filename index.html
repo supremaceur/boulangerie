@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Saveurs Pasteur</title>
+  <link rel="icon" href="https://iili.io/KnQjBa4.md.webp" type="image/webp">
+  <link href="./dist/output.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-brand { font-family: 'Playfair Display', serif; }
+    .font-receipt { font-family: 'Source Code Pro', monospace; }
+    .toast {
+      visibility: hidden; min-width: 250px; margin-left: -125px;
+      background-color: #333; color: #fff; text-align: center; border-radius: 8px;
+      padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px;
+      opacity: 0; transition: visibility 0s 0.5s, opacity 0.5s linear;
+    }
+    .toast.show { visibility: visible; opacity: 1; transition: opacity 0.5s linear; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+    .admin-order-tab { cursor: pointer; padding: 0.75rem 1.25rem; border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; }
+    .admin-order-tab.active { border-bottom-color: #d97706; color: #d97706; }
+    /* Promotion modal: hauteur auto (pas limitée), scroll « page » classique */
+    /* On supprime toute contrainte max-h sur la modale promo */
+    #promo-modal .max-h-\[90vh\] { max-height: none; }
+  </style>
+</head>
+<body class="bg-stone-100">
+  <div id="app" class="max-w-7xl mx-auto">
+    <!-- Spinner global -->
+    <div id="loader" class="hidden fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-600"></div>
+    </div>
+
+    <!-- ===== VIEW: AUTH ===== -->
+    <div id="auth-view" class="hidden min-h-screen flex items-center justify-center p-4">
+      <div class="w-full max-w-md rounded-2xl shadow-lg p-8" style="background-color: #F9F4EA;">
+        <div class="text-center mb-8">
+          <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="mx-auto h-48 w-auto">
+          <h1 class="font-brand text-4xl text-stone-800 mt-4">La Boulangerie</h1>
+          <p class="text-stone-500 mt-2">Commandez vos formules en ligne</p>
+        </div>
+
+        <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert"></div>
+
+        <!-- Auth Forms Container -->
+        <div id="auth-forms">
+          <!-- Login Form -->
+          <form id="login-form">
+            <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Connexion</h2>
+            <div class="mb-4">
+              <label for="login-email" class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+              <input type="email" id="login-email" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <div class="mb-6">
+              <label for="login-password" class="block text-sm font-medium text-stone-600 mb-1">Mot de passe</label>
+              <input type="password" id="login-password" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <div class="text-right text-sm mb-6">
+              <a href="#" id="forgot-password-link" class="font-semibold text-amber-600 hover:underline">Mot de passe oublié ?</a>
+            </div>
+            <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Se Connecter</button>
+            <p class="text-center text-sm text-stone-500 mt-4">
+              Pas encore de compte ? <a href="#" id="show-signup-btn" class="font-semibold text-amber-600 hover:underline">Inscrivez-vous</a>
+            </p>
+          </form>
+
+          <!-- Signup Form -->
+          <form id="signup-form" class="hidden">
+            <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Inscription</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="signup-firstname" class="block text-sm font-medium text-stone-600 mb-1">Prénom</label>
+                <input type="text" id="signup-firstname" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+              </div>
+              <div>
+                <label for="signup-lastname" class="block text-sm font-medium text-stone-600 mb-1">Nom</label>
+                <input type="text" id="signup-lastname" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="signup-email" class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+              <input type="email" id="signup-email" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <div class="mb-6">
+              <label for="signup-password" class="block text-sm font-medium text-stone-600 mb-1">Mot de passe</label>
+              <input type="password" id="signup-password" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Créer mon compte</button>
+            <p class="text-center text-sm text-stone-500 mt-4">
+              Déjà un compte ? <a href="#" id="show-login-btn" class="font-semibold text-amber-600 hover:underline">Connectez-vous</a>
+            </p>
+          </form>
+        </div>
+
+        <div class="my-6 flex items-center">
+          <div class="flex-grow border-t border-stone-300"></div>
+          <span class="flex-shrink mx-4 text-stone-500 text-sm">OU</span>
+          <div class="flex-grow border-t border-stone-300"></div>
+        </div>
+
+        <button id="google-login-btn" class="w-full bg-white border border-stone-300 text-stone-700 font-medium py-3 px-4 rounded-lg hover:bg-stone-50 transition-colors duration-300 flex items-center justify-center gap-3 shadow-sm">
+          <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.012,35.24,44,30.021,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
+          Continuer avec Google
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== VIEW: CUSTOMER ===== -->
+    <div id="customer-view" class="hidden">
+      <header class="shadow-md sticky top-0 z-50" style="background-color: #F9F4EA;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center py-2">
+            <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="h-24 w-auto">
+            <div class="hidden md:flex items-center gap-4">
+              <div id="welcome-message" class="text-stone-600"></div>
+              <button id="cart-btn-desktop" class="relative text-stone-600 hover:text-amber-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+              </button>
+              <button id="history-btn" class="text-stone-600 hover:text-amber-600 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Historique
+              </button>
+              <button id="logout-btn-customer" class="text-stone-600 hover:text-amber-600 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                Déconnexion
+              </button>
+            </div>
+            <div class="md:hidden flex items-center gap-4">
+              <button id="cart-btn-mobile" class="relative text-stone-600 hover:text-amber-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+              </button>
+              <button id="hamburger-btn" class="text-stone-600 hover:text-amber-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-stone-200">
+          <div id="welcome-message-mobile" class="py-3 px-4 text-stone-700 font-semibold"></div>
+          <a href="#" id="history-btn-mobile" class="block py-3 px-4 text-stone-700 hover:bg-stone-50">Historique des commandes</a>
+          <a href="#" id="logout-btn-customer-mobile" class="block py-3 px-4 text-stone-700 hover:bg-stone-50">Déconnexion</a>
+        </div>
+      </header>
+
+      <main class="p-4 sm:p-6 lg:p-8">
+        <div id="promo-banner" class="hidden bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded-lg mb-6" role="alert">
+          <p class="font-bold">Promotion !</p>
+          <p id="promo-description"></p>
+        </div>
+        <h2 class="text-3xl font-bold text-stone-800 mb-6">Nos Formules</h2>
+        <div id="formules-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+        <div class="mt-12">
+          <h2 class="text-3xl font-bold text-stone-800 mb-6">À la carte</h2>
+          <div id="products-container" class="space-y-8"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ===== VIEW: ADMIN ===== -->
+    <div id="admin-view" class="hidden">
+      <div class="md:flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-stone-800 text-white flex-shrink-0">
+          <div class="p-6 text-center">
+            <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="mx-auto h-28 w-auto">
+            <h1 class="font-brand text-xl text-white mt-2">Espace Admin</h1>
+          </div>
+          <nav class="mt-4">
+            <a href="#" data-tab="orders" class="admin-tab block py-3 px-6 text-lg bg-stone-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+              Commandes
+            </a>
+            <a href="#" data-tab="products" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              Produits
+            </a>
+            <a href="#" data-tab="formules" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Formules
+            </a>
+            <a href="#" data-tab="promotions" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 8V5a2 2 0 012-2z" /><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01" /></svg>
+              Promotions
+            </a>
+            <a href="#" data-tab="stats" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+              Statistiques
+            </a>
+            <a href="#" id="logout-btn-admin" class="admin-tab block py-3 px-6 text-lg hover:bg-stone-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              Déconnexion
+            </a>
+          </nav>
+        </aside>
+
+        <!-- Main Admin Content -->
+        <main class="flex-1 p-6 sm:p-10 bg-stone-100">
+          <!-- Orders Tab -->
+          <div id="orders-tab" class="admin-content">
+            <h2 class="text-3xl font-bold text-stone-800 mb-4">Gestion des Commandes</h2>
+            <div class="flex border-b border-stone-300 mb-6">
+              <button class="admin-order-tab active" data-order-tab="pending">En cours</button>
+              <button class="admin-order-tab" data-order-tab="completed">Terminées</button>
+            </div>
+            <div id="admin-orders-pending-container" class="space-y-4"></div>
+            <div id="admin-orders-completed-container" class="space-y-4 hidden"></div>
+          </div>
+
+          <!-- Products Tab -->
+          <div id="products-tab" class="admin-content hidden">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-3xl font-bold text-stone-800">Gestion des Produits</h2>
+              <button id="add-product-btn" class="bg-amber-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">Ajouter un produit</button>
+            </div>
+            <div id="admin-products-container" class="space-y-8"></div>
+          </div>
+
+          <!-- Formules Tab -->
+          <div id="formules-tab" class="admin-content hidden">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-3xl font-bold text-stone-800">Gestion des Formules</h2>
+              <button id="add-formule-btn" class="bg-amber-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">Créer une formule</button>
+            </div>
+            <div id="admin-formules-container" class="space-y-4"></div>
+          </div>
+
+          <!-- Promotions Tab -->
+          <div id="promotions-tab" class="admin-content hidden">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-3xl font-bold text-stone-800">Gestion des Promotions</h2>
+              <button id="add-promo-btn" class="bg-amber-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">Créer / Modifier</button>
+            </div>
+            <div id="admin-promos-container" class="space-y-4"></div>
+          </div>
+
+          <!-- Stats Tab -->
+          <div id="stats-tab" class="admin-content hidden">
+            <h2 class="text-3xl font-bold text-stone-800 mb-6">Statistiques de Vente</h2>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+              <div class="flex flex-wrap gap-2 mb-4">
+                <button class="stats-filter-btn bg-amber-600 text-white font-semibold py-1 px-3 rounded-full text-sm" data-period="today">Aujourd'hui</button>
+                <button class="stats-filter-btn bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-full text-sm" data-period="week">Cette semaine</button>
+                <button class="stats-filter-btn bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-full text-sm" data-period="month">Ce mois</button>
+                <button class="stats-filter-btn bg-stone-200 text-stone-700 font-semibold py-1 px-3 rounded-full text-sm" data-period="all">Tout</button>
+              </div>
+              <div id="stats-tables-container"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+  <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-stone-200 flex justify-between items-center">
+        <h3 class="text-2xl font-bold text-stone-800">Votre Panier</h3>
+        <button id="cart-close-btn" class="text-stone-500 hover:text-stone-800 text-3xl font-bold">&times;</button>
+      </div>
+      <div id="cart-body" class="p-6 space-y-4 overflow-y-auto"></div>
+      <div id="cart-footer" class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl"></div>
+    </div>
+  </div>
+
+  <div id="order-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-stone-200">
+        <h3 id="modal-title" class="text-2xl font-bold text-stone-800">Composer votre formule</h3>
+      </div>
+      <div id="modal-body" class="p-6 space-y-6 overflow-y-auto"></div>
+      <div class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-xl font-semibold text-stone-800">Total:</span>
+          <span id="modal-total-price" class="text-2xl font-bold text-amber-600">0.00€</span>
+        </div>
+        <div class="flex gap-4">
+          <button id="modal-close-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
+          <button id="modal-submit-btn" class="w-1/2 bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">Ajouter au Panier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="history-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-stone-200 flex justify-between items-center">
+        <h3 class="text-2xl font-bold text-stone-800">Historique des commandes</h3>
+        <button id="history-modal-close-btn" class="text-stone-500 hover:text-stone-800 text-3xl font-bold">&times;</button>
+      </div>
+      <div id="history-modal-body" class="p-6 space-y-4 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <div id="receipt-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm max-h-[90vh] flex flex-col font-receipt">
+      <div id="receipt-content" class="p-6 text-sm text-black overflow-y-auto">
+        <div class="text-center mb-4">
+          <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo" class="h-20 mx-auto mb-2">
+          <p class="font-bold text-lg">SAVEURS DE PASTEUR</p>
+          <p>172 AVENUE PASTEUR</p>
+          <p>10300 SAINTE-SAVINE</p>
+          <p>Tél: 03 25 78 21 90</p>
+          <p>SIRET: 931 528 236</p>
+        </div>
+        <div class="border-t border-b border-dashed border-black my-2 py-2">
+          <div class="flex justify-between">
+            <span>Date:</span><span id="receipt-date"></span>
+          </div>
+          <div class="flex justify-between">
+            <span>Ticket No:</span><span id="receipt-order-id"></span>
+          </div>
+        </div>
+        <div id="receipt-items" class="my-2 space-y-1"></div>
+        <div class="border-t border-dashed border-black pt-2">
+          <div id="receipt-promo-line" class="hidden flex justify-between">
+            <span>REMISE</span><span id="receipt-discount"></span>
+          </div>
+          <div class="flex justify-between">
+            <span>SOUS-TOTAL HT</span><span id="receipt-subtotal"></span>
+          </div>
+          <div class="flex justify-between">
+            <span>TVA (20%)</span><span id="receipt-tva"></span>
+          </div>
+          <div class="flex justify-between font-bold text-lg mt-2">
+            <span>TOTAL TTC</span><span id="receipt-total"></span>
+          </div>
+        </div>
+        <div class="text-center mt-6 text-xs">
+          <p>A bientot dans notre boulangerie</p>
+        </div>
+      </div>
+      <div class="p-4 bg-stone-100 flex gap-4">
+        <button id="receipt-close-btn" class="w-full bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="refuse-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6">
+        <h3 class="text-xl font-bold text-stone-800 mb-4">Motif du refus</h3>
+        <textarea id="refuse-reason" class="w-full p-2 border rounded-lg h-24" placeholder="Ex: Rupture de stock pour le sandwich poulet..."></textarea>
+        <div class="flex gap-4 mt-4">
+          <button id="refuse-cancel-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-2 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
+          <button id="refuse-confirm-btn" class="w-1/2 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Confirmer le Refus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="formule-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-stone-200">
+        <h3 id="formule-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une formule</h3>
+      </div>
+      <form id="formule-form">
+        <div class="p-6 space-y-6 overflow-y-auto">
+          <input type="hidden" id="formule-id-input">
+          <div>
+            <label for="formule-name" class="block text-sm font-medium text-stone-600 mb-1">Nom de la formule</label>
+            <input type="text" id="formule-name" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500" required>
+          </div>
+          <div>
+            <label for="formule-price" class="block text-sm font-medium text-stone-600 mb-1">Prix de la formule (€)</label>
+            <input type="number" id="formule-price" step="0.01" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500" required>
+          </div>
+          <div id="formule-products-selection" class="space-y-4"></div>
+        </div>
+        <div class="p-6 border-t border-stone-200 mt-auto bg-stone-50 rounded-b-2xl flex gap-4">
+          <button type="button" id="formule-modal-close-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
+          <button type="submit" class="w-1/2 bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <h3 class="text-2xl font-bold text-stone-800 p-6 border-b">Ajouter un produit</h3>
+      <form id="product-form" class="p-6 space-y-4">
+        <div>
+          <label for="product-name" class="block text-sm font-medium text-stone-600 mb-1">Nom du produit</label>
+          <input type="text" id="product-name" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500" required>
+        </div>
+        <div>
+          <label for="product-price" class="block text-sm font-medium text-stone-600 mb-1">Prix (€)</label>
+          <input type="number" id="product-price" step="0.01" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500" required>
+        </div>
+        <div>
+          <label for="product-category" class="block text-sm font-medium text-stone-600 mb-1">Catégorie</label>
+          <select id="product-category" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
+            <option value="sandwichs">Sandwich</option>
+            <option value="boissons">Boisson</option>
+            <option value="desserts">Dessert</option>
+          </select>
+        </div>
+        <div class="pt-4 flex gap-4">
+          <button type="button" id="product-modal-close-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg hover:bg-stone-300 transition">Annuler</button>
+          <button type="submit" class="w-1/2 bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">Ajouter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- >>> PROMO MODAL : hauteur auto, scroll par la page (pas de max-h) <<< -->
+  <div id="promo-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col"><!-- max-h supprimé -->
+      <div class="p-6 border-b border-stone-200">
+        <h3 id="promo-modal-title" class="text-2xl font-bold text-stone-800">Créer / Modifier une promotion</h3>
+      </div>
+      <form id="promo-form" class="flex flex-col h-full">
+        <div class="p-6 space-y-6 overflow-y-visible flex-grow h-auto"><!-- overflow Y visible -->
+          <input type="hidden" id="promo-id-input">
+          <div>
+            <label for="promo-description" class="block text-sm font-medium text-stone-600 mb-1">Description</label>
+            <input type="text" id="promo-description" class="w-full px-4 py-2 border border-stone-300 rounded-lg" required>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="promo-discount" class="block text-sm font-medium text-stone-600 mb-1">Réduction (%)</label>
+              <input type="number" id="promo-discount" step="0.01" class="w-full px-4 py-2 border border-stone-300 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-stone-600 mb-1">Type de limite</label>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="promo_limit_type" value="date" checked> Date
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="promo_limit_type" value="orders"> Commandes
+                </label>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div id="promo-expires-at-container">
+              <label for="promo-expires-at" class="block text-sm font-medium text-stone-600 mb-1">Date d'expiration</label>
+              <input type="date" id="promo-expires-at" class="w-full px-4 py-2 border border-stone-300 rounded-lg">
+            </div>
+            <div id="promo-max-orders-container" class="hidden">
+              <label for="promo-max-orders" class="block text-sm font-medium text-stone-600 mb-1">Nb. commandes max</label>
+              <input type="number" id="promo-max-orders" class="w-full px-4 py-2 border border-stone-300 rounded-lg">
+            </div>
+          </div>
+          <div id="promo-items-selection" class="space-y-4"></div>
+        </div>
+        <div class="p-6 border-t bg-stone-50 rounded-b-2xl flex gap-4">
+          <button type="button" id="promo-modal-close-btn" class="w-1/2 bg-stone-200 text-stone-700 font-bold py-3 px-4 rounded-lg">Annuler</button>
+          <button type="submit" class="w-1/2 bg-amber-600 text-white font-bold py-3 px-4 rounded-lg">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const SUPABASE_URL = 'https://zliusqwhpqzszjetvrpx.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaXVzcXdocHF6c3pqZXR2cnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNjE2MzgsImV4cCI6MjA3MjczNzYzOH0.Zb3InrWND0YpIUNHSHKDdPUxQzgihQOB2491VRb994E';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,  // garde la session au refresh
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    // ===== STATE =====
+    let state = {
+      currentUser: null,
+      userProfile: null,
+      products: { sandwichs: [], boissons: [], desserts: [] },
+      formules: [],
+      orders: [],
+      cart: [],
+      promotions: []
+    };
+
+    let chartInstances = {};
+    let logoutTimer;
+    const LOGOUT_TIME = 10 * 60 * 1000; // 10 min
+    
+
+    // ===== DOM =====
+    const loader = document.getElementById('loader');
+    const views = { auth: document.getElementById('auth-view'), customer: document.getElementById('customer-view'), admin: document.getElementById('admin-view') };
+    const authError = document.getElementById('auth-error');
+
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const showSignupBtn = document.getElementById('show-signup-btn');
+    const showLoginBtn = document.getElementById('show-login-btn');
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    const logoutBtns = [document.getElementById('logout-btn-customer'), document.getElementById('logout-btn-admin'), document.getElementById('logout-btn-customer-mobile')];
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const welcomeMessage = document.getElementById('welcome-message');
+    const welcomeMessageMobile = document.getElementById('welcome-message-mobile');
+
+    const cartBtns = [document.getElementById('cart-btn-desktop'), document.getElementById('cart-btn-mobile')];
+    const cartModal = document.getElementById('cart-modal');
+    const cartCloseBtn = document.getElementById('cart-close-btn');
+
+    const formulesContainer = document.getElementById('formules-container');
+    const orderModal = document.getElementById('order-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalTotalPrice = document.getElementById('modal-total-price');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalSubmitBtn = document.getElementById('modal-submit-btn');
+    const historyBtns = [document.getElementById('history-btn'), document.getElementById('history-btn-mobile')];
+    const historyModal = document.getElementById('history-modal');
+    const historyModalBody = document.getElementById('history-modal-body');
+    const historyModalCloseBtn = document.getElementById('history-modal-close-btn');
+    const adminTabs = document.querySelectorAll('.admin-tab');
+    const adminContents = document.querySelectorAll('.admin-content');
+    const adminOrdersPendingContainer = document.getElementById('admin-orders-pending-container');
+    const adminOrdersCompletedContainer = document.getElementById('admin-orders-completed-container');
+    const adminOrderTabs = document.querySelectorAll('.admin-order-tab');
+    const ordersTabContent = document.getElementById('orders-tab');
+    const adminProductsContainer = document.getElementById('admin-products-container');
+    const addProductBtn = document.getElementById('add-product-btn');
+    const adminFormulesContainer = document.getElementById('admin-formules-container');
+    const addFormuleBtn = document.getElementById('add-formule-btn');
+    const refuseModal = document.getElementById('refuse-modal');
+    const refuseReasonInput = document.getElementById('refuse-reason');
+    const refuseCancelBtn = document.getElementById('refuse-cancel-btn');
+    const refuseConfirmBtn = document.getElementById('refuse-confirm-btn');
+    const formuleModal = document.getElementById('formule-modal');
+    const formuleForm = document.getElementById('formule-form');
+    const formuleModalTitle = document.getElementById('formule-modal-title');
+    const formuleModalCloseBtn = document.getElementById('formule-modal-close-btn');
+    const productModal = document.getElementById('product-modal');
+    const productForm = document.getElementById('product-form');
+    const productModalCloseBtn = document.getElementById('product-modal-close-btn');
+    const confirmModal = document.getElementById('confirm-modal');
+    const confirmModalTitle = document.getElementById('confirm-modal-title');
+    const confirmModalText = document.getElementById('confirm-modal-text');
+    const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+    const confirmOkBtn = document.getElementById('confirm-ok-btn');
+    const toast = document.getElementById('toast');
+    const receiptModal = document.getElementById('receipt-modal');
+    const receiptCloseBtn = document.getElementById('receipt-close-btn');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const forgotPasswordModal = document.getElementById('forgot-password-modal');
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const forgotPasswordModalCloseBtn = document.getElementById('forgot-password-modal-close-btn');
+    const resetPasswordModal = document.getElementById('reset-password-modal');
+    const resetPasswordForm = document.getElementById('reset-password-form');
+    const promoModal = document.getElementById('promo-modal');
+    const promoForm = document.getElementById('promo-form');
+    const promoModalCloseBtn = document.getElementById('promo-modal-close-btn');
+    const addPromoBtn = document.getElementById('add-promo-btn');
+    const adminPromosContainer = document.getElementById('admin-promos-container');
+
+    // ===== HELPERS =====
+    const showLoader = (show) => { loader.classList.toggle('hidden', !show); };
+    const showView = (viewId) => {
+      Object.values(views).forEach(v => v.classList.add('hidden'));
+      views[viewId.replace('-view', '')]?.classList.remove('hidden');
+    };
+    const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); };
+    const getProduct = (id) => Object.values(state.products).flat().find(p => p.id === id);
+    const getFormule = (id) => state.formules.find(f => f.id === id);
+    const showAuthError = (message) => { authError.textContent = message; authError.classList.remove('hidden'); };
+    const hideAuthError = () => { authError.classList.add('hidden'); };
+    const showConfirmModal = (title, text, onConfirm) => {
+      confirmModalTitle.textContent = title;
+      confirmModalText.textContent = text;
+      confirmModal.classList.remove('hidden');
+      confirmOkBtn.onclick = () => { onConfirm(); confirmModal.classList.add('hidden'); };
+    };
+
+    const updateCartBadge = () => {
+      const cartBadge = document.getElementById('cart-badge');
+      const cartItemCount = state.cart.reduce((total, item) => total + item.quantity, 0);
+      if (cartItemCount > 0) { cartBadge.textContent = cartItemCount; cartBadge.classList.remove('hidden'); }
+      else { cartBadge.classList.add('hidden'); }
+    };
+
+    // ===== INACTIVITÉ =====
+    const resetLogoutTimer = () => {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
+    };
+    ['mousemove','mousedown','keypress','scroll','touchstart'].forEach(ev => document.addEventListener(ev, resetLogoutTimer, false));
+
+    // ===== DATA =====
+    async function loadInitialData(showLoaderIndicator = true) {
+      if (showLoaderIndicator) showLoader(true);
+      try {
+        // Profile
+        if (state.currentUser) {
+          const { data, error } = await supabaseClient.from('profiles').select('first_name, last_name').eq('id', state.currentUser.id).single();
+          if (error && error.code !== 'PGRST116') throw error;
+          state.userProfile = data;
+        }
+        // Products
+        const { data: productsData, error: productsError } = await supabaseClient.from('products').select('*');
+        if (productsError) throw productsError;
+        state.products = { sandwichs: [], boissons: [], desserts: [] };
+        productsData.forEach(p => {
+          if (!state.products[p.category]) state.products[p.category] = [];
+          state.products[p.category].push(p);
+        });
+        // Formules + eligible
+        const { data: formulesData, error: formulesError } = await supabaseClient.from('formules').select('*, formule_products(product_id)');
+        if (formulesError) throw formulesError;
+        state.formules = formulesData.map(f => {
+          const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
+          if (f.formule_products) {
+            f.formule_products.forEach(fp => {
+              const product = getProduct(fp.product_id);
+              if (product) {
+                if (!eligible_products[product.category]) eligible_products[product.category] = [];
+                eligible_products[product.category].push(product.id);
+              }
+            });
+          }
+          return { ...f, eligible_products };
+        });
+        // Orders
+        if (state.currentUser) {
+          let query = supabaseClient.from('orders').select('*, order_items(*, products(*), formules(*))');
+          if (state.currentUser.role !== 'admin') { query = query.eq('user_id', state.currentUser.id); }
+          const { data: ordersData, error: ordersError } = await query.order('created_at', { ascending: false });
+          if (ordersError) throw ordersError;
+          state.orders = ordersData;
+        }
+        // Promotions
+        const { data: promosData, error: promosError } = await supabaseClient.from('promotions').select('*, promotion_products(product_id), promotion_formules(formule_id)');
+        if (promosError) throw promosError;
+        state.promotions = promosData;
+        // usage_count
+        for (const promo of state.promotions) {
+          const { data: count, error: countError } = await supabaseClient.rpc('get_promotion_usage_count', { p_promotion_id: promo.id });
+          if (!countError) promo.usage_count = count;
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showToast(`Erreur de chargement: ${error.message}`);
+      } finally {
+        if (showLoaderIndicator) showLoader(false);
+      }
+    }
+
+    // ===== RENDER (identiques à ta version, conservés) =====
+    const renderProducts = () => {
+      const productsContainer = document.getElementById('products-container');
+      productsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
+        if (products.length === 0) return '';
+        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+        const productsHtml = products.filter(p => p.available).map(p => `
+          <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
+            <div class="p-4 flex-grow">
+              <p class="font-semibold text-stone-800">${p.name}</p>
+              <p class="text-stone-500 mt-1">${parseFloat(p.price).toFixed(2)}€</p>
+            </div>
+            <div class="p-4 border-t border-stone-100">
+              <button class="add-to-cart-btn bg-amber-100 text-amber-800 font-bold py-2 px-4 rounded-lg hover:bg-amber-200 transition w-full" data-product-id="${p.id}">Ajouter</button>
+            </div>
+          </div>`).join('');
+        if (!productsHtml) return '';
+        return `<div><h3 class="text-xl font-bold text-stone-700 mb-4">${categoryName}</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${productsHtml}</div></div>`;
+      }).join('');
+    };
+
+    const renderFormules = () => {
+      formulesContainer.innerHTML = state.formules.map(formule => {
+        const includedCategories = Object.keys(formule.eligible_products)
+          .filter(cat => formule.eligible_products[cat] && formule.eligible_products[cat].length > 0)
+          .map(cat => cat.charAt(0).toUpperCase() + cat.slice(1, -1))
+          .join(' + ');
+
+        const productsDetailsHtml = Object.entries(formule.eligible_products).map(([category, productIds]) => {
+          if (!productIds || productIds.length === 0) return '';
+          const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+          const productList = productIds.map(id => {
+            const product = getProduct(id);
+            return product && product.available ? `<li class="text-stone-600">${product.name}</li>` : '';
+          }).filter(Boolean).join('');
+          if (!productList) return '';
+          return `<div class="mt-3"><h4 class="font-semibold text-stone-700">${categoryName} inclus :</h4><ul class="list-disc list-inside ml-2 text-sm">${productList}</ul></div>`;
+        }).join('');
+
+        return `
+          <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
+            <div class="p-6">
+              <h3 class="text-2xl font-bold text-stone-800">${formule.name}</h3>
+              <p class="text-stone-500 mt-1 font-semibold text-amber-700">${includedCategories}</p>
+              <div class="mt-4 text-3xl font-bold text-amber-600">${parseFloat(formule.price).toFixed(2)}€</div>
+            </div>
+            <div class="p-6 border-t border-stone-200 bg-stone-50/50 flex-grow">${productsDetailsHtml}</div>
+            <div class="p-6 bg-white mt-auto">
+              <button data-formule-id="${formule.id}" class="order-btn w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Commander</button>
+            </div>
+          </div>`;
+      }).join('');
+    };
+
+    const renderAll = () => {
+      if (!state.currentUser) return;
+      if (state.currentUser.role === 'admin') {
+        renderAdminOrders();
+        renderAdminProducts();
+        renderAdminFormules();
+        renderAdminPromotions();
+        renderStats();
+      } else {
+        renderFormules();
+        renderProducts();
+        const welcomeText = `Bonjour, ${state.userProfile?.first_name || 'Client'} !`;
+        welcomeMessage.textContent = welcomeText;
+        welcomeMessageMobile.textContent = welcomeText;
+      }
+    };
+
+    const addProductToCart = (productId) => {
+      const product = getProduct(productId);
+      if (!product) return;
+      const cartItem = state.cart.find(item => item.type === 'product' && item.product.id === productId);
+      if (cartItem) cartItem.quantity++; else state.cart.push({ type: 'product', product: product, quantity: 1 });
+      updateCartBadge();
+      showToast(`${product.name} a été ajouté au panier.`);
+    };
+
+    const removeFromCart = (cartItemIndex) => {
+      if (cartItemIndex > -1 && cartItemIndex < state.cart.length) {
+        state.cart.splice(cartItemIndex, 1);
+        updateCartBadge();
+        renderCart();
+      }
+    };
+
+    const renderCart = () => {
+      const cartBody = document.getElementById('cart-body');
+      const cartFooter = document.getElementById('cart-footer');
+
+      if (state.cart.length === 0) {
+        cartBody.innerHTML = '<p class="text-center text-stone-500">Votre panier est vide.</p>';
+        cartFooter.innerHTML = '';
+        return;
+      }
+
+      cartBody.innerHTML = state.cart.map((item, index) => {
+        if (item.type === 'product') {
+          return `
+            <div class="flex justify-between items-center py-2 border-b border-stone-100">
+              <div>
+                <p class="font-semibold">${item.product.name}</p>
+                <p class="text-sm text-stone-500">${item.quantity} x ${parseFloat(item.product.price).toFixed(2)}€</p>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="font-semibold">${(item.quantity * item.product.price).toFixed(2)}€</span>
+                <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
+              </div>
+            </div>`;
+        } else if (item.type === 'formule') {
+          const productsList = item.selectedProducts.map(p => `<li>${p.name}</li>`).join('');
+          return `
+            <div class="py-2 border-b border-stone-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-semibold">${item.formule.name}</p>
+                  <ul class="text-sm text-stone-500 list-disc list-inside pl-2">${productsList}</ul>
+                </div>
+                <div class="flex items-center gap-4">
+                  <span class="font-semibold">${(item.quantity * item.formule.price).toFixed(2)}€</span>
+                  <button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold text-xl" data-cart-item-index="${index}">&times;</button>
+                </div>
+              </div>
+            </div>`;
+        }
+      }).join('');
+
+      const subtotal = state.cart.reduce((total, item) => {
+        const price = item.type === 'product' ? item.product.price : item.formule.price;
+        return total + (item.quantity * price);
+      }, 0);
+
+      const applicablePromo = findApplicablePromotion(state.cart);
+      let discountAmount = 0;
+      let finalTotal = subtotal;
+
+      let promoHtml = '';
+      if (applicablePromo) {
+        discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
+        finalTotal = subtotal - discountAmount;
+        promoHtml = `
+          <div class="flex justify-between items-center text-green-600">
+            <span>Promotion: ${applicablePromo.description}</span>
+            <span>-${discountAmount.toFixed(2)}€</span>
+          </div>`;
+      }
+
+      const timeSlots = [];
+      for (let h = 11; h <= 14; h++) {
+        for (let m = 0; m < 60; m += 15) {
+          if (h === 14 && m > 0) continue;
+          const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+          timeSlots.push(time);
+        }
+      }
+      const timeSelectorHtml = `
+        <div class="mt-4">
+          <label for="cart-pickup-time" class="block text-lg font-semibold text-stone-700 mb-2">Heure de retrait</label>
+          <select id="cart-pickup-time" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
+            ${timeSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
+          </select>
+        </div>
+      `;
+
+      cartFooter.innerHTML = `
+        <div class="flex justify-between items-center"><span>Sous-total:</span><span>${subtotal.toFixed(2)}€</span></div>
+        ${promoHtml}
+        <div class="flex justify-between items-center font-bold text-xl my-4"><span>Total:</span><span>${finalTotal.toFixed(2)}€</span></div>
+        ${timeSelectorHtml}
+        <button id="checkout-btn" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition mt-4">Valider la commande</button>
+      `;
+    };
+
+    const handleCheckout = async () => {
+      if (state.cart.length === 0) return showToast("Votre panier est vide.");
+      showLoader(true);
+      try {
+        const subtotal = state.cart.reduce((total, item) => {
+          const price = item.type === 'product' ? item.product.price : item.formule.price;
+          return total + (item.quantity * price);
+        }, 0);
+
+        const applicablePromo = findApplicablePromotion(state.cart);
+        let discountAmount = 0;
+        let finalTotal = subtotal;
+        let promoId = null;
+        if (applicablePromo) {
+          discountAmount = subtotal * (applicablePromo.discount_percentage / 100);
+          finalTotal = subtotal - discountAmount;
+          promoId = applicablePromo.id;
+        }
+
+        const pickupTime = document.getElementById('cart-pickup-time').value;
+
+        const { data: orderData, error: orderError } = await supabaseClient.from('orders').insert({
+          user_id: state.currentUser.id,
+          total_price: finalTotal,
+          pickup_time: pickupTime,
+          status: 'pending',
+          promotion_id: promoId,
+          discount_amount: discountAmount
+        }).select().single();
+        if (orderError) throw orderError;
+
+        const orderItemsToInsert = state.cart.map(item => {
+          if (item.type === 'product') {
+            return { order_id: orderData.id, product_id: item.product.id, quantity: item.quantity, price: item.product.price, category: item.product.category };
+          } else {
+            return { order_id: orderData.id, formule_id: item.formule.id, quantity: item.quantity, price: item.formule.price, description: item.selectedProducts.map(p => p.name).join(', '), category: 'formule' };
+          }
+        });
+
+        const { error: itemsError } = await supabaseClient.from('order_items').insert(orderItemsToInsert);
+        if (itemsError) throw itemsError;
+
+        state.cart = [];
+        updateCartBadge();
+        renderCart();
+        cartModal.classList.add('hidden');
+        await loadInitialData(false);
+        renderAll();
+        showToast("Commande passée avec succès !");
+      } catch (error) {
+        console.error('Checkout error:', error);
+        showToast(`Erreur lors de la commande: ${error.message}`);
+      } finally {
+        showLoader(false);
+      }
+    };
+
+    const findApplicablePromotion = (cart) => {
+      let bestPromo = null;
+      if (!state.promotions || state.promotions.length === 0) return null;
+      const now = new Date();
+      for (const promo of state.promotions) {
+        if (promo.expires_at && new Date(promo.expires_at) < now) continue;
+        if (promo.max_orders && promo.usage_count >= promo.max_orders) continue;
+        let isEligible = false;
+        for (const item of cart) {
+          if (item.type === 'product') {
+            if (promo.promotion_products?.some(pp => pp.product_id === item.product.id)) { isEligible = true; break; }
+          } else if (item.type === 'formule') {
+            if (promo.promotion_formules?.some(pf => pf.formule_id === item.formule.id)) { isEligible = true; break; }
+          }
+        }
+        if (isEligible) {
+          if (!bestPromo || promo.discount_percentage > bestPromo.discount_percentage) bestPromo = promo;
+        }
+      }
+      return bestPromo;
+    };
+
+    // ===== RENDER ADMIN =====
+    const renderAdminOrders = () => {
+      const pendingOrders = state.orders.filter(o => ['pending', 'confirmed'].includes(o.status)).sort((a, b) => a.pickup_time.localeCompare(b.pickup_time));
+      const completedOrders = state.orders.filter(o => ['refused', 'delivered'].includes(o.status));
+      const statusBadge = (status) => ({
+        pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
+        confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
+        refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
+        delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Livrée</span>`
+      }[status] || '');
+
+      const card = (order) => {
+        const itemsHtml = order.order_items.map(item => {
+          if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
+          if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description || ''})</li>`;
+          return '';
+        }).join('');
+        let actions = '';
+        if (order.status === 'pending') {
+          actions = `
+            <div class="mt-4 flex gap-3">
+              <button class="confirm-order-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Accepter</button>
+              <button class="refuse-order-btn flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Refuser</button>
+            </div>`;
+        } else if (order.status === 'confirmed') {
+          actions = `
+            <div class="mt-4">
+              <button class="deliver-order-btn w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition" data-order-id="${order.id}">Marquer comme livrée</button>
+            </div>`;
+        }
+        return `
+          <div class="bg-white rounded-xl shadow p-5">
+            <div class="flex flex-wrap justify-between items-start gap-4">
+              <div>
+                <p class="font-bold text-lg text-stone-800">Commande #${order.id.toString().slice(-4)}</p>
+                <p class="font-bold text-amber-600">Retrait: ${order.pickup_time.slice(0,5)}</p>
+                <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
+              </div>
+              <div>${statusBadge(order.status)}</div>
+            </div>
+            <div class="mt-4 border-t pt-4">
+              <p class="font-semibold">Total - ${parseFloat(order.total_price).toFixed(2)}€</p>
+              <ul class="list-disc list-inside text-stone-600 mt-2">${itemsHtml}</ul>
+              ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
+            </div>
+            ${actions}
+          </div>`;
+      };
+
+      adminOrdersPendingContainer.innerHTML = pendingOrders.length ? pendingOrders.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande en cours.</p>';
+      adminOrdersCompletedContainer.innerHTML = completedOrders.length ? completedOrders.map(card).join('') : '<p class="text-center text-stone-500">Aucune commande terminée.</p>';
+    };
+
+    const renderAdminProducts = () => {
+      adminProductsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
+        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+        const productsHtml = products.map(p => `
+          <div class="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+            <div>
+              <p class="font-semibold text-stone-800">${p.name}</p>
+              <p class="text-sm text-stone-500">${parseFloat(p.price).toFixed(2)}€</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" ${p.available ? 'checked' : ''} class="sr-only peer toggle-product-btn" data-product-id="${p.id}">
+                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+              </label>
+              <button class="delete-product-btn text-stone-400 hover:text-red-600 transition" data-product-id="${p.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+              </button>
+            </div>
+          </div>`).join('');
+        return `<div><h3 class="text-xl font-bold text-stone-700 mb-3">${categoryName}</h3><div class="space-y-2">${productsHtml}</div></div>`;
+      }).join('');
+    };
+
+    const renderAdminFormules = () => {
+      adminFormulesContainer.innerHTML = state.formules.length ? state.formules.map(f => `
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-bold text-lg text-stone-800">${f.name}</p>
+              <p class="font-bold text-amber-600 text-md">${parseFloat(f.price).toFixed(2)}€</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="edit-formule-btn text-stone-400 hover:text-amber-600 transition" data-formule-id="${f.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+              </button>
+              <button class="delete-formule-btn text-stone-400 hover:text-red-600 transition" data-formule-id="${f.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>`).join('') : '<p class="text-center text-stone-500">Aucune formule créée.</p>';
+    };
+
+    const renderAdminPromotions = () => {
+      adminPromosContainer.innerHTML = state.promotions.length ? state.promotions.map(p => `
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-bold text-lg text-stone-800">${p.description}</p>
+              <p class="font-semibold text-amber-600 text-md">${p.discount_percentage}% de réduction</p>
+              <p class="text-sm text-stone-500">Expire le: ${p.expires_at ? new Date(p.expires_at).toLocaleDateString('fr-FR') : 'N/A'}</p>
+              <p class="text-sm text-stone-500">Commandes max: ${p.max_orders || 'N/A'}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="edit-promo-btn text-stone-400 hover:text-amber-600 transition" data-promo-id="${p.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+              </button>
+              <button class="delete-promo-btn text-stone-400 hover:text-red-600 transition" data-promo-id="${p.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>`).join('') : '<p class="text-center text-stone-500">Aucune promotion créée.</p>';
+    };
+
+    const openOrderModal = (formuleId, existingOrderItems = null) => {
+      const formule = getFormule(formuleId);
+      if (!formule) return;
+      modalTitle.textContent = `Composer votre ${formule.name}`;
+      modalBody.innerHTML = '';
+      let currentSelections = {};
+      if(existingOrderItems) existingOrderItems.forEach(item => currentSelections[item.category] = item.product_id);
+
+      let productSelectionHtml = '';
+      Object.entries(formule.eligible_products).forEach(([type, ids]) => {
+        if (!ids || ids.length === 0) return;
+        const products = state.products[type].filter(p => p.available && ids.includes(p.id));
+        if(products.length === 0) return;
+        const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+        const grid = products.map(p => `<button class="p-3 border rounded-lg text-left transition bg-stone-50 border-stone-200 hover:border-amber-400" data-product-id="${p.id}" data-product-type="${type}"><p class="font-semibold text-stone-800">${p.name}</p></button>`).join('');
+        productSelectionHtml += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2">${typeName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${grid}</div></div>`;
+      });
+      modalBody.innerHTML = productSelectionHtml;
+      modalTotalPrice.textContent = `${parseFloat(formule.price).toFixed(2)}€`;
+
+      if (!existingOrderItems) {
+        Object.entries(formule.eligible_products).forEach(([type, ids]) => {
+          if (!ids || ids.length === 0) return;
+          const first = state.products[type].find(p => p.available && ids.includes(p.id));
+          if (first) currentSelections[type] = first.id;
+        });
+      }
+      Object.entries(currentSelections).forEach(([type, id]) => {
+        const button = modalBody.querySelector(`button[data-product-id="${id}"]`);
+        if (button) button.classList.add('bg-amber-100','border-amber-500','ring-2','ring-amber-500');
+      });
+
+      modalBody.onclick = e => {
+        const button = e.target.closest('button[data-product-id]');
+        if (!button) return;
+        const { productId, productType } = button.dataset;
+        modalBody.querySelectorAll(`button[data-product-type="${productType}"]`).forEach(btn => btn.classList.remove('bg-amber-100','border-amber-500','ring-2','ring-amber-500'));
+        button.classList.add('bg-amber-100','border-amber-500','ring-2','ring-amber-500');
+        currentSelections[productType] = parseInt(productId, 10);
+      };
+
+      modalSubmitBtn.onclick = () => {
+        const requiredCategories = Object.keys(formule.eligible_products).filter(k => formule.eligible_products[k] && formule.eligible_products[k].length > 0);
+        if (Object.keys(currentSelections).length < requiredCategories.length) return showToast("Veuillez sélectionner un article dans chaque catégorie.");
+        const formuleItem = { type: 'formule', formule: formule, selectedProducts: Object.values(currentSelections).map(productId => getProduct(productId)), quantity: 1 };
+        state.cart.push(formuleItem);
+        updateCartBadge();
+        orderModal.classList.add('hidden');
+        showToast(`${formule.name} a été ajouté au panier.`);
+      };
+      orderModal.classList.remove('hidden');
+    };
+
+    const renderHistory = () => {
+      historyModalBody.innerHTML = state.orders.length ? state.orders.map(order => {
+        const itemsHtml = order.order_items.map(item => {
+          if (item.products) return `<li>${item.quantity} x ${item.products.name}</li>`;
+          if (item.formules) return `<li>${item.quantity} x ${item.formules.name} (${item.description})</li>`;
+          return '';
+        }).join('');
+        const statusBadge = (status) => ({
+          pending: `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">En attente</span>`,
+          confirmed: `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Confirmée</span>`,
+          refused: `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Refusée</span>`,
+          delivered: `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terminée</span>`
+        }[order.status] || '');
+        const actionButtons = `${order.status === 'delivered' ? `<button class="receipt-btn bg-stone-200 text-stone-700 text-sm font-semibold px-3 py-1 rounded-full hover:bg-stone-300 transition ml-2" data-order-id="${order.id}">Voir le reçu</button>` : ''}`;
+        return `
+          <div class="bg-stone-50 p-4 rounded-lg">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-semibold text-stone-800">Commande #${order.id.toString().slice(-4)} (Retrait à ${order.pickup_time.slice(0,5)})</p>
+                <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString('fr-FR')}</p>
+              </div>
+              ${statusBadge}
+            </div>
+            <ul class="list-disc list-inside text-sm text-stone-600 mt-2">${itemsHtml}</ul>
+            ${order.status === 'refused' && order.refuse_reason ? `<p class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md">Motif: ${order.refuse_reason}</p>` : ''}
+            <div class="mt-3 text-right">${actionButtons}</div>
+          </div>`;
+      }).join('') : '<p class="text-center text-stone-500">Vous n\'avez pas encore de commande.</p>';
+      historyModal.classList.remove('hidden');
+    };
+
+    const renderStats = (period = 'today') => {
+      const statsContainer = document.getElementById('stats-tables-container');
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const filteredOrders = state.orders.filter(order => {
+        const orderDate = new Date(order.created_at);
+        if (period === 'today') return orderDate >= today;
+        if (period === 'week') return orderDate >= weekStart;
+        if (period === 'month') return orderDate >= monthStart;
+        return true;
+      });
+
+      const formulesStats = {};
+      filteredOrders.forEach(order => {
+        order.order_items.forEach(item => {
+          if (item.formules) {
+            const f = item.formules;
+            if (!formulesStats[f.id]) formulesStats[f.id] = { name: f.name, count: 0, revenue: 0 };
+            formulesStats[f.id].count += item.quantity;
+            formulesStats[f.id].revenue += item.price * item.quantity;
+          }
+        });
+      });
+
+      const productsStats = {};
+      filteredOrders.forEach(order => {
+        order.order_items.forEach(item => {
+          if (item.products) {
+            const p = item.products;
+            if (!productsStats[p.id]) productsStats[p.id] = { name: p.name, count: 0 };
+            productsStats[p.id].count += item.quantity;
+          }
+          if (item.formules && item.description) {
+            const productNames = item.description.split(', ');
+            productNames.forEach(name => {
+              const product = Object.values(state.products).flat().find(pp => pp.name === name);
+              if (product) {
+                if (!productsStats[product.id]) productsStats[product.id] = { name: product.name, count: 0 };
+                productsStats[product.id].count += item.quantity;
+              }
+            });
+          }
+        });
+      });
+
+      const sortedFormules = Object.values(formulesStats).sort((a,b) => b.count - a.count);
+      const sortedProducts = Object.values(productsStats).sort((a,b) => b.count - a.count);
+
+      statsContainer.innerHTML = `
+        <div class="mb-8">
+          <h3 class="text-xl font-semibold text-stone-700 mb-4">Formules les plus vendues</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-stone-200"><tr><th class="p-3">Formule</th><th class="p-3">Quantité</th><th class="p-3">Revenu Total</th></tr></thead>
+              <tbody>
+                ${sortedFormules.length ? sortedFormules.map(f => `<tr class="border-b"><td class="p-3">${f.name}</td><td class="p-3">${f.count}</td><td class="p-3">${f.revenue.toFixed(2)} €</td></tr>`).join('') : '<tr><td colspan="3" class="text-center p-4">Aucune donnée</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-stone-700 mb-4">Produits les plus populaires</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-stone-200"><tr><th class="p-3">Produit</th><th class="p-3">Nombre de fois choisi</th></tr></thead>
+              <tbody>
+                ${sortedProducts.length ? sortedProducts.map(p => `<tr class="border-b"><td class="p-3">${p.name}</td><td class="p-3">${p.count}</td></tr>`).join('') : '<tr><td colspan="2" class="text-center p-4">Aucune donnée</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    };
+
+    const renderReceipt = (order) => {
+      document.getElementById('receipt-date').textContent = new Date(order.created_at).toLocaleDateString('fr-FR');
+      document.getElementById('receipt-order-id').textContent = `#${order.id.toString().slice(-6).toUpperCase()}`;
+      const itemsHtml = order.order_items.map(item => {
+        let itemName = '';
+        if (item.products) itemName = `${item.quantity}x ${item.products.name}`;
+        else if (item.formules) { itemName = `${item.quantity}x ${item.formules.name}`; if (item.description) itemName += ` (${item.description})`; }
+        return `<div class="flex justify-between"><span>${itemName}</span><span>${(item.price * item.quantity).toFixed(2)}&nbsp;€</span></div>`;
+      }).join('');
+      document.getElementById('receipt-items').innerHTML = itemsHtml;
+      const subtotal_ttc = order.total_price;
+      const tva = subtotal_ttc * 0.20;
+      const total_ht = subtotal_ttc - tva;
+      document.getElementById('receipt-subtotal').innerHTML = `${total_ht.toFixed(2)}&nbsp;€`;
+      document.getElementById('receipt-tva').innerHTML = `${tva.toFixed(2)}&nbsp;€`;
+      document.getElementById('receipt-total').innerHTML = `${subtotal_ttc.toFixed(2)}&nbsp;€`;
+      const promoLine = document.getElementById('receipt-promo-line');
+      if (order.discount_amount) {
+        document.getElementById('receipt-discount').innerHTML = `- ${order.discount_amount.toFixed(2)}&nbsp;€`;
+        promoLine.classList.remove('hidden');
+      } else promoLine.classList.add('hidden');
+      receiptModal.classList.remove('hidden');
+    };
+
+    // ===== AUTH =====
+    const handleLogin = async (e) => {
+      e.preventDefault();
+      hideAuthError();
+      showLoader(true);
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } catch (error) {
+        console.error('Erreur de connexion:', error);
+        if (error.message === 'Invalid login credentials') showAuthError("Identifiant ou mot de passe incorrect");
+        else showAuthError(error.message);
+      } finally {
+        showLoader(false);
+      }
+    };
+
+    const handleSignup = async (e) => {
+      e.preventDefault();
+      hideAuthError();
+      showLoader(true);
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const firstName = document.getElementById('signup-firstname').value;
+      const lastName = document.getElementById('signup-lastname').value;
+      try {
+        const { error } = await supabaseClient.auth.signUp({
+          email, password, options: { data: { first_name: firstName, last_name: lastName } }
+        });
+        if (error) throw error;
+        showAuthError("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
+      } catch (error) {
+        console.error("Erreur d'inscription:", error);
+        showAuthError(error.message);
+      } finally {
+        showLoader(false);
+      }
+    };
+
+    const handleGoogleLogin = async () => { await supabaseClient.auth.signInWithOAuth({ provider: 'google' }); };
+
+    const hardSignOut = async () => {
+      try { await supabaseClient.auth.signOut(); } catch(e) {}
+      state = { currentUser: null, userProfile: null, products: { sandwichs: [], boissons: [], desserts: [] }, formules: [], orders: [], cart: [], promotions: [] };
+      clearTimeout(logoutTimer);
+      showView('auth-view');
+    };
+
+    const handleLogout = (isTimeout = false) => {
+      hardSignOut();
+      if (isTimeout) showToast('Vous avez été déconnecté pour inactivité.');
+    };
+
+    const boot = async () => {
+      showLoader(true);
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.user) {
+          state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+          resetLogoutTimer();
+          await loadInitialData(false);
+          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+          renderAll();
+        } else {
+          showView('auth-view');
+        }
+      } catch (e) {
+        console.warn('boot error:', e);
+        showView('auth-view');
+      } finally {
+        showLoader(false);
+      }
+
+      // Guards are now active
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        switch (event) {
+          case 'SIGNED_OUT':
+            await hardSignOut();
+            break;
+          
+          case 'TOKEN_REFRESHED':
+            if (session?.user) {
+              state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+              resetLogoutTimer();
+            } else {
+              await hardSignOut();
+            }
+            break;
+
+          case 'SIGNED_IN':
+          case 'USER_UPDATED':
+            if (session?.user) {
+              const user = session.user;
+              state.currentUser = { ...user, role: user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
+              resetLogoutTimer();
+              await loadInitialData();
+              renderAll();
+              showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+            }
+            break;
+        }
+      });
+    };
+
+    // ===== LISTENERS =====
+    loginForm.addEventListener('submit', handleLogin);
+    signupForm.addEventListener('submit', handleSignup);
+    showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); });
+    showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+
+    googleLoginBtn.addEventListener('click', handleGoogleLogin);
+    logoutBtns.forEach(btn => btn && btn.addEventListener('click', () => handleLogout(false)));
+    hamburgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+    // Cart modal
+    cartBtns.forEach(btn => btn && btn.addEventListener('click', () => { renderCart(); cartModal.classList.remove('hidden'); }));
+    document.getElementById('cart-body').addEventListener('click', e => {
+      const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
+      if (removeFromCartBtn) removeFromCart(parseInt(removeFromCartBtn.dataset.cartItemIndex, 10));
+    });
+    document.getElementById('cart-footer').addEventListener('click', e => { if (e.target.id === 'checkout-btn') handleCheckout(); });
+    cartCloseBtn.addEventListener('click', () => cartModal.classList.add('hidden'));
+
+    // History modal
+    historyBtns.forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); renderHistory(); }));
+    historyModalCloseBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
+
+    // Other modals
+    modalCloseBtn.addEventListener('click', () => orderModal.classList.add('hidden'));
+    refuseCancelBtn.addEventListener('click', () => refuseModal.classList.add('hidden'));
+    productModalCloseBtn.addEventListener('click', () => productModal.classList.add('hidden'));
+    formuleModalCloseBtn.addEventListener('click', () => formuleModal.classList.add('hidden'));
+    confirmCancelBtn.addEventListener('click', () => confirmModal.classList.add('hidden'));
+    receiptCloseBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
+    forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); forgotPasswordModal.classList.remove('hidden'); });
+    forgotPasswordModalCloseBtn?.addEventListener('click', () => { forgotPasswordModal.classList.add('hidden'); });
+
+    forgotPasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('forgot-password-email').value;
+      showLoader(true);
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+        if (error) throw error;
+        showToast("Un email de réinitialisation a été envoyé.");
+        forgotPasswordModal.classList.add('hidden');
+      } catch (error) {
+        console.error('Forgot password error:', error);
+        showToast(`Erreur: ${error.message}`);
+      } finally { showLoader(false); }
+    });
+
+    resetPasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById('reset-password-new').value;
+      if (newPassword.length < 6) return showToast("Le mot de passe doit contenir au moins 6 caractères.");
+      showLoader(true);
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        showToast("Mot de passe réinitialisé avec succès !");
+        resetPasswordModal.classList.add('hidden');
+      } catch (error) {
+        console.error('Reset password error:', error);
+        showToast(`Erreur: ${error.message}`);
+      } finally { showLoader(false); }
+    });
+
+    // CUSTOMER
+    document.addEventListener('click', e => {
+      const addToCartBtn = e.target.closest('.add-to-cart-btn');
+      if (addToCartBtn) addProductToCart(parseInt(addToCartBtn.dataset.productId, 10));
+      const orderBtn = e.target.closest('.order-btn');
+      if (orderBtn) openOrderModal(parseInt(orderBtn.dataset.formuleId, 10));
+    });
+
+    // ADMIN: changement d'onglet => refresh des commandes si on ouvre "orders"
+    document.addEventListener('click', async e => {
+      const adminTab = e.target.closest('.admin-tab');
+      if (!adminTab) return;
+      e.preventDefault();
+      const tabId = adminTab.dataset.tab;
+
+      document.querySelectorAll('.admin-tab').forEach(t => { t.classList.remove('bg-stone-700'); t.classList.add('hover:bg-stone-700'); });
+      adminTab.classList.add('bg-stone-700'); adminTab.classList.remove('hover:bg-stone-700');
+
+      document.querySelectorAll('.admin-content').forEach(content => content.classList.add('hidden'));
+      document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+
+      if (tabId === 'orders') {
+        showLoader(true);
+        await loadInitialData(false);
+        renderAdminOrders();
+        showLoader(false);
+      }
+      if (tabId === 'stats') renderStats();
+    });
+
+    // ADMIN Orders actions
+    ordersTabContent.addEventListener('click', async e => {
+      const confirmBtn = e.target.closest('.confirm-order-btn');
+      const refuseBtn = e.target.closest('.refuse-order-btn');
+      const deliverBtn = e.target.closest('.deliver-order-btn');
+
+      if (confirmBtn) {
+        const orderId = confirmBtn.dataset.orderId;
+        const { error } = await supabaseClient.from('orders').update({ status: 'confirmed' }).eq('id', orderId);
+        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+      }
+      if (refuseBtn) {
+        const orderId = refuseBtn.dataset.orderId;
+        refuseModal.classList.remove('hidden');
+        refuseConfirmBtn.onclick = async () => {
+          const reason = refuseReasonInput.value;
+          const { error } = await supabaseClient.from('orders').update({ status: 'refused', refuse_reason: reason }).eq('id', orderId);
+          if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+          refuseReasonInput.value = '';
+          refuseModal.classList.add('hidden');
+        };
+      }
+      if (deliverBtn) {
+        const orderId = deliverBtn.dataset.orderId;
+        const { error } = await supabaseClient.from('orders').update({ status: 'delivered' }).eq('id', orderId);
+        if (error) showToast(`Erreur: ${error.message}`); else { await loadInitialData(false); renderAdminOrders(); }
+      }
+    });
+
+    // Admin order list subtabs
+    adminOrderTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        adminOrderTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tab.dataset.orderTab === 'pending') { adminOrdersPendingContainer.classList.remove('hidden'); adminOrdersCompletedContainer.classList.add('hidden'); }
+        else { adminOrdersPendingContainer.classList.add('hidden'); adminOrdersCompletedContainer.classList.remove('hidden'); }
+      });
+    });
+
+    // Products CRUD
+    addProductBtn.addEventListener('click', () => { productForm.reset(); productModal.classList.remove('hidden'); });
+    productForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const newProduct = { name: document.getElementById('product-name').value, price: parseFloat(document.getElementById('product-price').value), category: document.getElementById('product-category').value };
+      showLoader(true);
+      const { error } = await supabaseClient.from('products').insert(newProduct);
+      if (error) { showToast(`Erreur: ${error.message}`); } else { showToast("Produit ajouté !"); }
+      await loadInitialData(false);
+      renderAdminProducts();
+      productModal.classList.add('hidden');
+      showLoader(false);
+    });
+    adminProductsContainer.addEventListener('click', async e => {
+      const deleteBtn = e.target.closest('.delete-product-btn');
+      if (deleteBtn) {
+        const productId = deleteBtn.dataset.productId;
+        showConfirmModal('Supprimer ce produit?', 'Cette action est irréversible.', async () => {
+          showLoader(true);
+          const { error } = await supabaseClient.from('products').delete().eq('id', productId);
+          if (error) showToast(`Erreur: ${error.message}`); else showToast("Produit supprimé.");
+          await loadInitialData(false);
+          renderAdminProducts();
+          renderAdminFormules();
+          showLoader(false);
+        });
+      }
+    });
+    adminProductsContainer.addEventListener('change', async e => {
+      if (e.target.classList.contains('toggle-product-btn')) {
+        const { productId } = e.target.dataset;
+        const isAvailable = e.target.checked;
+        const { error } = await supabaseClient.from('products').update({ available: isAvailable }).eq('id', productId);
+        if (error) { showToast(`Erreur: ${error.message}`); e.target.checked = !isAvailable; } else { showToast(`Disponibilité mise à jour.`); }
+      }
+    });
+
+    // Formules CRUD
+    const openFormuleModal = (formuleId = null) => {
+      formuleForm.reset();
+      document.getElementById('formule-id-input').value = '';
+      const selectionContainer = document.getElementById('formule-products-selection');
+      selectionContainer.innerHTML = '';
+      const formuleToEdit = formuleId ? getFormule(formuleId) : null;
+      if (formuleToEdit) {
+        formuleModalTitle.textContent = 'Modifier une formule';
+        document.getElementById('formule-id-input').value = formuleToEdit.id;
+        document.getElementById('formule-name').value = formuleToEdit.name;
+        document.getElementById('formule-price').value = formuleToEdit.price;
+      } else { formuleModalTitle.textContent = 'Créer une formule'; }
+      Object.entries(state.products).forEach(([category, products]) => {
+        const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+        let checkboxesHTML = products.map(p => {
+          const isChecked = formuleToEdit ? (formuleToEdit.eligible_products[category]?.includes(p.id)) : false;
+          return `<label class="flex items-center gap-2 p-2 rounded-md hover:bg-stone-50"><input type="checkbox" name="${category}" value="${p.id}" ${isChecked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"><span>${p.name}</span></label>`;
+        }).join('');
+        selectionContainer.innerHTML += `<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">${categoryName}</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">${checkboxesHTML}</div></div>`;
+      });
+      formuleModal.classList.remove('hidden');
+    };
+    addFormuleBtn.addEventListener('click', () => openFormuleModal());
+    adminFormulesContainer.addEventListener('click', e => {
+      const editBtn = e.target.closest('.edit-formule-btn');
+      if (editBtn) openFormuleModal(parseInt(editBtn.dataset.formuleId, 10));
+      const deleteBtn = e.target.closest('.delete-formule-btn');
+      if (deleteBtn) {
+        const formuleId = deleteBtn.dataset.formuleId;
+        showConfirmModal('Supprimer cette formule?', 'Cette action est irréversible.', async () => {
+          showLoader(true);
+          await supabaseClient.from('formule_products').delete().eq('formule_id', formuleId);
+          const { error } = await supabaseClient.from('formules').delete().eq('id', formuleId);
+          if (error) showToast(`Erreur: ${error.message}`); else showToast("Formule supprimée.");
+          await loadInitialData(false);
+          renderAdminFormules();
+          showLoader(false);
+        });
+      }
+    });
+    formuleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showLoader(true);
+      const id_str = document.getElementById('formule-id-input').value;
+      const id = id_str ? parseInt(id_str, 10) : null;
+      const name = document.getElementById('formule-name').value;
+      const price = parseFloat(document.getElementById('formule-price').value);
+      const selectedProducts = Array.from(formuleForm.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value, 10));
+      try {
+        if (id) {
+          const { error } = await supabaseClient.from('formules').update({ name, price }).eq('id', id);
+          if (error) throw error;
+          await supabaseClient.from('formule_products').delete().eq('formule_id', id);
+          if (selectedProducts.length > 0) {
+            const toInsert = selectedProducts.map(pid => ({ formule_id: id, product_id: pid }));
+            const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
+            if (insertError) throw insertError;
+          }
+        } else {
+          const { data, error } = await supabaseClient.from('formules').insert({ name, price }).select().single();
+          if (error) throw error;
+          if (selectedProducts.length > 0) {
+            const toInsert = selectedProducts.map(pid => ({ formule_id: data.id, product_id: pid }));
+            const { error: insertError } = await supabaseClient.from('formule_products').insert(toInsert);
+            if (insertError) throw insertError;
+          }
+        }
+        showToast("Formule enregistrée !");
+      } catch (error) {
+        showToast(`Erreur: ${error.message}`); console.error("Error saving formule:", error);
+      } finally {
+        await loadInitialData(false);
+        renderAdminFormules();
+        formuleModal.classList.add('hidden');
+        showLoader(false);
+      }
+    });
+
+    // Promotions CRUD
+    const openPromoModal = (promoId = null) => {
+      promoForm.reset();
+      document.getElementById('promo-id-input').value = '';
+      const selectionContainer = document.getElementById('promo-items-selection');
+      selectionContainer.innerHTML = '';
+      const promoToEdit = promoId ? state.promotions.find(p => p.id === promoId) : null;
+      if (promoToEdit) {
+        document.getElementById('promo-id-input').value = promoToEdit.id;
+        document.getElementById('promo-description').value = promoToEdit.description;
+        document.getElementById('promo-discount').value = promoToEdit.discount_percentage;
+        document.getElementById('promo-expires-at').value = promoToEdit.expires_at ? new Date(promoToEdit.expires_at).toISOString().split('T')[0] : '';
+        document.getElementById('promo-max-orders').value = promoToEdit.max_orders || '';
+        if (promoToEdit.expires_at) promoForm.querySelector('input[name="promo_limit_type"][value="date"]').checked = true;
+        else if (promoToEdit.max_orders) promoForm.querySelector('input[name="promo_limit_type"][value="orders"]').checked = true;
+      }
+      const updateVisibility = () => {
+        if (promoForm.querySelector('input[name="promo_limit_type"]:checked').value === 'date') {
+          document.getElementById('promo-expires-at-container').classList.remove('hidden');
+          document.getElementById('promo-max-orders-container').classList.add('hidden');
+        } else {
+          document.getElementById('promo-expires-at-container').classList.add('hidden');
+          document.getElementById('promo-max-orders-container').classList.remove('hidden');
+        }
+      };
+      promoForm.querySelectorAll('input[name="promo_limit_type"]').forEach(radio => radio.addEventListener('change', updateVisibility));
+      updateVisibility();
+
+      let itemsHtml = '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Produits éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
+      Object.values(state.products).flat().forEach(p => {
+        const isChecked = promoToEdit ? promoToEdit.promotion_products?.some(pp => pp.product_id === p.id) : false;
+        itemsHtml += `<label class="flex items-center gap-2"><input type="checkbox" name="promo_products" value="${p.id}" ${isChecked ? 'checked' : ''}>${p.name}</label>`;
+      });
+      itemsHtml += '</div></div>';
+
+      itemsHtml += '<div><h4 class="text-lg font-semibold text-stone-700 mb-2 border-b pb-1">Formules éligibles</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">';
+      state.formules.forEach(f => {
+        const isChecked = promoToEdit ? promoToEdit.promotion_formules?.some(pf => pf.formule_id === f.id) : false;
+        itemsHtml += `<label class="flex items-center gap-2"><input type="checkbox" name="promo_formules" value="${f.id}" ${isChecked ? 'checked' : ''}>${f.name}</label>`;
+      });
+      itemsHtml += '</div></div>';
+
+      selectionContainer.innerHTML = itemsHtml;
+      promoModal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    };
+
+    addPromoBtn.addEventListener('click', () => openPromoModal());
+    promoModalCloseBtn.addEventListener('click', () => { promoModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); });
+
+    promoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const descriptionEl = promoForm.querySelector('#promo-description');
+      if (!descriptionEl || !descriptionEl.value.trim()) { showToast("La description ne peut pas être vide."); return; }
+      showLoader(true);
+      const id = document.getElementById('promo-id-input').value;
+      const promoData = { description: descriptionEl.value, discount_percentage: parseFloat(document.getElementById('promo-discount').value) };
+      const limitType = promoForm.querySelector('input[name="promo_limit_type"]:checked').value;
+      if (limitType === 'date') { const exp = document.getElementById('promo-expires-at').value; promoData.expires_at = exp || null; promoData.max_orders = null; }
+      else { const mo = document.getElementById('promo-max-orders').value; promoData.max_orders = mo ? parseInt(mo, 10) : null; promoData.expires_at = null; }
+
+      const selectedProducts = Array.from(promoForm.querySelectorAll('input[name="promo_products"]:checked')).map(cb => parseInt(cb.value, 10));
+      const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
+
+      try {
+        if (id) {
+          const { error } = await supabaseClient.from('promotions').update(promoData).eq('id', id);
+          if (error) throw error;
+          await supabaseClient.from('promotion_products').delete().eq('promotion_id', id);
+          await supabaseClient.from('promotion_formules').delete().eq('promotion_id', id);
+          if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: id, product_id: pid })));
+          if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: id, formule_id: fid })));
+        } else {
+          const { data, error } = await supabaseClient.from('promotions').insert(promoData).select().single();
+          if (error) throw error;
+          const newPromoId = data.id;
+          if (selectedProducts.length) await supabaseClient.from('promotion_products').insert(selectedProducts.map(pid => ({ promotion_id: newPromoId, product_id: pid })));
+          if (selectedFormules.length) await supabaseClient.from('promotion_formules').insert(selectedFormules.map(fid => ({ promotion_id: newPromoId, formule_id: fid })));
+        }
+        showToast("Promotion enregistrée !");
+      } catch (error) {
+        showToast(`Erreur: ${error.message}`); console.error("Error saving promotion:", error);
+      } finally {
+        await loadInitialData(false);
+        renderAdminPromotions();
+        promoModal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        showLoader(false);
+      }
+    });
+
+    adminPromosContainer.addEventListener('click', async e => {
+      const editBtn = e.target.closest('.edit-promo-btn');
+      if (editBtn) openPromoModal(parseInt(editBtn.dataset.promoId, 10));
+      const deleteBtn = e.target.closest('.delete-promo-btn');
+      if (deleteBtn) {
+        const promoId = deleteBtn.dataset.promoId;
+        showConfirmModal('Supprimer cette promotion?', 'Cette action est irréversible.', async () => {
+          showLoader(true);
+          const { error } = await supabaseClient.from('promotions').delete().eq('id', promoId);
+          if (error) showToast(`Erreur: ${error.message}`); else showToast("Promotion supprimée.");
+          await loadInitialData(false);
+          renderAdminPromotions();
+          showLoader(false);
+        });
+      }
+    });
+
+    document.querySelector('#stats-tab').addEventListener('click', e => {
+      if (e.target.classList.contains('stats-filter-btn')) {
+        document.querySelectorAll('.stats-filter-btn').forEach(btn => { btn.classList.remove('bg-amber-600','text-white'); btn.classList.add('bg-stone-200','text-stone-700'); });
+        e.target.classList.add('bg-amber-600','text-white'); e.target.classList.remove('bg-stone-200','text-stone-700');
+        renderStats(e.target.dataset.period);
+      }
+    });
+
+    // Rafraîchit quand l’onglet reprend le focus
+    window.addEventListener('focus', async () => {
+      if (!state.currentUser) return;
+      await loadInitialData(false);
+      if (state.currentUser.role === 'admin') {
+        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+        if (isOrdersVisible) renderAdminOrders(); else renderAll();
+      } else { renderAll(); }
+    });
+
+    // Rafraîchit quand la page redevient visible
+    document.addEventListener('visibilitychange', async () => {
+      if (document.hidden || !state.currentUser) return;
+      await loadInitialData(false);
+      if (state.currentUser.role === 'admin') {
+        const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+        if (isOrdersVisible) renderAdminOrders(); else renderAll();
+      } else { renderAll(); }
+    });
+
+    // ===== BOOTSTRAP =====
+    await boot();
+    if (state.currentUser) resetLogoutTimer();
+  });
+  </script>
+</body>
+</html>
