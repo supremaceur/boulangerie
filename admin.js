@@ -318,7 +318,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <h4 class="font-semibold text-stone-800">${product.name}</h4>
                   <span class="text-lg font-bold text-amber-600">${product.price.toFixed(2)}€</span>
                 </div>
-                <p class="text-stone-600 text-sm mb-3">${product.description || ''}</p>
                 <div class="flex justify-between items-center">
                   <span class="px-2 py-1 text-xs font-semibold rounded-full ${
                     product.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -596,7 +595,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('product-name').value = product.name;
     document.getElementById('product-category').value = product.category;
-    document.getElementById('product-description').value = product.description || '';
     document.getElementById('product-price').value = product.price;
     document.getElementById('product-available').checked = product.available;
 
@@ -865,7 +863,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productData = {
       name: document.getElementById('product-name').value,
       category: document.getElementById('product-category').value,
-      description: document.getElementById('product-description').value,
       price: parseFloat(document.getElementById('product-price').value),
       available: document.getElementById('product-available').checked
     };
