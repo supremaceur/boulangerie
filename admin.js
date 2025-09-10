@@ -682,7 +682,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!formule) return;
 
     document.getElementById('formule-name').value = formule.name;
-    document.getElementById('formule-description').value = formule.description || '';
     document.getElementById('formule-price').value = formule.price;
 
     // Charger les produits sélectionnés pour cette formule
@@ -691,6 +690,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     formuleModal.classList.remove('hidden');
     formuleForm.dataset.formuleId = formuleId;
+  };
+
+  window.editPromotion = (promoId) => {
+    openPromoModal(promoId);
+  };
+
+  window.deletePromotion = (promoId) => {
+    const promo = state.promotions.find(p => p.id === promoId);
+    if (!promo) return;
+    
+    showConfirmModal(
+      'Supprimer cette promotion ?',
+      'Cette action est irréversible.',
+      async () => {
+        try {
+          showLoader(true);
+          
+          // Supprimer les relations
+          await supabaseClient.from('promotion_products').delete().eq('promotion_id', promoId);
+          await supabaseClient.from('promotion_formules').delete().eq('promotion_id', promoId);
+          
+          // Supprimer la promotion
+          const { error } = await supabaseClient
+            .from('promotions')
+            .delete()
+            .eq('id', promoId);
+            
+          if (error) throw error;
+          
+          showToast('Promotion supprimée !');
+          await loadInitialData(false);
+          renderAdminPromotions();
+        } catch (error) {
+          console.error('Delete promotion error:', error);
+          showToast('Erreur lors de la suppression');
+        } finally {
+          showLoader(false);
+        }
+      }
+    );
   };
 
   window.deleteFormule = (formuleId) => {
@@ -830,9 +869,82 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   addPromoBtn?.addEventListener('click', () => {
-    promoForm.reset();
-    promoModal.classList.remove('hidden');
+    openPromoModal();
   });
+
+  const openPromoModal = (promoId = null) => {
+    promoForm.reset();
+    document.getElementById('promo-id-input').value = '';
+    const selectionContainer = document.getElementById('promo-selection-container');
+    selectionContainer.innerHTML = '';
+    
+    const promoToEdit = promoId ? state.promotions.find(p => p.id === promoId) : null;
+    
+    if (promoToEdit) {
+      document.getElementById('promo-id-input').value = promoToEdit.id;
+      document.getElementById('promo-description').value = promoToEdit.description;
+      document.getElementById('promo-discount').value = promoToEdit.discount_percentage;
+      document.getElementById('promo-expires-at').value = promoToEdit.expires_at ? new Date(promoToEdit.expires_at).toISOString().split('T')[0] : '';
+      document.getElementById('promo-max-orders').value = promoToEdit.max_orders || '';
+      
+      if (promoToEdit.expires_at) {
+        promoForm.querySelector('input[name="promo_limit_type"][value="date"]').checked = true;
+      } else if (promoToEdit.max_orders) {
+        promoForm.querySelector('input[name="promo_limit_type"][value="orders"]').checked = true;
+      }
+    }
+    
+    const updateVisibility = () => {
+      const limitType = promoForm.querySelector('input[name="promo_limit_type"]:checked')?.value || 'date';
+      if (limitType === 'date') {
+        document.getElementById('promo-expires-at-container').classList.remove('hidden');
+        document.getElementById('promo-max-orders-container').classList.add('hidden');
+      } else {
+        document.getElementById('promo-expires-at-container').classList.add('hidden');
+        document.getElementById('promo-max-orders-container').classList.remove('hidden');
+      }
+    };
+    
+    promoForm.querySelectorAll('input[name="promo_limit_type"]').forEach(radio => {
+      radio.addEventListener('change', updateVisibility);
+    });
+    updateVisibility();
+
+    // Render products and formulas selection
+    let itemsHtml = '<div class="space-y-4">';
+    
+    // Products section
+    itemsHtml += '<div><h4 class="text-lg font-semibold text-stone-700 mb-3 border-b pb-2">Produits éligibles</h4>';
+    itemsHtml += '<div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">';
+    
+    Object.values(state.products).flat().forEach(p => {
+      const isChecked = promoToEdit ? promoToEdit.promotion_products?.some(pp => pp.product_id === p.id) : false;
+      itemsHtml += `
+        <label class="flex items-center gap-2 p-2 hover:bg-stone-50 rounded cursor-pointer">
+          <input type="checkbox" name="promo_products" value="${p.id}" ${isChecked ? 'checked' : ''} class="text-amber-600">
+          <span class="text-sm">${p.name}</span>
+        </label>`;
+    });
+    itemsHtml += '</div></div>';
+
+    // Formulas section
+    itemsHtml += '<div><h4 class="text-lg font-semibold text-stone-700 mb-3 border-b pb-2">Formules éligibles</h4>';
+    itemsHtml += '<div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">';
+    
+    state.formules.forEach(f => {
+      const isChecked = promoToEdit ? promoToEdit.promotion_formules?.some(pf => pf.formule_id === f.id) : false;
+      itemsHtml += `
+        <label class="flex items-center gap-2 p-2 hover:bg-stone-50 rounded cursor-pointer">
+          <input type="checkbox" name="promo_formules" value="${f.id}" ${isChecked ? 'checked' : ''} class="text-amber-600">
+          <span class="text-sm">${f.name}</span>
+        </label>`;
+    });
+    itemsHtml += '</div></div>';
+    itemsHtml += '</div>';
+
+    selectionContainer.innerHTML = itemsHtml;
+    promoModal.classList.remove('hidden');
+  };
 
   // Close modals
   [productModalCloseBtn, formuleModalCloseBtn, promoModalCloseBtn].forEach(btn => {
@@ -975,6 +1087,89 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
       console.error('Formule save error:', error);
       showToast('Erreur lors de l\'enregistrement');
+    } finally {
+      showLoader(false);
+    }
+  });
+
+  // Promotion form submission
+  promoForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const descriptionEl = document.getElementById('promo-description');
+    if (!descriptionEl || !descriptionEl.value.trim()) {
+      showToast("La description ne peut pas être vide.");
+      return;
+    }
+    
+    showLoader(true);
+    
+    try {
+      const id = document.getElementById('promo-id-input').value;
+      const promoData = {
+        description: descriptionEl.value,
+        discount_percentage: parseFloat(document.getElementById('promo-discount').value)
+      };
+      
+      const limitType = promoForm.querySelector('input[name="promo_limit_type"]:checked')?.value || 'date';
+      if (limitType === 'date') {
+        const exp = document.getElementById('promo-expires-at').value;
+        promoData.expires_at = exp || null;
+        promoData.max_orders = null;
+      } else {
+        const mo = document.getElementById('promo-max-orders').value;
+        promoData.max_orders = mo ? parseInt(mo, 10) : null;
+        promoData.expires_at = null;
+      }
+
+      const selectedProducts = Array.from(promoForm.querySelectorAll('input[name="promo_products"]:checked')).map(cb => parseInt(cb.value, 10));
+      const selectedFormules = Array.from(promoForm.querySelectorAll('input[name="promo_formules"]:checked')).map(cb => parseInt(cb.value, 10));
+
+      if (id) {
+        // Update existing promotion
+        const { error } = await supabaseClient.from('promotions').update(promoData).eq('id', id);
+        if (error) throw error;
+        
+        // Update relations
+        await supabaseClient.from('promotion_products').delete().eq('promotion_id', id);
+        await supabaseClient.from('promotion_formules').delete().eq('promotion_id', id);
+        
+        if (selectedProducts.length) {
+          await supabaseClient.from('promotion_products').insert(
+            selectedProducts.map(pid => ({ promotion_id: parseInt(id), product_id: pid }))
+          );
+        }
+        if (selectedFormules.length) {
+          await supabaseClient.from('promotion_formules').insert(
+            selectedFormules.map(fid => ({ promotion_id: parseInt(id), formule_id: fid }))
+          );
+        }
+      } else {
+        // Create new promotion
+        const { data, error } = await supabaseClient.from('promotions').insert(promoData).select().single();
+        if (error) throw error;
+        
+        const newPromoId = data.id;
+        if (selectedProducts.length) {
+          await supabaseClient.from('promotion_products').insert(
+            selectedProducts.map(pid => ({ promotion_id: newPromoId, product_id: pid }))
+          );
+        }
+        if (selectedFormules.length) {
+          await supabaseClient.from('promotion_formules').insert(
+            selectedFormules.map(fid => ({ promotion_id: newPromoId, formule_id: fid }))
+          );
+        }
+      }
+      
+      showToast("Promotion enregistrée !");
+      promoModal.classList.add('hidden');
+      await loadInitialData(false);
+      renderAdminPromotions();
+      
+    } catch (error) {
+      console.error('Promotion save error:', error);
+      showToast('Erreur lors de l\'enregistrement de la promotion');
     } finally {
       showLoader(false);
     }
