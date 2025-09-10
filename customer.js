@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!order) return;
 
     // Remplir le modal de reçu
-    document.getElementById('receipt-date').textContent = new Date(order.delivered_at || order.created_at).toLocaleDateString();
+    document.getElementById('receipt-date').textContent = new Date(order.created_at).toLocaleDateString();
     document.getElementById('receipt-order-id').textContent = order.id;
     
     const receiptItems = document.getElementById('receipt-items');

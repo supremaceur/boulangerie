@@ -482,8 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { error } = await supabaseClient
         .from('orders')
         .update({ 
-          status: 'delivered',
-          delivered_at: new Date().toISOString()
+          status: 'delivered'
         })
         .eq('id', orderId);
 
@@ -493,8 +492,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { error: completedError } = await supabaseClient
           .from('orders')
           .update({ 
-            status: 'completed',
-            delivered_at: new Date().toISOString()
+            status: 'completed'
           })
           .eq('id', orderId);
         
