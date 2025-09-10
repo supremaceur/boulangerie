@@ -146,18 +146,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         .select('*');
       if (productsError) throw productsError;
       
-      state.products = { sandwichs: [], boissons: [], desserts: [] };
-      productsData.forEach(p => {
-        if (!state.products[p.category]) state.products[p.category] = [];
-        state.products[p.category].push(p);
-      });
+      state.products = productsData;
 
-      // Formules
+      // Formules avec leurs produits
       const { data: formulesData, error: formulesError } = await supabaseClient
         .from('formules')
-        .select('*, formule_products(product_id)');
+        .select(`
+          *,
+          formules_products (
+            product_id,
+            quantity,
+            products (*)
+          )
+        `);
       if (formulesError) throw formulesError;
-      state.formules = formulesData;
+      
+      // Reformater les données pour faciliter l'utilisation
+      state.formules = formulesData.map(formule => ({
+        ...formule,
+        products: formule.formules_products?.map(fp => ({
+          ...fp.products,
+          quantity: fp.quantity
+        })) || []
+      }));
 
       // Orders
       const { data: ordersData, error: ordersError } = await supabaseClient
@@ -294,9 +305,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       : state.formules.map(formule => `
           <div class="bg-white rounded-lg shadow-sm p-6">
             <div class="flex justify-between items-start mb-4">
-              <div>
+              <div class="flex-1">
                 <h4 class="text-lg font-bold text-stone-800">${formule.name}</h4>
-                <p class="text-stone-600">${formule.description || ''}</p>
+                <p class="text-stone-600 mb-2">${formule.description || ''}</p>
+                ${formule.products && formule.products.length > 0 ? `
+                  <div class="text-sm text-stone-500">
+                    <span class="font-medium">Composition:</span>
+                    ${formule.products.map(p => p.name).join(', ')}
+                  </div>
+                ` : '<div class="text-sm text-stone-400 italic">Aucun produit sélectionné</div>'}
               </div>
               <div class="text-right">
                 <p class="text-xl font-bold text-amber-600">${formule.price.toFixed(2)}€</p>
@@ -308,8 +325,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
             </div>
             <div class="flex gap-2">
-              <button onclick="editFormule(${formule.id})" class="text-blue-600 hover:text-blue-800">Modifier</button>
-              <button onclick="deleteFormule(${formule.id})" class="text-red-600 hover:text-red-800">Supprimer</button>
+              <button onclick="editFormule('${formule.id}')" class="text-blue-600 hover:text-blue-800">Modifier</button>
+              <button onclick="deleteFormule('${formule.id}')" class="text-red-600 hover:text-red-800">Supprimer</button>
             </div>
           </div>
         `).join('');
@@ -501,6 +518,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       async () => {
         showLoader(true);
         try {
+          // Les relations seront automatiquement supprimées grâce à ON DELETE CASCADE
           const { error } = await supabaseClient
             .from('formules')
             .delete()
@@ -706,21 +724,58 @@ document.addEventListener('DOMContentLoaded', async () => {
       available: true
     };
 
+    // Récupérer les produits sélectionnés
+    const selectedProducts = Array.from(document.querySelectorAll('input[name="formule-products"]:checked'))
+      .map(checkbox => checkbox.value);
+
     try {
       const formuleId = formuleForm.dataset.formuleId;
+      let savedFormuleId = formuleId;
+
       if (formuleId) {
+        // Mise à jour de la formule existante
         const { error } = await supabaseClient
           .from('formules')
           .update(formuleData)
           .eq('id', formuleId);
         if (error) throw error;
+
+        // Supprimer les anciennes relations
+        const { error: deleteError } = await supabaseClient
+          .from('formules_products')
+          .delete()
+          .eq('formule_id', formuleId);
+        if (deleteError) throw deleteError;
+
         showToast('Formule modifiée !');
       } else {
-        const { error } = await supabaseClient
+        // Création d'une nouvelle formule
+        const { data, error } = await supabaseClient
           .from('formules')
-          .insert(formuleData);
+          .insert(formuleData)
+          .select()
+          .single();
         if (error) throw error;
+        savedFormuleId = data.id;
         showToast('Formule ajoutée !');
+      }
+
+      // Ajouter les nouvelles relations produit-formule
+      if (selectedProducts.length > 0) {
+        const relations = selectedProducts.map(productId => ({
+          formule_id: savedFormuleId,
+          product_id: productId,
+          quantity: 1
+        }));
+
+        const { error: relationError } = await supabaseClient
+          .from('formules_products')
+          .insert(relations);
+        
+        if (relationError) {
+          console.error('Error saving product relations:', relationError);
+          showToast('Formule sauvée mais erreur dans la composition');
+        }
       }
 
       formuleModal.classList.add('hidden');
