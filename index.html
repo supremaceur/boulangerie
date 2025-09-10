@@ -1273,7 +1273,9 @@
     const boot = async () => {
       showLoader(true);
       try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) throw error;
+        const session = data.session;
         if (session?.user) {
           state.currentUser = { ...session.user, role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' };
           resetLogoutTimer();
