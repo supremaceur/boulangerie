@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Connexion - Saveurs Pasteur</title>
+  <link rel="icon" href="https://iili.io/KnQjBa4.md.webp" type="image/webp">
+  <link href="./dist/output.css" rel="stylesheet">
+  <link href="./styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-stone-100">
+  <div id="app" class="max-w-7xl mx-auto">
+    <!-- Spinner global -->
+    <div id="loader" class="hidden fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-600"></div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Page de Connexion -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+      <div class="w-full max-w-md rounded-2xl shadow-lg p-8" style="background-color: #F9F4EA;">
+        <div class="text-center mb-8">
+          <img src="https://iili.io/KnQjBa4.md.webp" alt="Logo Boulangerie" class="mx-auto h-48 w-auto">
+          <h1 class="font-brand text-4xl text-stone-800 mt-4">La Boulangerie</h1>
+          <p class="text-stone-500 mt-2">Commandez vos formules en ligne</p>
+        </div>
+
+        <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert"></div>
+
+        <!-- Auth Forms Container -->
+        <div id="auth-forms">
+          <!-- Login Form -->
+          <form id="login-form">
+            <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Connexion</h2>
+            <div class="mb-4">
+              <label for="login-email" class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+              <input type="email" id="login-email" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <div class="mb-6">
+              <label for="login-password" class="block text-sm font-medium text-stone-600 mb-1">Mot de passe</label>
+              <input type="password" id="login-password" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <div class="text-right text-sm mb-6">
+              <a href="#" id="forgot-password-link" class="font-semibold text-amber-600 hover:underline">Mot de passe oublié ?</a>
+            </div>
+            <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Se Connecter</button>
+            <p class="text-center text-sm text-stone-500 mt-4">
+              Pas encore de compte ? <a href="#" id="show-signup-btn" class="font-semibold text-amber-600 hover:underline">Inscrivez-vous</a>
+            </p>
+          </form>
+
+          <!-- Signup Form -->
+          <form id="signup-form" class="hidden">
+            <h2 class="text-2xl font-bold text-center text-stone-700 mb-6">Inscription</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="signup-firstname" class="block text-sm font-medium text-stone-600 mb-1">Prénom</label>
+                <input type="text" id="signup-firstname" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+              </div>
+              <div>
+                <label for="signup-lastname" class="block text-sm font-medium text-stone-600 mb-1">Nom</label>
+                <input type="text" id="signup-lastname" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="signup-email" class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+              <input type="email" id="signup-email" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <div class="mb-6">
+              <label for="signup-password" class="block text-sm font-medium text-stone-600 mb-1">Mot de passe</label>
+              <input type="password" id="signup-password" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+            </div>
+            <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Créer mon compte</button>
+            <p class="text-center text-sm text-stone-500 mt-4">
+              Déjà un compte ? <a href="#" id="show-login-btn" class="font-semibold text-amber-600 hover:underline">Connectez-vous</a>
+            </p>
+          </form>
+        </div>
+
+        <div class="my-6 flex items-center">
+          <div class="flex-grow border-t border-stone-300"></div>
+          <span class="flex-shrink mx-4 text-stone-500 text-sm">OU</span>
+          <div class="flex-grow border-t border-stone-300"></div>
+        </div>
+
+        <button id="google-login-btn" class="w-full bg-white border border-stone-300 text-stone-700 font-medium py-3 px-4 rounded-lg hover:bg-stone-50 transition-colors duration-300 flex items-center justify-center gap-3 shadow-sm">
+          <svg class="w-5 h-5" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.012,35.24,44,30.021,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+          </svg>
+          Continuer avec Google
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Mot de passe oublié -->
+    <div id="forgot-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-stone-800">Mot de passe oublié</h3>
+          <button id="forgot-password-modal-close-btn" class="text-stone-500 hover:text-stone-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <form id="forgot-password-form">
+          <div class="mb-4">
+            <label for="forgot-email" class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+            <input type="email" id="forgot-email" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+          </div>
+          <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Envoyer le lien de réinitialisation</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Réinitialisation mot de passe -->
+    <div id="reset-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-lg max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-stone-800 mb-4">Nouveau mot de passe</h3>
+        <form id="reset-password-form">
+          <div class="mb-4">
+            <label for="new-password" class="block text-sm font-medium text-stone-600 mb-1">Nouveau mot de passe</label>
+            <input type="password" id="new-password" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition" required>
+          </div>
+          <button type="submit" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md">Mettre à jour le mot de passe</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="./auth.js"></script>
+</body>
+</html>

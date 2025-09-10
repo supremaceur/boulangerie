@@ -1,0 +1,104 @@
+/* Saveurs Pasteur - Styles principaux */
+
+body { 
+  font-family: 'Inter', sans-serif; 
+}
+
+.font-brand { 
+  font-family: 'Playfair Display', serif; 
+}
+
+.font-receipt { 
+  font-family: 'Source Code Pro', monospace; 
+}
+
+/* Toast notifications */
+.toast {
+  visibility: hidden; 
+  min-width: 250px; 
+  margin-left: -125px;
+  background-color: #333; 
+  color: #fff; 
+  text-align: center; 
+  border-radius: 8px;
+  padding: 16px; 
+  position: fixed; 
+  z-index: 100; 
+  left: 50%; 
+  bottom: 30px;
+  opacity: 0; 
+  transition: visibility 0s 0.5s, opacity 0.5s linear;
+}
+
+.toast.show { 
+  visibility: visible; 
+  opacity: 1; 
+  transition: opacity 0.5s linear; 
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar { 
+  width: 8px; 
+}
+
+::-webkit-scrollbar-track { 
+  background: #f1f1f1; 
+}
+
+::-webkit-scrollbar-thumb { 
+  background: #a8a29e; 
+  border-radius: 10px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+  background: #78716c; 
+}
+
+/* Admin order tabs */
+.admin-order-tab { 
+  cursor: pointer; 
+  padding: 0.75rem 1.25rem; 
+  border-bottom: 3px solid transparent; 
+  transition: all 0.2s ease-in-out; 
+}
+
+.admin-order-tab.active { 
+  border-bottom-color: #d97706; 
+  color: #d97706; 
+}
+
+/* Promotion modal styles */
+#promo-modal .max-h-\[90vh\] { 
+  max-height: none; 
+}
+
+/* Spinner global */
+.loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.75);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader.hidden {
+  display: none;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 4rem;
+  width: 4rem;
+  border-top: 4px solid #d97706;
+  border-bottom: 4px solid #d97706;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
