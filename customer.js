@@ -475,12 +475,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       total += itemTotal;
       
       return `
-        <div class="flex justify-between items-center">
-          <div>
+        <div class="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+          <div class="flex-1">
             <p class="font-semibold">${itemInfo.name}</p>
-            <p class="text-sm text-stone-500">${item.price.toFixed(2)}€ × ${item.quantity}</p>
+            <p class="text-sm text-stone-500">${item.price.toFixed(2)}€ chacun</p>
+            ${item.description ? `<p class="text-xs text-stone-400">${item.description}</p>` : ''}
           </div>
-          <p class="font-bold">${itemTotal.toFixed(2)}€</p>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <button onclick="updateCartQuantity(${state.cart.indexOf(item)}, -1)" class="w-6 h-6 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center text-sm font-bold">
+                -
+              </button>
+              <span class="w-8 text-center font-medium">${item.quantity}</span>
+              <button onclick="updateCartQuantity(${state.cart.indexOf(item)}, 1)" class="w-6 h-6 rounded-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center text-sm font-bold">
+                +
+              </button>
+            </div>
+            <p class="font-bold w-16 text-right">${itemTotal.toFixed(2)}€</p>
+            <button onclick="removeFromCart(${state.cart.indexOf(item)})" class="text-red-600 hover:text-red-800 p-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
         </div>
       `;
     }).join('');
@@ -554,6 +571,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('receipt-promo-line').classList.add('hidden');
 
     receiptModal.classList.remove('hidden');
+  };
+
+  window.removeFromCart = (index) => {
+    if (index >= 0 && index < state.cart.length) {
+      const removedItem = state.cart[index];
+      state.cart.splice(index, 1);
+      
+      // Mettre à jour l'affichage
+      renderCart();
+      updateCartBadge();
+      
+      // Notification
+      const itemInfo = removedItem.type === 'product' 
+        ? getProduct(removedItem.id) 
+        : getFormule(removedItem.id);
+      showToast(`${itemInfo?.name || 'Article'} retiré du panier`);
+    }
+  };
+
+  window.updateCartQuantity = (index, change) => {
+    if (index >= 0 && index < state.cart.length) {
+      const item = state.cart[index];
+      const newQuantity = item.quantity + change;
+      
+      if (newQuantity <= 0) {
+        // Si la quantité devient 0 ou négative, supprimer l'article
+        removeFromCart(index);
+      } else {
+        // Mettre à jour la quantité
+        item.quantity = newQuantity;
+        
+        // Mettre à jour l'affichage
+        renderCart();
+        updateCartBadge();
+      }
+    }
   };
 
   window.submitOrder = async () => {
