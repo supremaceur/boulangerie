@@ -223,11 +223,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
               `).join('')}
             </div>
-            <div class="flex gap-2">
-              <button onclick="completeOrder(${order.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                Valider
+            <div class="flex gap-2 relative z-10">
+              <button onclick="completeOrder(${order.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium">
+                Accepter
               </button>
-              <button onclick="refuseOrder(${order.id})" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+              <button onclick="refuseOrder(${order.id})" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium">
                 Refuser
               </button>
             </div>
@@ -245,9 +245,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p class="text-stone-600">Client: ${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}</p>
                 <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString()}</p>
                 <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${
-                  order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  order.status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }">
-                  ${order.status === 'completed' ? 'Validée' : 'Refusée'}
+                  ${order.status === 'accepted' ? 'Validée' : 'Annulée'}
                 </span>
               </div>
               <div class="text-right">
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const { error } = await supabaseClient
         .from('orders')
-        .update({ status: 'completed' })
+        .update({ status: 'accepted' })
         .eq('id', orderId);
 
       if (error) throw error;
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const { error } = await supabaseClient
           .from('orders')
-          .update({ status: 'refused', refuse_reason: reason })
+          .update({ status: 'cancelled', refuse_reason: reason })
           .eq('id', orderId);
 
         if (error) throw error;
