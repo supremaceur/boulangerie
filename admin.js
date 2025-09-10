@@ -678,12 +678,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   window.editFormule = (formuleId) => {
-    console.log('editFormule called with ID:', formuleId);
-    const formule = getFormule(formuleId);
+    console.log('editFormule called with ID:', formuleId, typeof formuleId);
+    // Convertir l'ID en nombre si c'est une string
+    const numericId = typeof formuleId === 'string' ? parseInt(formuleId, 10) : formuleId;
+    const formule = getFormule(numericId);
+    console.log('Looking for formule with numeric ID:', numericId);
+    console.log('Available formules:', state.formules.map(f => ({ id: f.id, name: f.name, type: typeof f.id })));
     console.log('Found formule:', formule);
     
     if (!formule) {
-      console.error('Formule not found with ID:', formuleId);
+      console.error('Formule not found with ID:', numericId);
       return;
     }
 
@@ -693,7 +697,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Remplir les champs
     document.getElementById('formule-name').value = formule.name;
     document.getElementById('formule-price').value = formule.price;
-    document.getElementById('formule-id-input').value = formuleId;
+    document.getElementById('formule-id-input').value = numericId;
 
     // Charger les produits sélectionnés pour cette formule
     const selectedProducts = formule.products ? formule.products.map(p => p.id) : [];
@@ -701,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderFormuleProducts(selectedProducts);
 
     formuleModal.classList.remove('hidden');
-    formuleForm.dataset.formuleId = formuleId;
+    formuleForm.dataset.formuleId = numericId;
   };
 
   window.editPromotion = (promoId) => {
@@ -745,7 +749,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   window.deleteFormule = (formuleId) => {
-    const formule = getFormule(formuleId);
+    // Convertir l'ID en nombre si c'est une string
+    const numericId = typeof formuleId === 'string' ? parseInt(formuleId, 10) : formuleId;
+    const formule = getFormule(numericId);
     if (!formule) return;
 
     showConfirmModal(
@@ -758,7 +764,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const { error } = await supabaseClient
             .from('formules')
             .delete()
-            .eq('id', formuleId);
+            .eq('id', numericId);
 
           if (error) throw error;
           showToast('Formule supprimée !');
@@ -1048,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .map(checkbox => checkbox.value);
 
     try {
-      const formuleId = formuleForm.dataset.formuleId;
+      const formuleId = formuleForm.dataset.formuleId ? parseInt(formuleForm.dataset.formuleId, 10) : null;
       let savedFormuleId = formuleId;
 
       if (formuleId) {
