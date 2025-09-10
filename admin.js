@@ -678,14 +678,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   window.editFormule = (formuleId) => {
+    console.log('editFormule called with ID:', formuleId);
     const formule = getFormule(formuleId);
-    if (!formule) return;
+    console.log('Found formule:', formule);
+    
+    if (!formule) {
+      console.error('Formule not found with ID:', formuleId);
+      return;
+    }
 
+    // Changer le titre de la modale
+    document.getElementById('formule-modal-title').textContent = 'Modifier une formule';
+    
+    // Remplir les champs
     document.getElementById('formule-name').value = formule.name;
     document.getElementById('formule-price').value = formule.price;
+    document.getElementById('formule-id-input').value = formuleId;
 
     // Charger les produits sélectionnés pour cette formule
     const selectedProducts = formule.products ? formule.products.map(p => p.id) : [];
+    console.log('Selected products for formule:', selectedProducts);
     renderFormuleProducts(selectedProducts);
 
     formuleModal.classList.remove('hidden');
@@ -862,8 +874,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   addFormuleBtn?.addEventListener('click', () => {
+    // Changer le titre de la modale
+    document.getElementById('formule-modal-title').textContent = 'Créer une formule';
+    
     formuleForm.reset();
     delete formuleForm.dataset.formuleId;
+    document.getElementById('formule-id-input').value = '';
     renderFormuleProducts();
     formuleModal.classList.remove('hidden');
   });
