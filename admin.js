@@ -197,8 +197,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const renderAdminOrders = () => {
     console.log('All orders:', state.orders.map(o => ({ id: o.id, status: o.status })));
     const pendingOrders = state.orders.filter(order => order.status === 'pending');
-    const completedOrders = state.orders.filter(order => order.status !== 'pending');
-    console.log(`Pending orders: ${pendingOrders.length}, Completed orders: ${completedOrders.length}`);
+    const acceptedOrders = state.orders.filter(order => order.status === 'confirmed');
+    const completedOrders = state.orders.filter(order => ['delivered', 'completed'].includes(order.status));
+    const rejectedOrders = state.orders.filter(order => ['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status));
+    console.log(`Pending: ${pendingOrders.length}, Accepted: ${acceptedOrders.length}, Completed: ${completedOrders.length}, Rejected: ${rejectedOrders.length}`);
 
     // Commandes en cours
     adminOrdersPendingContainer.innerHTML = pendingOrders.length === 0 
@@ -234,10 +236,53 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         `).join('');
 
-    // Commandes terminées
-    adminOrdersCompletedContainer.innerHTML = completedOrders.length === 0 
+    // Section pour commandes acceptées (en préparation)  
+    const acceptedSection = acceptedOrders.length === 0 
+      ? '<p class="text-center text-stone-500 mb-6">Aucune commande en préparation</p>'
+      : `
+        <h3 class="text-lg font-semibold text-stone-700 mb-4">Commandes en préparation (${acceptedOrders.length})</h3>
+        <div class="grid gap-4 mb-8">
+          ${acceptedOrders.map(order => `
+            <div class="bg-blue-50 rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h4 class="text-lg font-bold text-stone-800">Commande #${order.id}</h4>
+                  <p class="text-stone-600">Client: ${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}</p>
+                  <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString()}</p>
+                  <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 mt-2">
+                    En préparation
+                  </span>
+                </div>
+                <div class="text-right">
+                  <p class="text-xl font-bold text-amber-600">${order.total_price.toFixed(2)}€</p>
+                </div>
+              </div>
+              <div class="space-y-2 mb-4">
+                ${order.order_items.map(item => `
+                  <div class="flex justify-between">
+                    <span>${item.products?.name || item.formules?.name} x${item.quantity}</span>
+                    <span>${(item.price * item.quantity).toFixed(2)}€</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="flex gap-2 relative z-10 mt-4">
+                <button onclick="deliverOrder(${order.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium border-0" style="background-color: #16a34a !important; color: #ffffff !important;">
+                  Livrer
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+    // Injecter la section des commandes acceptées entre pending et completed
+    adminOrdersPendingContainer.innerHTML += acceptedSection;
+
+    // Commandes terminées (livrées + refusées)
+    const allFinishedOrders = [...completedOrders, ...rejectedOrders];
+    adminOrdersCompletedContainer.innerHTML = allFinishedOrders.length === 0 
       ? '<p class="text-center text-stone-500">Aucune commande terminée</p>'
-      : completedOrders.map(order => `
+      : allFinishedOrders.map(order => `
           <div class="bg-white rounded-lg shadow-sm p-6">
             <div class="flex justify-between items-start">
               <div>
@@ -245,9 +290,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p class="text-stone-600">Client: ${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}</p>
                 <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString()}</p>
                 <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${
-                  order.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  ['delivered', 'completed'].includes(order.status) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }">
-                  ${order.status === 'confirmed' ? 'Validée' : 'Refusée'}
+                  ${['delivered', 'completed'].includes(order.status) ? 'Livrée' : 'Refusée'}
                 </span>
               </div>
               <div class="text-right">
@@ -428,6 +473,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         showLoader(false);
       }
     };
+  };
+
+  // Fonction pour livrer une commande
+  window.deliverOrder = async (orderId) => {
+    showLoader(true);
+    try {
+      const { error } = await supabaseClient
+        .from('orders')
+        .update({ 
+          status: 'delivered',
+          delivered_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Deliver status error:', error);
+        // Essayer 'completed' si 'delivered' ne fonctionne pas
+        const { error: completedError } = await supabaseClient
+          .from('orders')
+          .update({ 
+            status: 'completed',
+            delivered_at: new Date().toISOString()
+          })
+          .eq('id', orderId);
+        
+        if (completedError) throw completedError;
+        console.log('Success with status: completed');
+      } else {
+        console.log('Success with status: delivered');
+      }
+
+      showToast('Commande livrée ! Le ticket est maintenant disponible pour le client.');
+      await loadInitialData(false);
+      renderAdminOrders();
+    } catch (error) {
+      console.error('Deliver order error:', error);
+      showToast('Erreur lors de la livraison');
+    } finally {
+      showLoader(false);
+    }
   };
 
   window.editProduct = (productId) => {

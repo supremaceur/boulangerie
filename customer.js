@@ -438,11 +438,52 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span class="text-sm text-stone-500">${new Date(order.created_at).toLocaleDateString()}</span>
         </div>
         <div class="text-sm text-stone-600 mb-2">
-          Status: <span class="font-semibold ${order.status === 'completed' ? 'text-green-600' : order.status === 'refused' ? 'text-red-600' : 'text-amber-600'}">${order.status}</span>
+          Status: <span class="font-semibold ${['delivered', 'completed'].includes(order.status) ? 'text-green-600' : ['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) ? 'text-red-600' : order.status === 'confirmed' ? 'text-blue-600' : 'text-amber-600'}">
+            ${['delivered', 'completed'].includes(order.status) ? 'Livrée' : 
+              ['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) ? 'Annulée' : 
+              order.status === 'confirmed' ? 'En préparation' : 'En attente'}
+          </span>
         </div>
-        <div class="text-lg font-bold text-amber-600">${order.total_price.toFixed(2)}€</div>
+        <div class="flex justify-between items-center">
+          <div class="text-lg font-bold text-amber-600">${order.total_price.toFixed(2)}€</div>
+          ${['delivered', 'completed'].includes(order.status) ? 
+            `<button onclick="showReceipt(${order.id})" class="bg-amber-600 text-white px-3 py-1 rounded text-sm hover:bg-amber-700 transition">
+              Voir le ticket
+            </button>` : ''}
+        </div>
       </div>
     `).join('');
+  };
+
+  // Fonction pour afficher le ticket d'une commande livrée
+  window.showReceipt = (orderId) => {
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Remplir le modal de reçu
+    document.getElementById('receipt-date').textContent = new Date(order.delivered_at || order.created_at).toLocaleDateString();
+    document.getElementById('receipt-order-id').textContent = order.id;
+    
+    const receiptItems = document.getElementById('receipt-items');
+    receiptItems.innerHTML = order.order_items.map(item => `
+      <div class="flex justify-between">
+        <span>${item.products?.name || item.formules?.name} x${item.quantity}</span>
+        <span>${(item.price * item.quantity).toFixed(2)}€</span>
+      </div>
+    `).join('');
+
+    // Calculer les totaux
+    const subtotalHT = order.total_price / 1.2; // Enlever la TVA
+    const tva = order.total_price - subtotalHT;
+
+    document.getElementById('receipt-subtotal').textContent = `${subtotalHT.toFixed(2)}€`;
+    document.getElementById('receipt-tva').textContent = `${tva.toFixed(2)}€`;
+    document.getElementById('receipt-total').textContent = `${order.total_price.toFixed(2)}€`;
+
+    // Masquer les éléments de promotion si pas applicable
+    document.getElementById('receipt-promo-line').classList.add('hidden');
+
+    receiptModal.classList.remove('hidden');
   };
 
   window.submitOrder = async () => {
