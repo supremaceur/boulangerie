@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formuleForm = document.getElementById('formule-form');
   const formuleModalCloseBtn = document.getElementById('formule-modal-close-btn');
   const formuleCancelBtn = document.getElementById('formule-cancel-btn');
+  const productCancelBtn = document.getElementById('product-cancel-btn');
   const formuleProductsContainer = document.getElementById('formule-products-container');
   
   const productModal = document.getElementById('product-modal');
@@ -66,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const promoModal = document.getElementById('promo-modal');
   const promoForm = document.getElementById('promo-form');
   const promoModalCloseBtn = document.getElementById('promo-modal-close-btn');
+  const promoCancelBtn = document.getElementById('promo-cancel-btn');
   
   const confirmModal = document.getElementById('confirm-modal');
   const confirmModalTitle = document.getElementById('confirm-modal-title');
@@ -643,19 +645,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     formuleProductsContainer.innerHTML = '';
 
-    if (state.products.length === 0) {
+    if (Object.values(state.products).every(category => category.length === 0)) {
       formuleProductsContainer.innerHTML = '<p class="text-stone-500 text-center py-4">Aucun produit disponible. Créez d\'abord des produits.</p>';
       return;
     }
 
-    // Grouper les produits par catégorie
-    const productsByCategory = {};
-    state.products.forEach(product => {
-      if (!productsByCategory[product.category]) {
-        productsByCategory[product.category] = [];
-      }
-      productsByCategory[product.category].push(product);
-    });
+    // state.products est déjà organisé par catégorie
+    const productsByCategory = state.products;
 
     // Render par catégorie
     Object.entries(productsByCategory).forEach(([category, products]) => {
@@ -850,6 +846,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Cancel buttons
   formuleCancelBtn?.addEventListener('click', () => {
     formuleModal.classList.add('hidden');
+  });
+
+  productCancelBtn?.addEventListener('click', () => {
+    productModal.classList.add('hidden');
+  });
+
+  promoCancelBtn?.addEventListener('click', () => {
+    promoModal.classList.add('hidden');
   });
 
   refuseCancelBtn?.addEventListener('click', () => {
