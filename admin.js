@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formuleModal = document.getElementById('formule-modal');
   const formuleForm = document.getElementById('formule-form');
   const formuleModalCloseBtn = document.getElementById('formule-modal-close-btn');
+  const formuleCancelBtn = document.getElementById('formule-cancel-btn');
+  const formuleProductsContainer = document.getElementById('formule-products-container');
   
   const productModal = document.getElementById('product-modal');
   const productForm = document.getElementById('product-form');
@@ -429,6 +431,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
   };
 
+  // Fonction pour rendre les produits dans le modal de formule
+  const renderFormuleProducts = (selectedProducts = []) => {
+    if (!formuleProductsContainer) return;
+
+    formuleProductsContainer.innerHTML = '';
+
+    if (state.products.length === 0) {
+      formuleProductsContainer.innerHTML = '<p class="text-stone-500 text-center py-4">Aucun produit disponible. Créez d\'abord des produits.</p>';
+      return;
+    }
+
+    // Grouper les produits par catégorie
+    const productsByCategory = {};
+    state.products.forEach(product => {
+      if (!productsByCategory[product.category]) {
+        productsByCategory[product.category] = [];
+      }
+      productsByCategory[product.category].push(product);
+    });
+
+    // Render par catégorie
+    Object.entries(productsByCategory).forEach(([category, products]) => {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'mb-4';
+      categoryDiv.innerHTML = `
+        <h4 class="font-semibold text-stone-700 mb-2 capitalize">${category}</h4>
+        <div class="space-y-2">
+          ${products.map(product => `
+            <label class="flex items-center gap-3 p-2 hover:bg-stone-50 rounded-lg cursor-pointer">
+              <input type="checkbox" 
+                     name="formule-products" 
+                     value="${product.id}" 
+                     class="rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+                     ${selectedProducts.includes(product.id) ? 'checked' : ''}>
+              <span class="flex-1 text-stone-700">${product.name}</span>
+              <span class="text-sm text-stone-500">${product.price.toFixed(2)}€</span>
+            </label>
+          `).join('')}
+        </div>
+      `;
+      formuleProductsContainer.appendChild(categoryDiv);
+    });
+  };
+
   window.editFormule = (formuleId) => {
     const formule = getFormule(formuleId);
     if (!formule) return;
@@ -436,6 +482,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('formule-name').value = formule.name;
     document.getElementById('formule-description').value = formule.description || '';
     document.getElementById('formule-price').value = formule.price;
+
+    // Charger les produits sélectionnés pour cette formule
+    const selectedProducts = formule.products ? formule.products.map(p => p.id) : [];
+    renderFormuleProducts(selectedProducts);
 
     formuleModal.classList.remove('hidden');
     formuleForm.dataset.formuleId = formuleId;
@@ -572,6 +622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   addFormuleBtn?.addEventListener('click', () => {
     formuleForm.reset();
     delete formuleForm.dataset.formuleId;
+    renderFormuleProducts();
     formuleModal.classList.remove('hidden');
   });
 
@@ -587,6 +638,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       formuleModal.classList.add('hidden');
       promoModal.classList.add('hidden');
     });
+  });
+
+  // Cancel buttons
+  formuleCancelBtn?.addEventListener('click', () => {
+    formuleModal.classList.add('hidden');
   });
 
   refuseCancelBtn?.addEventListener('click', () => {
