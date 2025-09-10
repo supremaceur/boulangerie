@@ -50,23 +50,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Fonction de redirection après connexion
   const redirectAfterAuth = async (user) => {
     try {
-      const { data: profile, error } = await supabaseClient
+      let { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, first_name, last_name')
         .eq('id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
+      // Si le profil n'existe pas, le créer
+      if (error && error.code === 'PGRST116') {
+        console.log('Profile not found, creating new profile for user:', user.id);
+        
+        const { error: insertError } = await supabaseClient
+          .from('profiles')
+          .insert({
+            id: user.id,
+            first_name: user.user_metadata?.first_name || '',
+            last_name: user.user_metadata?.last_name || '',
+            is_admin: false
+          });
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+        } else {
+          // Récupérer le profil nouvellement créé
+          const { data: newProfile, error: fetchError } = await supabaseClient
+            .from('profiles')
+            .select('is_admin, first_name, last_name')
+            .eq('id', user.id)
+            .single();
+          
+          if (!fetchError) {
+            profile = newProfile;
+          }
+        }
+      } else if (error) {
         console.error('Error fetching profile:', error);
-        // Redirection par défaut vers customer si erreur
-        window.location.href = 'customer.html';
-        return;
       }
 
       // Redirection selon is_admin
       if (profile?.is_admin === true) {
+        console.log('Redirecting admin user to admin panel');
         window.location.href = 'admin.html';
       } else {
+        console.log('Redirecting regular user to customer panel');
         window.location.href = 'customer.html';
       }
     } catch (error) {
@@ -173,8 +199,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (profileError) {
           console.error('Profile creation error:', profileError);
+          showAuthError('Erreur lors de la création du profil utilisateur');
+          return;
         }
 
+        console.log('Profile created successfully for user:', data.user.id);
         showToast('Inscription réussie ! Vérifiez votre email.');
         // Basculer vers le formulaire de connexion
         signupForm.classList.add('hidden');
@@ -197,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/customer.html'
+          redirectTo: window.location.origin + '/index.html'
         }
       });
 
