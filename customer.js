@@ -268,7 +268,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (existingItem) {
           existingItem.quantity += 1;
         } else {
-          state.cart.push({ type: 'product', id, quantity: 1, price: product.price });
+          state.cart.push({ 
+            type: 'product', 
+            id, 
+            quantity: 1, 
+            price: product.price,
+            category: product.category,
+            name: product.name
+          });
         }
         updateCartBadge();
         showToast(`${product.name} ajouté au panier`);
@@ -299,7 +306,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
-        state.cart.push({ type: 'formule', id: formuleId, quantity: 1, price: formule.price });
+        state.cart.push({ 
+          type: 'formule', 
+          id: formuleId, 
+          quantity: 1, 
+          price: formule.price,
+          category: 'formule',
+          name: formule.name
+        });
       }
       updateCartBadge();
       showToast(`${formule.name} ajouté au panier`);
@@ -459,7 +473,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         product_id: item.type === 'product' ? item.id : null,
         formule_id: item.type === 'formule' ? item.id : null,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        category: item.category || (item.type === 'product' ? 'autre' : 'formule')
       }));
 
       const { error: itemsError } = await supabaseClient
