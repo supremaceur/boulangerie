@@ -168,7 +168,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data: formulesData, error: formulesError } = await supabaseClient
         .from('formules')
         .select('*, formules_products(product_id)');
-      if (formulesError) throw formulesError;
+      if (formulesError) {
+        console.error('Formules error:', formulesError);
+        throw formulesError;
+      }
+      
+      console.log('Raw formules data:', formulesData);
       
       state.formules = formulesData.map(f => {
         const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
@@ -183,6 +188,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         return { ...f, eligible_products };
       });
+      
+      console.log('Processed formules:', state.formules);
 
       // Orders
       if (state.currentUser) {
@@ -245,7 +252,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const renderFormules = () => {
-    formulesContainer.innerHTML = state.formules.filter(f => f.available).map(f => `
+    console.log('Formules to render:', state.formules);
+    
+    if (!state.formules || state.formules.length === 0) {
+      formulesContainer.innerHTML = '<p class="text-center text-stone-500 col-span-full">Aucune formule disponible pour le moment</p>';
+      return;
+    }
+    
+    formulesContainer.innerHTML = state.formules.map(f => `
       <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="p-6">
           <h3 class="text-xl font-bold text-stone-800 mb-2">${f.name}</h3>
