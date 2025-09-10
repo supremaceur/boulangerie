@@ -60,12 +60,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error && error.code === 'PGRST116') {
         console.log('Profile not found, creating new profile for user:', user.id);
         
+        // Extraire le nom et prénom depuis les métadonnées Google
+        let firstName = '';
+        let lastName = '';
+        
+        if (user.user_metadata) {
+          // Vérifier d'abord les champs directs
+          firstName = user.user_metadata.first_name || user.user_metadata.given_name || '';
+          lastName = user.user_metadata.last_name || user.user_metadata.family_name || '';
+          
+          // Si pas de prénom/nom, essayer de diviser le full_name
+          if (!firstName && !lastName && user.user_metadata.full_name) {
+            const nameParts = user.user_metadata.full_name.split(' ');
+            firstName = nameParts[0] || '';
+            lastName = nameParts.slice(1).join(' ') || '';
+          }
+          
+          // Si toujours vide, utiliser le name de Google
+          if (!firstName && !lastName && user.user_metadata.name) {
+            const nameParts = user.user_metadata.name.split(' ');
+            firstName = nameParts[0] || '';
+            lastName = nameParts.slice(1).join(' ') || '';
+          }
+        }
+
+        console.log('Creating profile with:', { firstName, lastName, userMetadata: user.user_metadata });
+
         const { error: insertError } = await supabaseClient
           .from('profiles')
           .insert({
             id: user.id,
-            first_name: user.user_metadata?.first_name || '',
-            last_name: user.user_metadata?.last_name || '',
+            first_name: firstName,
+            last_name: lastName,
             is_admin: false
           });
 

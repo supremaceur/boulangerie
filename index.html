@@ -77,12 +77,38 @@
             console.log('Profile not found, creating profile for user:', session.user.id);
             statusMessage.textContent = 'Création de votre profil...';
             
+            // Extraire le nom et prénom depuis les métadonnées Google
+            let firstName = '';
+            let lastName = '';
+            
+            if (session.user.user_metadata) {
+              // Vérifier d'abord les champs directs
+              firstName = session.user.user_metadata.first_name || session.user.user_metadata.given_name || '';
+              lastName = session.user.user_metadata.last_name || session.user.user_metadata.family_name || '';
+              
+              // Si pas de prénom/nom, essayer de diviser le full_name
+              if (!firstName && !lastName && session.user.user_metadata.full_name) {
+                const nameParts = session.user.user_metadata.full_name.split(' ');
+                firstName = nameParts[0] || '';
+                lastName = nameParts.slice(1).join(' ') || '';
+              }
+              
+              // Si toujours vide, utiliser le name de Google
+              if (!firstName && !lastName && session.user.user_metadata.name) {
+                const nameParts = session.user.user_metadata.name.split(' ');
+                firstName = nameParts[0] || '';
+                lastName = nameParts.slice(1).join(' ') || '';
+              }
+            }
+
+            console.log('Creating profile with:', { firstName, lastName, userMetadata: session.user.user_metadata });
+
             const { error: insertError } = await supabaseClient
               .from('profiles')
               .insert({
                 id: session.user.id,
-                first_name: session.user.user_metadata?.first_name || '',
-                last_name: session.user.user_metadata?.last_name || '',
+                first_name: firstName,
+                last_name: lastName,
                 is_admin: false
               });
 
