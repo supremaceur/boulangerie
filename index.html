@@ -477,7 +477,8 @@
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    multiTab: false
   },
   global: {
     headers: {
@@ -603,7 +604,7 @@
     const resetLogoutTimer = () => {
   if (!state.currentUser) return;
   clearTimeout(logoutTimer);
-  logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
+  // logoutTimer = setTimeout(() => handleLogout(true), LOGOUT_TIME);
 };
 
 // Événements moins agressifs pour mobile
@@ -1374,63 +1375,63 @@ activityEvents.forEach(ev => {
 };
 
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  console.log('Auth state change:', event, session?.user?.email);
-  
-  // Toujours arrêter le loader en cas d'événement auth
-  showLoader(false);
-  
-  try {
-    switch (event) {
-      case 'SIGNED_IN':
-        if (session?.user) {
-          console.log('Utilisateur connecté');
-          
-          // Nettoyer l'URL
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.has('code')) {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-          
-          state.currentUser = { 
-            ...session.user, 
-            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-          };
-          
-          resetLogoutTimer();
-          showLoader(true); // Montrer le loader pour le chargement des données
-          await loadInitialData(false);
-          showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
-          renderAll();
-          showLoader(false); // Cacher le loader après chargement
+      console.log('Auth state change:', event, session?.user?.email);
+
+      // Toujours arrêter le loader en cas d'événement auth
+      showLoader(false);
+
+      try {
+        switch (event) {
+          case 'SIGNED_IN':
+            if (session?.user) {
+              console.log('Utilisateur connecté');
+
+              // Nettoyer l'URL après une connexion OAuth
+              const urlParams = new URLSearchParams(window.location.search);
+              if (urlParams.has('code')) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+
+              state.currentUser = {
+                ...session.user,
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer'
+              };
+
+              resetLogoutTimer();
+              showLoader(true);
+              await loadInitialData(false);
+              showView(state.currentUser.role === 'admin' ? 'admin-view' : 'customer-view');
+              renderAll();
+              showLoader(false);
+            }
+            break;
+
+          case 'SIGNED_OUT':
+            // La session a été supprimée, on nettoie l'état de l'application.
+            await hardSignOut();
+            break;
+
+          case 'TOKEN_REFRESHED':
+          case 'USER_UPDATED':
+            // La session a été mise à jour (token rafraîchi ou données utilisateur modifiées).
+            // On met à jour notre état local. Ce n'est PAS une déconnexion.
+            if (session?.user) {
+              state.currentUser = {
+                ...session.user,
+                role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer'
+              };
+              resetLogoutTimer();
+            }
+            break;
         }
-        break;
-        
-      case 'SIGNED_OUT':
-        const { data: { session: s } } = await supabaseClient.auth.getSession();
-        if (!s) { 
-          await hardSignOut(); 
-        }
-        break;
-        
-      case 'TOKEN_REFRESHED':
-      case 'USER_UPDATED':
-        if (session?.user) {
-          state.currentUser = { 
-            ...session.user, 
-            role: session.user.email === 'kevin.gouche@gmail.com' ? 'admin' : 'customer' 
-          };
-          resetLogoutTimer();
-        }
-        break;
-    }
-  } catch (error) {
-    console.error('Erreur dans onAuthStateChange:', error);
-    showView('auth-view');
-    showAuthError("Erreur de connexion.");
-  } finally {
-    showLoader(false); // Sécurité: toujours cacher le loader
-  }
-});
+      } catch (error) {
+        console.error('Erreur dans onAuthStateChange:', error);
+        showView('auth-view');
+        showAuthError("Erreur de connexion.");
+      } finally {
+        showLoader(false); // Sécurité: toujours cacher le loader
+      }
+    });
 
     // ===== LISTENERS =====
     loginForm.addEventListener('submit', handleLogin);
