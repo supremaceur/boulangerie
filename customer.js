@@ -167,13 +167,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Formules
       const { data: formulesData, error: formulesError } = await supabaseClient
         .from('formules')
-        .select('*, formule_products(product_id)');
+        .select('*, formules_products(product_id)');
       if (formulesError) throw formulesError;
       
       state.formules = formulesData.map(f => {
         const eligible_products = { sandwichs: [], boissons: [], desserts: [] };
-        if (f.formule_products) {
-          f.formule_products.forEach(fp => {
+        if (f.formules_products) {
+          f.formules_products.forEach(fp => {
             const product = getProduct(fp.product_id);
             if (product) {
               if (!eligible_products[product.category]) eligible_products[product.category] = [];
