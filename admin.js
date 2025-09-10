@@ -195,8 +195,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Fonctions de rendu
   const renderAdminOrders = () => {
+    console.log('All orders:', state.orders.map(o => ({ id: o.id, status: o.status })));
     const pendingOrders = state.orders.filter(order => order.status === 'pending');
     const completedOrders = state.orders.filter(order => order.status !== 'pending');
+    console.log(`Pending orders: ${pendingOrders.length}, Completed orders: ${completedOrders.length}`);
 
     // Commandes en cours
     adminOrdersPendingContainer.innerHTML = pendingOrders.length === 0 
@@ -317,10 +319,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <div class="text-right">
                 <p class="text-xl font-bold text-amber-600">${formule.price.toFixed(2)}€</p>
-                <span class="px-2 py-1 text-xs font-semibold rounded-full ${
-                  formule.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }">
-                  ${formule.available ? 'Disponible' : 'Indisponible'}
+                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  Disponible
                 </span>
               </div>
             </div>
@@ -720,8 +720,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formuleData = {
       name: document.getElementById('formule-name').value,
       description: document.getElementById('formule-description').value,
-      price: parseFloat(document.getElementById('formule-price').value),
-      available: true
+      price: parseFloat(document.getElementById('formule-price').value)
     };
 
     // Récupérer les produits sélectionnés
