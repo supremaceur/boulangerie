@@ -304,18 +304,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalTitle.textContent = `Composer votre ${formule.name}`;
     modalTotalPrice.textContent = `${formule.price.toFixed(2)}€`;
     
-    // Ici vous ajouteriez la logique pour composer la formule
-    // Pour l'instant, on simule un ajout direct
-    modalBody.innerHTML = `
-      <div class="text-center">
-        <p class="text-lg mb-4">Composition de la formule ${formule.name}</p>
-        <p class="text-stone-600">Prix: ${formule.price.toFixed(2)}€</p>
-      </div>
-    `;
+    // Créer l'interface de composition avec les produits éligibles
+    let compositionHTML = `<div class="space-y-6">`;
+    
+    if (formule.eligible_products) {
+      Object.entries(formule.eligible_products).forEach(([category, productIds]) => {
+        if (productIds.length > 0) {
+          compositionHTML += `
+            <div class="bg-stone-50 rounded-lg p-4">
+              <h4 class="font-semibold text-stone-700 mb-3 capitalize">${category}</h4>
+              <div class="space-y-2">
+                ${productIds.map(productId => {
+                  const product = getProduct(productId);
+                  if (!product) return '';
+                  return `
+                    <label class="flex items-center gap-3 p-2 hover:bg-stone-100 rounded-lg cursor-pointer">
+                      <input type="radio" 
+                             name="formule-${category}" 
+                             value="${product.id}" 
+                             class="text-amber-600 focus:ring-amber-500">
+                      <span class="flex-1">${product.name}</span>
+                      <span class="text-sm text-stone-500">${product.price.toFixed(2)}€</span>
+                    </label>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+      });
+    }
+    
+    if (compositionHTML === `<div class="space-y-6">`) {
+      compositionHTML += `
+        <div class="text-center py-8">
+          <p class="text-stone-500">Cette formule n'a pas encore de produits définis.</p>
+          <p class="text-sm text-stone-400 mt-2">Elle sera ajoutée telle quelle au panier.</p>
+        </div>
+      `;
+    }
+    
+    compositionHTML += `</div>`;
+    modalBody.innerHTML = compositionHTML;
     
     orderModal.classList.remove('hidden');
     
     modalSubmitBtn.onclick = () => {
+      // Récupérer les produits sélectionnés
+      const selectedProducts = {};
+      const radioInputs = modalBody.querySelectorAll('input[type="radio"]:checked');
+      
+      radioInputs.forEach(input => {
+        const category = input.name.replace('formule-', '');
+        const productId = parseInt(input.value);
+        const product = getProduct(productId);
+        if (product) {
+          selectedProducts[category] = {
+            id: productId,
+            name: product.name,
+            price: product.price
+          };
+        }
+      });
+      
       const existingItem = state.cart.find(item => item.type === 'formule' && item.id === formuleId);
       if (existingItem) {
         existingItem.quantity += 1;
@@ -326,11 +377,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           quantity: 1, 
           price: formule.price,
           category: 'formule',
-          name: formule.name
+          name: formule.name,
+          selectedProducts: selectedProducts
         });
       }
+      
       updateCartBadge();
-      showToast(`${formule.name} ajouté au panier`);
+      const compositionText = Object.keys(selectedProducts).length > 0 
+        ? ` avec ${Object.values(selectedProducts).map(p => p.name).join(', ')}`
+        : '';
+      showToast(`${formule.name}${compositionText} ajouté au panier`);
       orderModal.classList.add('hidden');
     };
   };
@@ -573,6 +629,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateCartBadge();
     resetLogoutTimer();
   };
+
+  // Rafraîchit quand l'onglet reprend le focus
+  window.addEventListener('focus', async () => {
+    if (!state.currentUser) return;
+    await loadInitialData(false);
+    renderFormules();
+    renderProducts();
+    updateCartBadge();
+  });
+
+  // Rafraîchit quand la page redevient visible
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden || !state.currentUser) return;
+    await loadInitialData(false);
+    renderFormules();
+    renderProducts();
+    updateCartBadge();
+  });
 
   // Lancer l'initialisation
   await init();

@@ -398,6 +398,83 @@ document.addEventListener('DOMContentLoaded', async () => {
         `).join('');
   };
 
+  const renderStats = (period = 'today') => {
+    const statsContainer = document.getElementById('stats-tables-container');
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(today); 
+    weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const filteredOrders = state.orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      if (period === 'today') return orderDate >= today;
+      if (period === 'week') return orderDate >= weekStart;
+      if (period === 'month') return orderDate >= monthStart;
+      return true;
+    });
+
+    const formulesStats = {};
+    filteredOrders.forEach(order => {
+      order.order_items.forEach(item => {
+        if (item.formules) {
+          const f = item.formules;
+          if (!formulesStats[f.id]) formulesStats[f.id] = { name: f.name, count: 0, revenue: 0 };
+          formulesStats[f.id].count += item.quantity;
+          formulesStats[f.id].revenue += item.price * item.quantity;
+        }
+      });
+    });
+
+    const productsStats = {};
+    filteredOrders.forEach(order => {
+      order.order_items.forEach(item => {
+        if (item.products) {
+          const p = item.products;
+          if (!productsStats[p.id]) productsStats[p.id] = { name: p.name, count: 0 };
+          productsStats[p.id].count += item.quantity;
+        }
+        if (item.formules && item.description) {
+          const productNames = item.description.split(', ');
+          productNames.forEach(name => {
+            const product = Object.values(state.products).flat().find(pp => pp.name === name);
+            if (product) {
+              if (!productsStats[product.id]) productsStats[product.id] = { name: product.name, count: 0 };
+              productsStats[product.id].count += item.quantity;
+            }
+          });
+        }
+      });
+    });
+
+    const sortedFormules = Object.values(formulesStats).sort((a,b) => b.count - a.count);
+    const sortedProducts = Object.values(productsStats).sort((a,b) => b.count - a.count);
+
+    statsContainer.innerHTML = `
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold text-stone-700 mb-4">Formules les plus vendues</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-stone-200"><tr><th class="p-3">Formule</th><th class="p-3">Quantité</th><th class="p-3">Revenu Total</th></tr></thead>
+            <tbody>
+              ${sortedFormules.length ? sortedFormules.map(f => `<tr class="border-b"><td class="p-3">${f.name}</td><td class="p-3">${f.count}</td><td class="p-3">${f.revenue.toFixed(2)} €</td></tr>`).join('') : '<tr><td colspan="3" class="text-center p-4">Aucune donnée</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold text-stone-700 mb-4">Produits les plus populaires</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-stone-200"><tr><th class="p-3">Produit</th><th class="p-3">Nombre de fois choisi</th></tr></thead>
+            <tbody>
+              ${sortedProducts.length ? sortedProducts.map(p => `<tr class="border-b"><td class="p-3">${p.name}</td><td class="p-3">${p.count}</td></tr>`).join('') : '<tr><td colspan="2" class="text-center p-4">Aucune donnée</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  };
+
   // Fonctions globales pour les boutons onclick
   window.completeOrder = async (orderId) => {
     showLoader(true);
@@ -712,7 +789,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           renderAdminPromotions();
           break;
         case 'stats':
-          // renderStats();
+          renderStats();
           break;
       }
     });
@@ -913,6 +990,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   logoutBtn?.addEventListener('click', () => handleLogout());
+
+  // Event listeners pour les filtres de statistiques
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('stats-filter-btn')) {
+      document.querySelectorAll('.stats-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-600', 'text-white');
+        btn.classList.add('bg-stone-200', 'text-stone-700');
+      });
+      e.target.classList.remove('bg-stone-200', 'text-stone-700');
+      e.target.classList.add('bg-amber-600', 'text-white');
+      renderStats(e.target.dataset.period);
+    }
+  });
+
+  // Rafraîchit quand l'onglet reprend le focus
+  window.addEventListener('focus', async () => {
+    if (!state.currentUser) return;
+    await loadInitialData(false);
+    const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+    if (isOrdersVisible) renderAdminOrders();
+  });
+
+  // Rafraîchit quand la page redevient visible
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden || !state.currentUser) return;
+    await loadInitialData(false);
+    const isOrdersVisible = !document.getElementById('orders-tab').classList.contains('hidden');
+    if (isOrdersVisible) renderAdminOrders();
+  });
 
   // Initialisation
   const init = async () => {
