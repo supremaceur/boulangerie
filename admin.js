@@ -116,11 +116,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Vérifier le rôle admin
       const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('role')
+        .select('is_admin')
         .eq('id', session.user.id)
         .single();
 
-      if (error || profile?.role !== 'admin') {
+      if (error || profile?.is_admin !== true) {
         window.location.href = 'customer.html';
         return false;
       }

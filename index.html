@@ -68,7 +68,7 @@
         try {
           const { data: profile, error } = await supabaseClient
             .from('profiles')
-            .select('role, first_name, last_name')
+            .select('is_admin, first_name, last_name')
             .eq('id', session.user.id)
             .single();
 
@@ -82,8 +82,8 @@
             return;
           }
 
-          // Redirection selon le rôle
-          if (profile?.role === 'admin') {
+          // Redirection selon is_admin
+          if (profile?.is_admin === true) {
             statusMessage.textContent = `Bonjour ${profile.first_name || ''}, redirection vers l'administration...`;
             setTimeout(() => {
               window.location.href = 'admin.html';

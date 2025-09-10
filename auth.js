@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('role')
+        .select('is_admin')
         .eq('id', user.id)
         .single();
 
@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Redirection selon le rôle
-      if (profile?.role === 'admin') {
+      // Redirection selon is_admin
+      if (profile?.is_admin === true) {
         window.location.href = 'admin.html';
       } else {
         window.location.href = 'customer.html';
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             id: data.user.id,
             first_name: firstName,
             last_name: lastName,
-            role: 'customer'
+            is_admin: false
           });
 
         if (profileError) {
