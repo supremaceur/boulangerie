@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${
                   order.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }">
-                  ${order.status === 'confirmed' ? 'Validée' : 'Annulée'}
+                  ${order.status === 'confirmed' ? 'Validée' : 'Refusée'}
                 </span>
               </div>
               <div class="text-right">
@@ -387,10 +387,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const { error } = await supabaseClient
           .from('orders')
-          .update({ status: 'cancelled', refuse_reason: reason })
+          .update({ status: 'rejected', refuse_reason: reason })
           .eq('id', orderId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Status rejection error:', error);
+          // Essayer d'autres valeurs communes si 'rejected' échoue
+          const alternativeStatuses = ['declined', 'refused', 'cancelled', 'failed'];
+          let success = false;
+          
+          for (const status of alternativeStatuses) {
+            try {
+              const { error: retryError } = await supabaseClient
+                .from('orders')
+                .update({ status, refuse_reason: reason })
+                .eq('id', orderId);
+              
+              if (!retryError) {
+                console.log(`Success with status: ${status}`);
+                success = true;
+                break;
+              }
+            } catch (retryErr) {
+              console.log(`Failed with status ${status}:`, retryErr);
+            }
+          }
+          
+          if (!success) throw error;
+        }
+
         showToast('Commande refusée');
         refuseModal.classList.add('hidden');
         refuseReasonInput.value = '';
@@ -398,7 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderAdminOrders();
       } catch (error) {
         console.error('Refuse order error:', error);
-        showToast('Erreur lors du refus');
+        showToast('Erreur lors du refus - vérifiez la console pour les détails');
       } finally {
         showLoader(false);
       }
