@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data: ordersData, error: ordersError } = await supabaseClient
         .from('orders')
         .select('*, order_items(*, products(*), formules(*)), profiles(first_name, last_name)')
-        .order('created_at', { ascending: false });
+        .order('pickup_time', { ascending: true });
       if (ordersError) throw ordersError;
       state.orders = ordersData;
 
@@ -265,7 +265,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div>
                   <h4 class="text-lg font-bold text-stone-800">Commande #${order.id}</h4>
                   <p class="text-stone-600">Client: ${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}</p>
-                  <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString()}</p>
+                  <p class="text-sm text-stone-500">Commandé le: ${new Date(order.created_at).toLocaleString()}</p>
+                  <p class="font-bold text-amber-600">Retrait: ${order.pickup_time ? order.pickup_time.slice(0,5) : 'N/A'}</p>
                   <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 mt-2">
                     En préparation
                   </span>

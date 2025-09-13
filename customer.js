@@ -513,11 +513,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
     }).join('');
 
+    const timeSlots = [];
+    for (let h = 11; h <= 14; h++) {
+        for (let m = 0; m < 60; m += 15) {
+            if (h === 14 && m > 0) continue;
+            const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            timeSlots.push(time);
+        }
+    }
+    const timeSelectorHtml = `
+      <div class="mt-4">
+        <label for="cart-pickup-time" class="block text-sm font-medium text-stone-600 mb-1">Heure de retrait</label>
+        <select id="cart-pickup-time" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
+          ${timeSlots.map(t => `<option value="${t}">${t}</option>`).join('')}
+        </select>
+      </div>
+    `;
+
     cartFooter.innerHTML = `
       <div class="flex justify-between items-center mb-4">
         <span class="text-xl font-bold">Total: ${total.toFixed(2)}€</span>
       </div>
-      <button onclick="submitOrder()" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition">
+      ${timeSelectorHtml}
+      <button onclick="submitOrder()" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition mt-4">
         Commander
       </button>
     `;
