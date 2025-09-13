@@ -200,18 +200,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  // Dans votre fichier customer.js, remplacez la fonction loadInitialData par :
+
   // Charger les données initiales
   const loadInitialData = async (showLoaderFlag = true) => {
     console.log('Loading initial data...');
     if (showLoaderFlag) showLoader(true);
     
     try {
-      // Charger les produits
+      // Charger les produits avec la vraie colonne "avaible"
       console.log('Fetching products...');
       const { data: products, error: productsError } = await supabaseClient
         .from('products')
         .select('*')
-        .eq('is_available', true)
+        .eq('avaible', true)
         .order('name');
       
       if (productsError) {
@@ -220,6 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       console.log('Products loaded:', products?.length || 0);
+      console.log('Sample product:', products?.[0]);
       
       // Organiser les produits par catégorie
       state.products = {
@@ -233,7 +236,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data: formules, error: formulesError } = await supabaseClient
         .from('formules')
         .select('*')
-        .eq('is_available', true)
         .order('price');
       
       if (formulesError) {
@@ -242,20 +244,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       console.log('Formules loaded:', formules?.length || 0);
-      state.formules = formules || [];
+      console.log('Sample formule:', formules?.[0]);
       
-      // Charger les promotions actives
+      // Pour les formules, vérifier s'il y a une colonne "avaible" aussi
+      state.formules = formules?.filter(f => f.avaible !== false) || [];
+      
+      // Charger les promotions
       console.log('Fetching promotions...');
       const { data: promotions, error: promosError } = await supabaseClient
         .from('promotions')
-        .select('*')
-        .eq('is_active', true)
-        .gte('end_date', new Date().toISOString());
+        .select('*');
       
       if (promosError) {
         console.error('Promotions error:', promosError);
+        // Ne pas faire échouer le chargement pour les promotions
+      } else {
+        // Filtrer les promotions actives côté client si les colonnes existent
+        state.promotions = promotions?.filter(p => {
+          const now = new Date();
+          const endDate = new Date(p.end_date);
+          return (p.active !== false || p.avaible !== false) && endDate >= now;
+        }) || [];
       }
-      state.promotions = promotions || [];
       
       // Charger l'historique des commandes de l'utilisateur
       if (state.currentUser) {
@@ -282,6 +292,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       console.log('All data loaded successfully');
+      console.log('Final state:', {
+        products: Object.keys(state.products).map(k => `${k}: ${state.products[k].length}`),
+        formules: state.formules.length,
+        promotions: state.promotions.length,
+        orders: state.orders.length
+      });
       
     } catch (error) {
       console.error('Error loading data:', error);
