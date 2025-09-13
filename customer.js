@@ -435,10 +435,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Opening modal for formule:', formule.name);
     modalTitle.textContent = `Composer votre ${formule.name}`;
     
+    // Créer une sélection basée sur les catégories disponibles
     const categories = [];
-    if (formule.includes_sandwich) categories.push({ key: 'sandwichs', name: 'Choisissez votre sandwich' });
-    if (formule.includes_boisson) categories.push({ key: 'boissons', name: 'Choisissez votre boisson' });
-    if (formule.includes_dessert) categories.push({ key: 'desserts', name: 'Choisissez votre dessert' });
+    if (formule.includes_sandwich || formule.sandwich_included) {
+      categories.push({ key: 'sandwichs', name: 'Choisissez votre sandwich' });
+    }
+    if (formule.includes_boisson || formule.boisson_included) {
+      categories.push({ key: 'boissons', name: 'Choisissez votre boisson' });
+    }
+    if (formule.includes_dessert || formule.dessert_included) {
+      categories.push({ key: 'desserts', name: 'Choisissez votre dessert' });
+    }
+    
+    // Si aucune catégorie spécifique, permettre de choisir dans tous les produits disponibles
+    if (categories.length === 0) {
+      categories.push(
+        { key: 'sandwichs', name: 'Choisissez votre sandwich' },
+        { key: 'boissons', name: 'Choisissez votre boisson' },
+        { key: 'desserts', name: 'Choisissez votre dessert' }
+      );
+    }
     
     const updateModalTotal = () => {
       if (modalTotalPrice) {
@@ -454,13 +470,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="mb-6">
           <h4 class="text-lg font-semibold text-stone-800 mb-3">${category.name}</h4>
           <div class="space-y-2">
-            ${products.map(product => `
+            ${products.map((product, index) => `
               <label class="flex items-center p-3 bg-stone-50 rounded-lg cursor-pointer hover:bg-stone-100 transition-colors">
                 <input 
                   type="radio" 
                   name="${category.key}" 
                   value="${product.id}" 
                   class="text-amber-600 focus:ring-amber-500 mr-3"
+                  ${index === 0 ? 'checked' : ''}
                 >
                 <span class="text-stone-800">${product.name}</span>
               </label>
@@ -489,16 +506,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         });
         
-        // Vérifier que toutes les catégories requises sont sélectionnées
-        const missingCategories = categories.filter(cat => !selections[cat.key]);
-        if (missingCategories.length > 0) {
-          showToast('Veuillez sélectionner tous les éléments de votre formule');
-          return;
-        }
-        
-        // Ajouter la formule au panier
+        // Créer la description avec les sélections
         const description = Object.values(selections).map(p => p.name).join(', ');
         
+        // Ajouter au panier même avec des sélections partielles
         state.cart.push({
           id: formuleId,
           type: 'formule',
@@ -506,7 +517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           price: parseFloat(formule.price),
           quantity: 1,
           category: 'formule',
-          description: description,
+          description: description || 'Formule personnalisée',
           products: selections
         });
         
