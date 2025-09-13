@@ -560,8 +560,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               order.status === 'confirmed' ? 'En préparation' : 'En attente'''}
           </span>
         </div>
-        ${'''['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) && order.refuse_reason ? 
-          `<div class="text-sm text-red-600 mb-2">Motif du refus: ${order.refuse_reason}</div>` : ''''}
+        ${['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) && order.refuse_reason ?
+          `<div class="text-sm text-red-600 mb-2">Motif du refus: ${order.refuse_reason}</div>` : ''}
         <div class="flex justify-between items-center">
           <div class="text-lg font-bold text-amber-600">${order.total_price.toFixed(2)}€</div>
           ${'''['delivered', 'completed'].includes(order.status) ? 
