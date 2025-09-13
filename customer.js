@@ -93,6 +93,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const getProduct = (id) => Object.values(state.products).flat().find(p => p.id === id);
   const getFormule = (id) => state.formules.find(f => f.id === id);
 
+  const getApplicablePromotion = (item, type) => {
+    const now = new Date();
+    return state.promotions.find(promo => {
+      // Check if promotion is active based on date or max orders
+      const isDateValid = !promo.expires_at || new Date(promo.expires_at) > now;
+      const isOrderCountValid = !promo.max_orders || promo.current_orders < promo.max_orders;
+
+      if (!isDateValid || !isOrderCountValid) return false;
+
+      if (type === 'product' && promo.promotion_products) {
+        return promo.promotion_products.some(pp => pp.product_id === item.id);
+      }
+      if (type === 'formule' && promo.promotion_formules) {
+        return promo.promotion_formules.some(pf => pf.formule_id === item.id);
+      }
+      return false;
+    });
+  };
+
   const showConfirmModal = (title, text, onConfirm) => {
     confirmModalTitle.textContent = title;
     confirmModalText.textContent = text;
@@ -232,7 +251,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     productsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
       if (products.length === 0) return '';
       const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-      const productsHtml = products.filter(p => p.available).map(p => `
+      const productsHtml = products.filter(p => p.available).map(p => {
+        const promotion = getApplicablePromotion(p, 'product');
+        const discountedPrice = promotion ? (p.price * (1 - promotion.discount_percentage / 100)).toFixed(2) : null;
+        return `
         <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
           <div class="p-4 flex-grow">
             <p class="font-semibold text-stone-800">${p.name}</p>
@@ -240,14 +262,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="p-4 border-t border-stone-100">
             <div class="flex justify-between items-center">
-              <span class="text-lg font-bold text-amber-600">${p.price.toFixed(2)}€</span>
+              ${discountedPrice ? `
+                <span class="text-sm text-stone-500 line-through mr-2">${p.price.toFixed(2)}€</span>
+                <span class="text-lg font-bold text-amber-600">${discountedPrice}€</span>
+              ` : `
+                <span class="text-lg font-bold text-amber-600">${p.price.toFixed(2)}€</span>
+              `}
               <button onclick="addToCart('product', ${p.id})" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition">
                 Ajouter
               </button>
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       
       return `
         <div>
@@ -268,18 +296,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     
-    formulesContainer.innerHTML = state.formules.map(f => `
+    formulesContainer.innerHTML = state.formules.map(f => {
+      const promotion = getApplicablePromotion(f, 'formule');
+      const discountedPrice = promotion ? (f.price * (1 - promotion.discount_percentage / 100)).toFixed(2) : null;
+      return `
       <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="p-6">
           <h3 class="text-xl font-bold text-stone-800 mb-2">${f.name}</h3>
           <p class="text-stone-500 text-sm mb-4">${f.description || ''}</p>
-          <div class="text-2xl font-bold text-amber-600 mb-4">${f.price.toFixed(2)}€</div>
+          <div class="flex items-center mb-4">
+            ${discountedPrice ? `
+              <span class="text-lg text-stone-500 line-through mr-2">${f.price.toFixed(2)}€</span>
+              <span class="text-2xl font-bold text-amber-600">${discountedPrice}€</span>
+            ` : `
+              <span class="text-2xl font-bold text-amber-600">${f.price.toFixed(2)}€</span>
+            `}
+          </div>
           <button onclick="openFormuleModal(${f.id})" class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-amber-700 transition shadow-md">
             Composer
           </button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   };
 
   // Fonctions globales pour les boutons onclick
@@ -287,6 +326,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (type === 'product') {
       const product = getProduct(id);
       if (product) {
+        const promotion = getApplicablePromotion(product, 'product');
+        const priceToAddToCart = promotion ? (product.price * (1 - promotion.discount_percentage / 100)) : product.price;
+
         const existingItem = state.cart.find(item => item.type === 'product' && item.id === id);
         if (existingItem) {
           existingItem.quantity += 1;
@@ -295,7 +337,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             type: 'product', 
             id, 
             quantity: 1, 
-            price: product.price,
+            price: priceToAddToCart,
+            originalPrice: product.price, // Store original price for reference
             category: product.category,
             name: product.name
           });
@@ -310,8 +353,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formule = getFormule(formuleId);
     if (!formule) return;
     
+    const promotion = getApplicablePromotion(formule, 'formule');
+    const priceToAddToCart = promotion ? (formule.price * (1 - promotion.discount_percentage / 100)) : formule.price;
+
     modalTitle.textContent = `Composer votre ${formule.name}`;
-    modalTotalPrice.textContent = `${formule.price.toFixed(2)}€`;
+    modalTotalPrice.textContent = `${priceToAddToCart.toFixed(2)}€`;
     
     // Créer l'interface de composition avec les produits éligibles
     let compositionHTML = `<div class="space-y-6">`;
@@ -384,7 +430,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           type: 'formule', 
           id: formuleId, 
           quantity: 1, 
-          price: formule.price,
+          price: priceToAddToCart,
+          originalPrice: formule.price, // Store original price for reference
           category: 'formule',
           name: formule.name,
           selectedProducts: selectedProducts
@@ -489,7 +536,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
           <div class="flex-1">
             <p class="font-semibold">${itemInfo.name}</p>
-            <p class="text-sm text-stone-500">${item.price.toFixed(2)}€ chacun</p>
+            ${item.originalPrice && item.originalPrice !== item.price ? `
+              <p class="text-sm text-stone-500 line-through">${item.originalPrice.toFixed(2)}€</p>
+              <p class="text-sm text-amber-600">${item.price.toFixed(2)}€ chacun</p>
+            ` : `
+              <p class="text-sm text-stone-500">${item.price.toFixed(2)}€ chacun</p>
+            `}
             ${item.description ? `<p class="text-xs text-stone-400">${item.description}</p>` : ''}
           </div>
           <div class="flex items-center gap-3">
