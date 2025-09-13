@@ -555,19 +555,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
         <div class="text-sm text-stone-600 mb-2">
           Status: <span class="font-semibold ${['delivered', 'completed'].includes(order.status) ? 'text-green-600' : ['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) ? 'text-red-600' : order.status === 'confirmed' ? 'text-blue-600' : 'text-amber-600'}">
-            ${'''['delivered', 'completed'].includes(order.status) ? 'Livrée' : 
+            ${['delivered', 'completed'].includes(order.status) ? 'Livrée' : 
               ['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) ? 'Annulée' : 
-              order.status === 'confirmed' ? 'En préparation' : 'En attente'''}
+              order.status === 'confirmed' ? 'En préparation' : 'En attente'}
           </span>
         </div>
         ${['rejected', 'declined', 'refused', 'cancelled', 'failed'].includes(order.status) && order.refuse_reason ?
           `<div class="text-sm text-red-600 mb-2">Motif du refus: ${order.refuse_reason}</div>` : ''}
         <div class="flex justify-between items-center">
           <div class="text-lg font-bold text-amber-600">${order.total_price.toFixed(2)}€</div>
-          ${'''['delivered', 'completed'].includes(order.status) ? 
+          ${['delivered', 'completed'].includes(order.status) ? 
             `<button onclick="showReceipt(${order.id})" class="bg-amber-600 text-white px-3 py-1 rounded text-sm hover:bg-amber-700 transition">
               Voir le ticket
-            </button>` : ''''}
+            </button>` : ''}
         </div>
       </div>
     `).join('');
