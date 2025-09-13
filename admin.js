@@ -986,7 +986,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // Close modals
-  [productModalCloseBtn, formuleModalCloseBtn, promoModalCloseBtn].forEach(btn => {
+  [productModalCloseBtn].forEach(btn => {
     btn?.addEventListener('click', () => {
       productModal.classList.add('hidden');
       formuleModal.classList.add('hidden');
