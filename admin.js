@@ -228,7 +228,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div>
                 <h4 class="text-lg font-bold text-stone-800">Commande #${order.id}</h4>
                 <p class="text-stone-600">Client: ${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}</p>
-                <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString()}</p>
+                <p class="text-sm text-stone-500">Commandé le: ${new Date(order.created_at).toLocaleString()}</p>
+                <p class="font-bold text-amber-600">Retrait: ${order.pickup_time ? order.pickup_time.slice(0,5) : 'N/A'}</p>
               </div>
               <div class="text-right">
                 <p class="text-xl font-bold text-amber-600">${order.total_price.toFixed(2)}€</p>
@@ -255,9 +256,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Section pour commandes acceptées (en préparation)  
     const acceptedSection = acceptedOrders.length === 0 
-      ? '<p class="text-center text-stone-500 mb-6">Aucune commande en préparation</p>'
-      : `
-        const acceptedSection = acceptedOrders.length === 0 
       ? '<p class="text-center text-stone-500 mb-6">Aucune commande en préparation</p>'
       : `
         <h3 class="text-lg font-semibold text-stone-700 mb-4">Commandes en préparation (${acceptedOrders.length})</h3>
@@ -294,7 +292,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           `).join('')}
         </div>
-      `;
       `;
 
     // Injecter la section des commandes acceptées entre pending et completed
