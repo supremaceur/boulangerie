@@ -308,6 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <h4 class="text-lg font-bold text-stone-800">Commande #${order.id}</h4>
                 <p class="text-stone-600">Client: ${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}</p>
                 <p class="text-sm text-stone-500">${new Date(order.created_at).toLocaleString()}</p>
+                <p class="font-bold text-amber-600">Retrait: ${order.pickup_time ? order.pickup_time.slice(0,5) : 'N/A'}</p>
                 <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${
                   ['delivered', 'completed'].includes(order.status) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }">
@@ -798,7 +799,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('Fonction en cours de développement');
   };
 
-  
+  window.deletePromotion = (promoId) => {
+    const promo = state.promotions.find(p => p.id === promoId);
+    if (!promo) return;
+
+    showConfirmModal(
+      'Supprimer la promotion',
+      `Êtes-vous sûr de vouloir supprimer cette promotion ?`,
+      async () => {
+        showLoader(true);
+        try {
+          const { error } = await supabaseClient
+            .from('promotions')
+            .delete()
+            .eq('id', promoId);
+
+          if (error) throw error;
+          showToast('Promotion supprimée !');
+          await loadInitialData(false);
+          renderAdminPromotions();
+        } catch (error) {
+          console.error('Delete promotion error:', error);
+          showToast('Erreur lors de la suppression');
+        } finally {
+          showLoader(false);
+        }
+      }
+    );
+  };
 
   // Event listeners
   
