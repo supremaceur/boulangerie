@@ -257,6 +257,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const acceptedSection = acceptedOrders.length === 0 
       ? '<p class="text-center text-stone-500 mb-6">Aucune commande en préparation</p>'
       : `
+        const acceptedSection = acceptedOrders.length === 0 
+      ? '<p class="text-center text-stone-500 mb-6">Aucune commande en préparation</p>'
+      : `
         <h3 class="text-lg font-semibold text-stone-700 mb-4">Commandes en préparation (${acceptedOrders.length})</h3>
         <div class="grid gap-4 mb-8">
           ${acceptedOrders.map(order => `
@@ -291,6 +294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           `).join('')}
         </div>
+      `;
       `;
 
     // Injecter la section des commandes acceptées entre pending et completed
