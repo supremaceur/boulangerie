@@ -647,13 +647,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     showLoader(true);
     try {
       const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const pickupTime = document.getElementById('cart-pickup-time').value;
       
       const { data: order, error: orderError } = await supabaseClient
         .from('orders')
         .insert({
           user_id: state.currentUser.id,
           total_price: total,
-          status: 'pending'
+          status: 'pending',
+          pickup_time: pickupTime
         })
         .select()
         .single();
