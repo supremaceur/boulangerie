@@ -1,4 +1,4 @@
-// Customer JavaScript pour la page client
+// Customer JavaScript pour la page client - VERSION FINALE COMPLÈTE
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Customer page loaded');
 
@@ -200,19 +200,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-
   // Charger les données initiales
   const loadInitialData = async (showLoaderFlag = true) => {
     console.log('Loading initial data...');
     if (showLoaderFlag) showLoader(true);
     
     try {
-      // Charger les produits avec la vraie colonne "avaible"
+      // Charger les produits avec la colonne "available"
       console.log('Fetching products...');
       const { data: products, error: productsError } = await supabaseClient
         .from('products')
         .select('*')
-        .eq('avaible', true)
+        .eq('available', true)
         .order('name');
       
       if (productsError) {
@@ -221,7 +220,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       console.log('Products loaded:', products?.length || 0);
-      console.log('Sample product:', products?.[0]);
+      if (products?.length > 0) {
+        console.log('Sample product:', products[0]);
+      }
       
       // Organiser les produits par catégorie
       state.products = {
@@ -229,6 +230,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         boissons: products?.filter(p => p.category === 'boisson') || [],
         desserts: products?.filter(p => p.category === 'dessert') || []
       };
+      
+      console.log('Products organized by category:', {
+        sandwichs: state.products.sandwichs.length,
+        boissons: state.products.boissons.length,
+        desserts: state.products.desserts.length
+      });
       
       // Charger les formules
       console.log('Fetching formules...');
@@ -243,27 +250,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       console.log('Formules loaded:', formules?.length || 0);
-      console.log('Sample formule:', formules?.[0]);
+      if (formules?.length > 0) {
+        console.log('Sample formule:', formules[0]);
+      }
       
-      // Pour les formules, vérifier s'il y a une colonne "avaible" aussi
-      state.formules = formules?.filter(f => f.avaible !== false) || [];
+      // Filtrer les formules disponibles si la colonne existe
+      state.formules = formules?.filter(f => f.available !== false) || [];
+      console.log('Available formules:', state.formules.length);
       
-      // Charger les promotions
+      // Charger les promotions (optionnel)
       console.log('Fetching promotions...');
-      const { data: promotions, error: promosError } = await supabaseClient
-        .from('promotions')
-        .select('*');
-      
-      if (promosError) {
-        console.error('Promotions error:', promosError);
-        // Ne pas faire échouer le chargement pour les promotions
-      } else {
-        // Filtrer les promotions actives côté client si les colonnes existent
-        state.promotions = promotions?.filter(p => {
-          const now = new Date();
-          const endDate = new Date(p.end_date);
-          return (p.active !== false || p.avaible !== false) && endDate >= now;
-        }) || [];
+      try {
+        const { data: promotions, error: promosError } = await supabaseClient
+          .from('promotions')
+          .select('*');
+        
+        if (promosError) {
+          console.log('Promotions error (non-critical):', promosError);
+          state.promotions = [];
+        } else {
+          state.promotions = promotions || [];
+          console.log('Promotions loaded:', state.promotions.length);
+        }
+      } catch (promoErr) {
+        console.log('Promotions table might not exist, skipping...');
+        state.promotions = [];
       }
       
       // Charger l'historique des commandes de l'utilisateur
@@ -284,28 +295,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (ordersError) {
           console.error('Orders error:', ordersError);
+          state.orders = [];
         } else {
           console.log('Orders loaded:', orders?.length || 0);
           state.orders = orders || [];
         }
       }
       
-      console.log('All data loaded successfully');
-      console.log('Final state:', {
-        products: Object.keys(state.products).map(k => `${k}: ${state.products[k].length}`),
+      console.log('✅ All data loaded successfully');
+      console.log('Final state summary:', {
+        products: `${Object.values(state.products).flat().length} total (${state.products.sandwichs.length} sandwichs, ${state.products.boissons.length} boissons, ${state.products.desserts.length} desserts)`,
         formules: state.formules.length,
         promotions: state.promotions.length,
         orders: state.orders.length
       });
       
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       showToast('Erreur lors du chargement des données');
     } finally {
       if (showLoaderFlag) showLoader(false);
     }
   };
-  
 
   // Afficher les formules
   const renderFormules = () => {
@@ -321,10 +332,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     formulesContainer.innerHTML = state.formules.map(formule => {
+      // Déterminer les catégories incluses basé sur les colonnes booléennes
       const includedCategories = [];
-      if (formule.includes_sandwich) includedCategories.push('Sandwich');
-      if (formule.includes_boisson) includedCategories.push('Boisson');
-      if (formule.includes_dessert) includedCategories.push('Dessert');
+      if (formule.includes_sandwich || formule.sandwich_included) includedCategories.push('Sandwich');
+      if (formule.includes_boisson || formule.boisson_included) includedCategories.push('Boisson');
+      if (formule.includes_dessert || formule.dessert_included) includedCategories.push('Dessert');
+      
+      // Si pas de colonnes booléennes, essayer une approche générique
+      if (includedCategories.length === 0) {
+        includedCategories.push('Formule complète');
+      }
       
       const categoryNames = includedCategories.join(' + ');
       
@@ -333,6 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="p-6">
             <h3 class="text-2xl font-bold text-stone-800">${formule.name}</h3>
             <p class="text-stone-500 mt-1 font-semibold text-amber-700">${categoryNames}</p>
+            ${formule.description ? `<p class="text-stone-600 mt-2 text-sm">${formule.description}</p>` : ''}
             <div class="mt-4 text-3xl font-bold text-amber-600">${parseFloat(formule.price).toFixed(2)}€</div>
           </div>
           <div class="p-6 bg-white mt-auto">
@@ -376,6 +394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div>
             <h4 class="font-semibold text-stone-800">${product.name}</h4>
             <p class="text-amber-600 font-bold">${parseFloat(product.price).toFixed(2)}€</p>
+            ${product.description ? `<p class="text-stone-500 text-sm">${product.description}</p>` : ''}
           </div>
           <button 
             class="add-product-btn bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors duration-200"
