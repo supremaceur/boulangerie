@@ -255,7 +255,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const promotion = getApplicablePromotion(p, 'product');
         const discountedPrice = promotion ? (p.price * (1 - promotion.discount_percentage / 100)).toFixed(2) : null;
         return `
-        <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
+        <div class="bg-white rounded-lg shadow-sm flex flex-col text-center relative">
+          ${promotion ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">PROMO</div>` : ''}
           <div class="p-4 flex-grow">
             <p class="font-semibold text-stone-800">${p.name}</p>
             <p class="text-stone-500 text-sm mt-2">${p.description || ''}</p>
@@ -264,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="flex justify-between items-center">
               ${discountedPrice ? `
                 <span class="text-sm text-stone-500 line-through mr-2">${p.price.toFixed(2)}€</span>
-                <span class="text-lg font-bold text-amber-600">${discountedPrice}€</span>
+                <span class="text-lg font-bold text-red-600">${discountedPrice}€</span>
               ` : `
                 <span class="text-lg font-bold text-amber-600">${p.price.toFixed(2)}€</span>
               `}
@@ -300,14 +301,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const promotion = getApplicablePromotion(f, 'formule');
       const discountedPrice = promotion ? (f.price * (1 - promotion.discount_percentage / 100)).toFixed(2) : null;
       return `
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden relative">
+        ${promotion ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">PROMO</div>` : ''}
         <div class="p-6">
           <h3 class="text-xl font-bold text-stone-800 mb-2">${f.name}</h3>
           <p class="text-stone-500 text-sm mb-4">${f.description || ''}</p>
           <div class="flex items-center mb-4">
             ${discountedPrice ? `
               <span class="text-lg text-stone-500 line-through mr-2">${f.price.toFixed(2)}€</span>
-              <span class="text-2xl font-bold text-amber-600">${discountedPrice}€</span>
+              <span class="text-2xl font-bold text-red-600">${discountedPrice}€</span>
             ` : `
               <span class="text-2xl font-bold text-amber-600">${f.price.toFixed(2)}€</span>
             `}
@@ -538,7 +540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p class="font-semibold">${itemInfo.name}</p>
             ${item.originalPrice && item.originalPrice !== item.price ? `
               <p class="text-sm text-stone-500 line-through">${item.originalPrice.toFixed(2)}€</p>
-              <p class="text-sm text-amber-600">${item.price.toFixed(2)}€ chacun</p>
+              <p class="text-sm text-red-600">${item.price.toFixed(2)}€ chacun</p>
             ` : `
               <p class="text-sm text-stone-500">${item.price.toFixed(2)}€ chacun</p>
             `}
