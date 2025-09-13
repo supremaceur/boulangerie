@@ -200,7 +200,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // Dans votre fichier customer.js, remplacez la fonction loadInitialData par :
 
   // Charger les données initiales
   const loadInitialData = async (showLoaderFlag = true) => {
@@ -306,6 +305,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (showLoaderFlag) showLoader(false);
     }
   };
+  
 
   // Afficher les formules
   const renderFormules = () => {
