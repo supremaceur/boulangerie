@@ -798,34 +798,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('Fonction en cours de développement');
   };
 
-  window.deletePromotion = (promoId) => {
-    const promo = state.promotions.find(p => p.id === promoId);
-    if (!promo) return;
-
-    showConfirmModal(
-      'Supprimer la promotion',
-      `Êtes-vous sûr de vouloir supprimer cette promotion ?`,
-      async () => {
-        showLoader(true);
-        try {
-          const { error } = await supabaseClient
-            .from('promotions')
-            .delete()
-            .eq('id', promoId);
-
-          if (error) throw error;
-          showToast('Promotion supprimée !');
-          await loadInitialData(false);
-          renderAdminPromotions();
-        } catch (error) {
-          console.error('Delete promotion error:', error);
-          showToast('Erreur lors de la suppression');
-        } finally {
-          showLoader(false);
-        }
-      }
-    );
-  };
+  
 
   // Event listeners
   

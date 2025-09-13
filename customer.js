@@ -232,7 +232,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     productsContainer.innerHTML = Object.entries(state.products).map(([category, products]) => {
       if (products.length === 0) return '';
       const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-      const productsHtml = products.filter(p => p.available).map(p => `
+      const productsHtml = products.filter(p => p.available).map(p => {
+        const promo = getPromotionForItem({type: 'product', id: p.id});
+        const newPrice = promo ? p.price * (1 - promo.discount_percentage / 100) : p.price;
+
+        return `
         <div class="bg-white rounded-lg shadow-sm flex flex-col text-center">
           <div class="p-4 flex-grow">
             <p class="font-semibold text-stone-800">${p.name}</p>
@@ -240,14 +244,21 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <div class="p-4 border-t border-stone-100">
             <div class="flex justify-between items-center">
-              <span class="text-lg font-bold text-amber-600">${p.price.toFixed(2)}€</span>
+              <div>
+                ${'''promo ? `
+                  <span class="text-lg font-bold text-red-500 line-through">${p.price.toFixed(2)}€</span>
+                  <span class="text-lg font-bold text-amber-600">${newPrice.toFixed(2)}€</span>
+                ` : `
+                  <span class="text-lg font-bold text-amber-600">${p.price.toFixed(2)}€</span>
+                `'''}
+              </div>
               <button onclick="addToCart('product', ${p.id})" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition">
                 Ajouter
               </button>
             </div>
           </div>
         </div>
-      `).join('');
+      `}).join('');
       
       return `
         <div>
@@ -697,6 +708,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // Initialisation
+  const init = async () => {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) return;
+
+    await loadInitialData();
+    
+    // Mettre à jour le message de bienvenue
+    if (state.userProfile) {
+      const welcomeText = `Bonjour ${state.userProfile.first_name} ${state.userProfile.last_name}`;
+      if (welcomeMessage) welcomeMessage.textContent = welcomeText;
+      if (welcomeMessageMobile) welcomeMessageMobile.textContent = welcomeText;
+    }
+
+    renderFormules();
+    renderProducts();
+    updateCartBadge();
+    resetLogoutTimer();
+  };
+
+  // Rafraîchit quand l'onglet reprend le focus
+  window.addEventListener('focus', async () => {
+    if (!state.currentUser) return;
+    await loadInitialData(false);
+    renderFormules();
+    renderProducts();
+    updateCartBadge();
+  });
+
+  // Rafraîchit quand la page redevient visible
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden || !state.currentUser) return;
+    await loadInitialData(false);
+    renderFormules();
+    renderProducts();
+    updateCartBadge();
+  });
+
+  // Lancer l'initialisation
+  await init();
+});ation
   const init = async () => {
     const isAuthenticated = await checkAuth();
     if (!isAuthenticated) return;
