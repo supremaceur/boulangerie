@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="p-4 border-t border-stone-100">
             <div class="flex justify-between items-center">
               ${discountedPrice ? `
-                <span class="text-sm text-stone-500 line-through mr-2">${p.price.toFixed(2)}€</span>
+                <span class="text-sm text-stone-500 line-through mr-2" style="text-decoration: line-through;">${p.price.toFixed(2)}€</span>
                 <span class="text-lg font-bold text-red-600">${discountedPrice}€</span>
               ` : `
                 <span class="text-lg font-bold text-amber-600">${p.price.toFixed(2)}€</span>
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <p class="text-stone-500 text-sm mb-4">${f.description || ''}</p>
           <div class="flex items-center mb-4">
             ${discountedPrice ? `
-              <span class="text-lg text-stone-500 line-through mr-2">${f.price.toFixed(2)}€</span>
+              <span class="text-lg text-stone-500 line-through mr-2" style="text-decoration: line-through;">${f.price.toFixed(2)}€</span>
               <span class="text-2xl font-bold text-red-600">${discountedPrice}€</span>
             ` : `
               <span class="text-2xl font-bold text-amber-600">${f.price.toFixed(2)}€</span>
