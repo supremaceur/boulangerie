@@ -724,7 +724,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         formule_id: item.type === 'formule' ? item.id : null,
         quantity: item.quantity,
         price: item.price,
-        category: item.category || (item.type === 'product' ? 'autre' : 'formule')
+        category: item.category || (item.type === 'product' ? 'autre' : 'formule'),
+        selected_products: item.type === 'formule' ? item.selectedProducts : null
       }));
 
       const { error: itemsError } = await supabaseClient

@@ -448,18 +448,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productsStats = {};
     filteredOrders.forEach(order => {
       order.order_items.forEach(item => {
+        // Case 1: Product ordered "à la carte"
         if (item.products) {
           const p = item.products;
-          if (!productsStats[p.id]) productsStats[p.id] = { name: p.name, count: 0 };
+          if (!productsStats[p.id]) {
+            productsStats[p.id] = { name: p.name, count: 0 };
+          }
           productsStats[p.id].count += item.quantity;
         }
-        if (item.formules && item.description) {
-          const productNames = item.description.split(', ');
-          productNames.forEach(name => {
-            const product = Object.values(state.products).flat().find(pp => pp.name === name);
-            if (product) {
-              if (!productsStats[product.id]) productsStats[product.id] = { name: product.name, count: 0 };
-              productsStats[product.id].count += item.quantity;
+        // Case 2: Product ordered as part of a formula
+        else if (item.formules && item.selected_products) {
+          const selected = Object.values(item.selected_products);
+          selected.forEach(productInfo => {
+            if (productInfo && productInfo.id) {
+              if (!productsStats[productInfo.id]) {
+                productsStats[productInfo.id] = { name: productInfo.name, count: 0 };
+              }
+              productsStats[productInfo.id].count += item.quantity;
             }
           });
         }
